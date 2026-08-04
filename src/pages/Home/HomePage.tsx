@@ -8,7 +8,7 @@ import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseSer
 const MENU_ITEMS = [
   { num: '01', title: 'My Guide', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', path: '/guide' },
   { num: '02', title: 'Adaab', sub: 'Daily etiquette', icon: '📋', path: '/adaab' },
-  { num: '03', title: 'Taleem ul Islam', sub: 'Basic Islamic education', icon: '📚', path: '/taleem' },
+  { num: '03', title: 'Islamic Q & A', sub: 'Question & answer volumes', icon: '📚', path: '/taleem' },
   { num: '04', title: 'Maqtab', sub: 'Learning journey', icon: '📖', path: '/maqtab' },
   { num: '05', title: 'Hifz', sub: 'Surah memorisation', icon: '⭐', path: '/hifz' },
   { num: '06', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', path: '/detoxify' },

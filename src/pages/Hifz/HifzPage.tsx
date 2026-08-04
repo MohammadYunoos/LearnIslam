@@ -1,117 +1,65 @@
 // src/pages/Hifz/HifzPage.tsx
-import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
-import { useAppStore } from '../../store/appStore'
-import {
-  getHifzSurahs,
-  getHifzProgress,
-  updateHifzStatus,
-} from '../../services/supabaseService'
+import { SURAHS } from '../../content/surahs'
+import { getStatus, getMemorised, type HifzStatus } from '../../services/hifzLocal'
 
-type Status = 'NotStarted' | 'InProgress' | 'Completed'
-
-interface Surah {
-  id: number
-  name: string
-  arabic_name?: string
-  level?: string
-  ayah_count?: number
-  sort_order?: number
-}
-
-const STATUS_META: Record<Status, { label: string; cls: string }> = {
+const STATUS_META: Record<HifzStatus, { label: string; cls: string }> = {
   NotStarted: { label: 'Not started', cls: 'bg-sand text-ink-muted' },
   InProgress: { label: 'In progress', cls: 'bg-gold/20 text-gold-dark' },
   Completed: { label: 'Completed', cls: 'bg-teal-900 text-white' },
 }
 
-const NEXT: Record<Status, Status> = {
-  NotStarted: 'InProgress',
-  InProgress: 'Completed',
-  Completed: 'NotStarted',
-}
-
 export function HifzPage() {
-  const user = useAppStore((s) => s.user)
-  const isPremium = user?.tier === 'premium'
-  const [surahs, setSurahs] = useState<Surah[]>([])
-  const [statuses, setStatuses] = useState<Record<number, Status>>({})
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function load() {
-      const [list, progress] = await Promise.all([
-        getHifzSurahs(isPremium),
-        user ? getHifzProgress(user.id) : Promise.resolve([]),
-      ])
-      setSurahs(list as Surah[])
-      const map: Record<number, Status> = {}
-      for (const p of progress) map[p.surah_id] = p.status as Status
-      setStatuses(map)
-      setLoading(false)
-    }
-    load()
-  }, [user, isPremium])
-
-  const toggle = async (surahId: number) => {
-    const current = statuses[surahId] ?? 'NotStarted'
-    const next = NEXT[current]
-    setStatuses((s) => ({ ...s, [surahId]: next }))
-    if (user) await updateHifzStatus(user.id, surahId, next)
-  }
-
-  const completed = Object.values(statuses).filter((s) => s === 'Completed').length
+  const navigate = useNavigate()
+  const completed = SURAHS.filter((s) => getStatus(s.slug) === 'Completed').length
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title="Hifz" subtitle="Surah memorisation" backTo="/home" />
+      <PageHeader title="Hifz" subtitle="Listen · learn · memorise" backTo="/home" />
 
       <div className="px-4 pt-4">
         <div className="bg-white border border-border rounded-2xl p-4 mb-4">
           <p className="text-sm font-semibold text-teal-900">
-            {completed} surah{completed === 1 ? '' : 's'} memorised
+            {completed} of {SURAHS.length} surahs memorised
           </p>
-          <p className="text-xs text-ink-muted mt-0.5">
-            Tap a surah to cycle its status: Not started → In progress → Completed
-          </p>
+          <div className="h-2 bg-sand rounded-full overflow-hidden mt-2">
+            <div
+              className="h-full bg-gold rounded-full transition-all"
+              style={{ width: `${(completed / SURAHS.length) * 100}%` }}
+            />
+          </div>
         </div>
 
-        {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}
-
         <div className="space-y-3">
-          {surahs.map((surah) => {
-            const status = statuses[surah.id] ?? 'NotStarted'
+          {SURAHS.map((s) => {
+            const status = getStatus(s.slug)
             const meta = STATUS_META[status]
+            const memo = getMemorised(s.slug).length
             return (
               <button
-                key={surah.id}
-                onClick={() => toggle(surah.id)}
+                key={s.slug}
+                onClick={() => navigate(`/hifz/${s.slug}`)}
                 className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
               >
+                <div className="w-11 h-11 rounded-xl bg-sand flex items-center justify-center shrink-0">
+                  <span className="font-arabic text-lg text-teal-900">{s.arabicName}</span>
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-teal-900">{surah.name}</p>
-                  {surah.arabic_name && (
-                    <p className="font-arabic text-base text-ink">{surah.arabic_name}</p>
-                  )}
+                  <p className="text-sm font-bold text-teal-900">{s.name}</p>
                   <p className="text-xs text-ink-muted">
-                    {surah.level ? `${surah.level}` : ''}
-                    {surah.ayah_count ? ` · ${surah.ayah_count} ayah` : ''}
+                    {s.meaning} · {s.ayahs.length} ayah
+                    {memo > 0 ? ` · ${memo}/${s.ayahs.length} memorised` : ''}
                   </p>
                 </div>
-                <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${meta.cls}`}>
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${meta.cls}`}>
                   {meta.label}
                 </span>
               </button>
             )
           })}
         </div>
-
-        {!isPremium && !loading && (
-          <p className="text-xs text-ink-muted text-center mt-6 px-6">
-            Basic surahs shown. Upgrade to premium to unlock the full Hifz list.
-          </p>
-        )}
       </div>
 
       <BottomNav />

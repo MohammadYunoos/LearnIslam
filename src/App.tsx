@@ -16,6 +16,7 @@ import { MaqtabPage } from './pages/Maqtab/MaqtabPage'
 import { LessonPage } from './pages/Maqtab/LessonPage'
 import { QuizPage } from './pages/Maqtab/QuizPage'
 import { HifzPage } from './pages/Hifz/HifzPage'
+import { HifzSurahPage } from './pages/Hifz/HifzSurahPage'
 import { WajifaListPage } from './pages/Wajifa/WajifaListPage'
 import { TasbihPage } from './pages/Wajifa/TasbihPage'
 import { DetoxifyPage } from './pages/Detoxify/DetoxifyPage'
@@ -75,6 +76,7 @@ export default function App() {
           element={<PrivateRoute element={<QuizPage />} />}
         />
         <Route path="/hifz" element={<PrivateRoute element={<HifzPage />} />} />
+        <Route path="/hifz/:slug" element={<PrivateRoute element={<HifzSurahPage />} />} />
         <Route path="/wajifa" element={<PrivateRoute element={<WajifaListPage />} />} />
         <Route path="/wajifa/:slug" element={<PrivateRoute element={<TasbihPage />} />} />
         <Route path="/detoxify" element={<PrivateRoute element={<DetoxifyPage />} />} />
