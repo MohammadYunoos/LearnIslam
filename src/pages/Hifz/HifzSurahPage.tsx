@@ -14,6 +14,7 @@ import {
 } from '../../services/hifzLocal'
 import { getSurahTranslation, getSurahTransliteration } from '../../services/quranText'
 import { useAppStore } from '../../store/appStore'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 type Mode = 'single' | 'all'
 
@@ -82,6 +83,19 @@ export function HifzSurahPage() {
       alive = false
     }
   }, [surah, lang])
+
+  const tMeaning = useTr(surah?.meaning ?? '')
+  const L = useTrList([
+    'Memorised',
+    'Completed',
+    'Audio could not load. Check the storage bucket/path config.',
+    'Mark as memorised',
+    'Surah completed',
+    'Mark surah as completed',
+    'Stop',
+    'Play surah',
+    'Repeat',
+  ])
 
   if (!surah) {
     return (
@@ -155,16 +169,16 @@ export function HifzSurahPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-40">
-      <PageHeader title={surah.name} subtitle={`${surah.arabicName} · ${surah.meaning}`} backTo="/hifz" />
+      <PageHeader title={surah.name} subtitle={`${surah.arabicName} · ${tMeaning}`} backTo="/hifz" />
 
       <div className="px-4 pt-4">
         {/* Progress */}
         <div className="bg-white border border-border rounded-2xl p-4 mb-3">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-semibold text-teal-900">Memorised</p>
+            <p className="text-sm font-semibold text-teal-900">{L[0]}</p>
             <p className="text-xs font-bold text-gold-dark">
               {memoCount} / {total}
-              {status === 'Completed' ? ' · ✓ Completed' : ''}
+              {status === 'Completed' ? ` · ✓ ${L[1]}` : ''}
             </p>
           </div>
           <div className="h-2 bg-sand rounded-full overflow-hidden">
@@ -176,9 +190,7 @@ export function HifzSurahPage() {
         </div>
 
         {audioError && (
-          <p className="text-xs text-red-500 mb-3">
-            Audio could not load. Check the storage bucket/path config (see surahs.ts).
-          </p>
+          <p className="text-xs text-red-500 mb-3">{L[2]}</p>
         )}
 
         {/* Ayah list */}
@@ -227,7 +239,7 @@ export function HifzSurahPage() {
                       : 'bg-cream text-ink-muted border-border'
                   }`}
                 >
-                  {done ? '✓ Memorised' : 'Mark as memorised'}
+                  {done ? `✓ ${L[0]}` : L[3]}
                 </button>
               </div>
             )
@@ -239,7 +251,7 @@ export function HifzSurahPage() {
           disabled={status === 'Completed'}
           className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm mt-4 disabled:opacity-60"
         >
-          {status === 'Completed' ? '✓ Surah completed' : 'Mark surah as completed'}
+          {status === 'Completed' ? `✓ ${L[4]}` : L[5]}
         </button>
       </div>
 
@@ -249,7 +261,7 @@ export function HifzSurahPage() {
           onClick={() => (isPlaying ? stop() : playIndex(0, 'all'))}
           className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"
         >
-          {isPlaying ? '⏹ Stop' : '▶ Play surah'}
+          {isPlaying ? `⏹ ${L[6]}` : `▶ ${L[7]}`}
         </button>
         <button
           onClick={() => {
@@ -261,7 +273,7 @@ export function HifzSurahPage() {
             loop ? 'bg-gold text-teal-900 border-gold' : 'bg-white text-ink-muted border-border'
           }`}
         >
-          🔁 Repeat
+          🔁 {L[8]}
         </button>
       </div>
 

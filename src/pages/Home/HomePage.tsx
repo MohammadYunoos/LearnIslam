@@ -4,16 +4,18 @@ import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store/appStore'
 import { BottomNav } from '../../components/BottomNav'
 import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseService'
+import { useTr, useTrList } from '../../i18n/useTr'
+import { Logo } from '../../components/Logo'
 
 const MENU_ITEMS = [
-  { num: '01', title: 'My Guide', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', path: '/guide' },
+  { num: '01', title: 'Masail', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', path: '/guide' },
   { num: '02', title: 'Adaab', sub: 'Daily etiquette', icon: '📋', path: '/adaab' },
   { num: '03', title: 'Islamic Q & A', sub: 'Question & answer volumes', icon: '📚', path: '/taleem' },
   { num: '04', title: 'Maqtab', sub: 'Learning journey', icon: '📖', path: '/maqtab' },
   { num: '05', title: 'Hifz', sub: 'Surah memorisation', icon: '⭐', path: '/hifz' },
   { num: '06', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', path: '/detoxify' },
-  { num: '07', title: 'Wajifa', sub: 'Tasbih and duas', icon: '🤲', path: '/wajifa' },
-  { num: '08', title: 'Masail', sub: 'Ask a basic ruling', icon: '❓', path: '/masail' },
+  { num: '07', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', path: '/wajifa' },
+  { num: '08', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', path: '/masail' },
 ]
 
 interface Hadees {
@@ -37,13 +39,21 @@ export function HomePage() {
     if (user) getMaqtabProgress(user.id).then(setProgress)
   }, [user])
 
+  const tGreet = useTr('Assalamu Alaikum')
+  const tPrompt = useTr('What would you like to learn?')
+  const titles = useTrList(MENU_ITEMS.map((i) => i.title))
+  const subs = useTrList(MENU_ITEMS.map((i) => i.sub))
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       {/* Top bar */}
       <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center justify-between">
-        <div>
-          <p className="font-arabic text-white text-xl font-bold">My Maqtab</p>
-          <p className="text-sand text-xs">Assalamu Alaikum, {user?.name}</p>
+        <div className="flex items-center gap-2">
+          <Logo size={34} ring={false} />
+          <div>
+            <p className="font-arabic text-white text-xl font-bold leading-tight">Islam Seekho</p>
+            <p className="text-sand text-xs">{tGreet}, {user?.name}</p>
+          </div>
         </div>
         <button
           onClick={() => navigate('/settings')}
@@ -71,11 +81,9 @@ export function HomePage() {
         )}
 
         {/* Menu grid */}
-        <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">
-          What would you like to learn?
-        </p>
+        <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">{tPrompt}</p>
         <div className="grid grid-cols-2 gap-3">
-          {MENU_ITEMS.map((item) => (
+          {MENU_ITEMS.map((item, idx) => (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
@@ -85,8 +93,8 @@ export function HomePage() {
               <div className="w-8 h-8 rounded-xl bg-sand flex items-center justify-center text-base mb-2">
                 {item.icon}
               </div>
-              <p className="text-sm font-bold text-teal-900">{item.title}</p>
-              <p className="text-xs text-ink-muted mt-0.5">{item.sub}</p>
+              <p className="text-sm font-bold text-teal-900">{titles[idx]}</p>
+              <p className="text-xs text-ink-muted mt-0.5">{subs[idx]}</p>
             </button>
           ))}
         </div>

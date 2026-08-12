@@ -7,12 +7,18 @@ import { RefChips } from '../../components/RefChips'
 import { getAdaab, MASLAK } from '../../content/adaab'
 import { itemsForGender } from '../../content/guide'
 import { useAppStore } from '../../store/appStore'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 export function AdaabDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const gender = useAppStore((s) => s.user?.gender)
   const topic = slug ? getAdaab(slug) : undefined
+
+  const items = topic ? itemsForGender(topic.items, gender) : []
+  const trItems = useTrList(items.map((i) => i.text))
+  const tIntro = useTr(topic?.intro ?? '')
+  const tAsk = useTr('Ask Ulema')
 
   if (!topic) {
     return (
@@ -24,8 +30,6 @@ export function AdaabDetailPage() {
     )
   }
 
-  const items = itemsForGender(topic.items, gender)
-
   return (
     <div className="bg-cream min-h-screen pb-44">
       <PageHeader title={topic.title} subtitle={topic.arabic} backTo="/adaab" />
@@ -33,7 +37,7 @@ export function AdaabDetailPage() {
       <div className="px-4 pt-4">
         <GuideDisclaimer maslak={MASLAK} />
 
-        {topic.intro && <p className="text-sm text-ink-muted mb-3">{topic.intro}</p>}
+        {topic.intro && <p className="text-sm text-ink-muted mb-3">{tIntro}</p>}
 
         <div className="bg-white border border-border rounded-2xl p-4">
           <ol className="space-y-3">
@@ -47,7 +51,7 @@ export function AdaabDetailPage() {
                         {item.gender === 'female' ? '♀ Women' : '♂ Men'}
                       </span>
                     )}
-                    {item.text}
+                    {trItems[i] ?? item.text}
                   </p>
                   <RefChips refs={item.refs} />
                 </div>
@@ -59,24 +63,12 @@ export function AdaabDetailPage() {
 
       {/* Always-visible action bar */}
       <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3">
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() =>
-              navigate(
-                `/masail?q=${encodeURIComponent(`According to Hanafi fiqh, the adaab of ${topic.title}: `)}`
-              )
-            }
-            className="flex items-center justify-center gap-1.5 bg-gold text-teal-900 text-xs font-bold rounded-xl py-2.5"
-          >
-            🤖 Ask Masail AI
-          </button>
-          <button
-            onClick={() => navigate('/ulema')}
-            className="flex items-center justify-center gap-1.5 bg-white border border-teal-700 text-teal-900 text-xs font-bold rounded-xl py-2.5"
-          >
-            🕌 Connect Ulema
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/masail')}
+          className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"
+        >
+          🕌 {tAsk}
+        </button>
       </div>
 
       <BottomNav />

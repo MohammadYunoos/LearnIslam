@@ -1,64 +1,88 @@
 // src/pages/Wajifa/WajifaListPage.tsx
-import { useEffect, useState } from 'react'
+// Masnoon Dua & Zikr — two parts: masnoon duas (read) and zikr (counter).
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
-import { getWajifaCategories } from '../../services/supabaseService'
-
-interface Category {
-  id: number
-  name: string
-  arabic_text?: string
-  description?: string
-  target_count?: number
-  icon?: string
-}
+import { MASNOON_DUAS, ZIKR } from '../../content/masnoon'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 export function WajifaListPage() {
   const navigate = useNavigate()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    getWajifaCategories().then((data) => {
-      setCategories(data as Category[])
-      setLoading(false)
-    })
-  }, [])
+  const [tab, setTabState] = useState<'duas' | 'zikr'>(
+    () => (localStorage.getItem('mymaqtab_wajifa_tab') as 'duas' | 'zikr') || 'duas'
+  )
+  const setTab = (t: 'duas' | 'zikr') => {
+    localStorage.setItem('mymaqtab_wajifa_tab', t)
+    setTabState(t)
+  }
+  const duaTitles = useTrList(MASNOON_DUAS.map((d) => d.title))
+  const duaMeanings = useTrList(MASNOON_DUAS.map((d) => d.meaning))
+  const zikrTitles = useTrList(ZIKR.map((z) => z.title))
+  const tDuasTab = useTr('Masnoon Duas')
+  const tZikrTab = useTr('Zikr & Wajifa')
+  const tHint = useTr('Tap any zikr to open the counter for your daily wird.')
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title="Wajifa" subtitle="Tasbih and duas" backTo="/home" />
+      <PageHeader title="Masnoon Dua & Zikr" subtitle="Duas · Kalimas · Tasbih" backTo="/home" />
 
       <div className="px-4 pt-4">
-        {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}
-
-        {!loading && categories.length === 0 && (
-          <p className="text-ink-muted text-sm text-center py-8">No wajifa categories found.</p>
-        )}
-
-        <div className="grid grid-cols-2 gap-3">
-          {categories.map((cat) => (
+        {/* Tabs */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {(['duas', 'zikr'] as const).map((t) => (
             <button
-              key={cat.id}
-              onClick={() => navigate(`/wajifa/${cat.id}`)}
-              className="bg-white border border-border rounded-2xl p-4 text-left active:scale-95 transition-transform"
+              key={t}
+              onClick={() => setTab(t)}
+              className={`rounded-xl py-2.5 text-sm font-bold border ${
+                tab === t
+                  ? 'bg-teal-900 text-white border-teal-900'
+                  : 'bg-white text-ink-muted border-border'
+              }`}
             >
-              <div className="w-9 h-9 rounded-xl bg-sand flex items-center justify-center text-lg mb-2">
-                {cat.icon ?? '🤲'}
-              </div>
-              <p className="text-sm font-bold text-teal-900">{cat.name}</p>
-              {cat.arabic_text && (
-                <p className="font-arabic text-base text-ink mt-0.5">{cat.arabic_text}</p>
-              )}
-              {cat.target_count ? (
-                <p className="text-xs text-gold-dark font-semibold mt-1">
-                  Target: {cat.target_count}×
-                </p>
-              ) : null}
+              {t === 'duas' ? `🤲 ${tDuasTab}` : `📿 ${tZikrTab}`}
             </button>
           ))}
         </div>
+
+        {tab === 'duas' && (
+          <div className="space-y-3">
+            {MASNOON_DUAS.map((d, idx) => (
+              <div key={d.slug} className="bg-white border border-border rounded-2xl p-4">
+                <p className="text-xs font-bold text-gold-dark uppercase tracking-wide mb-2">
+                  {duaTitles[idx]}
+                </p>
+                <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-2">
+                  {d.arabic}
+                </p>
+                <p className="text-sm italic text-gold-dark leading-relaxed mb-1">{d.translit}</p>
+                <p className="text-sm text-ink leading-relaxed">{duaMeanings[idx]}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === 'zikr' && (
+          <div className="space-y-3">
+            <p className="text-xs text-ink-muted mb-1">{tHint}</p>
+            {ZIKR.map((z, idx) => (
+              <button
+                key={z.slug}
+                onClick={() => navigate(`/wajifa/${z.slug}`)}
+                className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+              >
+                <div className="w-11 h-11 rounded-xl bg-sand flex items-center justify-center text-lg shrink-0">
+                  📿
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-teal-900">{zikrTitles[idx]}</p>
+                  <p className="font-arabic text-base text-ink truncate">{z.arabic}</p>
+                </div>
+                <span className="text-xs font-bold text-gold-dark shrink-0">×{z.target}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <BottomNav />

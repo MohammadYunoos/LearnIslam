@@ -22,9 +22,25 @@ const app = new Hono().basePath('/api')
 
 app.use('*', cors({ origin: '*', allowHeaders: ['Content-Type', 'Authorization', 'apikey', 'x-user-id'] }))
 
-// Resolve the acting user id. Alpha: header/body/query. Prod: replace with JWT sub.
+// Extract the authenticated user id from the Supabase JWT (role=authenticated).
+function jwtSub(c: any): string | null {
+  const auth = c.req.header('Authorization') || ''
+  const token = auth.replace(/^Bearer\s+/i, '')
+  if (!token || token.split('.').length !== 3) return null
+  try {
+    const payload = JSON.parse(
+      atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+    )
+    if (payload.role === 'authenticated' && payload.sub) return payload.sub as string
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Resolve the acting user id: signed-in JWT first, then guest header/body/query.
 function uid(c: any, bodyUserId?: string): string | null {
-  return bodyUserId || c.req.query('userId') || c.req.header('x-user-id') || null
+  return jwtSub(c) || bodyUserId || c.req.query('userId') || c.req.header('x-user-id') || null
 }
 
 async function sha256(text: string): Promise<string> {
@@ -96,6 +112,101 @@ app.get('/hifz/surahs', async (c) => {
 app.get('/wajifa/categories', async (c) => {
   const { data } = await supabase.from('wajifa_categories').select('*').order('id')
   return c.json(data ?? [])
+})
+
+// ── ISLAMIC Q&A (volumes) ───────────────────────────────
+app.get('/qa/volumes', async (c) => {
+  const { data } = await supabase
+    .from('qa_volumes')
+    .select('id, volume_no, title, sort_order')
+    .order('sort_order')
+    .order('volume_no')
+  return c.json(data ?? [])
+})
+
+app.get('/qa/volume/:id', async (c) => {
+  const { data } = await supabase
+    .from('qa_volumes')
+    .select('*')
+    .eq('id', c.req.param('id'))
+    .single()
+  return c.json(data)
+})
+
+// ── TRANSLATE (Google free endpoint + DB cache) ─────────
+app.post('/translate', async (c) => {
+  const { texts, target } = await c.req.json()
+  const list: string[] = Array.isArray(texts) ? texts : []
+  const tl = String(target || 'en')
+  if (!list.length || tl === 'en') return c.json({ translations: list })
+
+  const out: string[] = new Array(list.length)
+  const misses: { i: number; text: string; hash: string }[] = []
+
+  for (let i = 0; i < list.length; i++) {
+    const text = list[i] ?? ''
+    if (!text.trim()) {
+      out[i] = text
+      continue
+    }
+    const hash = await sha256(tl + '|' + text)
+    const { data } = await supabase
+      .from('translations')
+      .select('translated_text')
+      .eq('hash', hash)
+      .single()
+    if (data?.translated_text != null) out[i] = data.translated_text
+    else misses.push({ i, text, hash })
+  }
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+  // Translate one text with retry/backoff to survive the free endpoint's rate limits.
+  async function gtx(text: string): Promise<string | null> {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const res = await fetch(
+          `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
+            tl
+          )}&dt=t`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
+            body: 'q=' + encodeURIComponent(text),
+          }
+        )
+        if (res.status === 429 || res.status >= 500) {
+          await sleep(400 * (attempt + 1))
+          continue
+        }
+        const json = await res.json()
+        const t = (json?.[0] ?? []).map((seg: any[]) => seg?.[0] ?? '').join('')
+        if (t) return t
+      } catch {
+        /* retry */
+      }
+      await sleep(250)
+    }
+    return null
+  }
+
+  for (const m of misses) {
+    const t = await gtx(m.text)
+    if (t) {
+      out[m.i] = t
+      await supabase.from('translations').insert({
+        hash: m.hash,
+        target_lang: tl,
+        source_text: m.text,
+        translated_text: t,
+      })
+    } else {
+      out[m.i] = m.text // leave English; NOT cached, so it retries next time
+    }
+    await sleep(120) // gentle spacing between calls
+  }
+
+  return c.json({ translations: out })
 })
 
 // ── PROFILE ─────────────────────────────────────────────

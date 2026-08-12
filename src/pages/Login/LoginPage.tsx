@@ -1,12 +1,20 @@
 // src/pages/Login/LoginPage.tsx
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { loginWithName } from '../../services/authService'
+import { useEffect, useState } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { signInWithGoogle, continueAsGuest, saveProfile } from '../../services/authService'
 import { useAppStore } from '../../store/appStore'
+import { Logo } from '../../components/Logo'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const user = useAppStore((s) => s.user)
+  const needsProfile = useAppStore((s) => s.needsProfile)
   const setUser = useAppStore((s) => s.setUser)
+  const setNeedsProfile = useAppStore((s) => s.setNeedsProfile)
+
+  // Google users land here with a session but no profile → complete profile.
+  const isGoogle = !!(user && needsProfile)
+
   const [step, setStep] = useState<'name' | 'profile' | 'done'>('name')
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
@@ -16,7 +24,30 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleContinue = () => {
+  // Already fully signed in → render a redirect (no login flash).
+  const alreadyIn = !!(user && !needsProfile)
+
+  // Google sign-in complete → jump straight to the profile step, prefill name.
+  useEffect(() => {
+    if (isGoogle) {
+      setStep('profile')
+      setName((n) => n || user!.name)
+    }
+  }, [isGoogle, user])
+
+  const handleGoogle = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      await signInWithGoogle()
+      // Web redirects away; native opens the browser and returns via deep link.
+    } catch {
+      setError('Google sign-in failed. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  const handleContinueGuest = () => {
     if (!name.trim()) {
       setError('Please enter your name')
       return
@@ -25,13 +56,20 @@ export function LoginPage() {
     setStep('profile')
   }
 
-  const handleLogin = async () => {
+  const handleSubmitProfile = async () => {
     setLoading(true)
     try {
-      const user = await loginWithName(name, parseInt(age) || 20, gender, madhab, lang)
-      setUser(user)
-      setStep('done')
-      setTimeout(() => navigate('/home'), 1000)
+      if (isGoogle && user) {
+        const u = await saveProfile(user.id, name || user.name, parseInt(age) || 20, gender, madhab, lang)
+        setUser(u)
+        setNeedsProfile(false)
+        navigate('/home', { replace: true })
+      } else {
+        const u = await continueAsGuest(name, parseInt(age) || 20, gender, madhab, lang)
+        setUser(u)
+        setStep('done')
+        setTimeout(() => navigate('/home'), 1000)
+      }
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -39,21 +77,16 @@ export function LoginPage() {
     }
   }
 
+  if (alreadyIn) return <Navigate to="/home" replace />
+
   return (
     <div className="min-h-screen bg-cream flex flex-col">
       {/* Hero header */}
       <div className="bg-teal-900 px-6 pt-12 pb-16 text-center">
-        <svg className="w-14 h-14 mx-auto mb-3" viewBox="0 0 100 100">
-          <polygon
-            points="50,5 61,38 96,38 67,59 78,92 50,71 22,92 33,59 4,38 39,38"
-            fill="none"
-            stroke="#C8962C"
-            strokeWidth="3"
-          />
-        </svg>
-        <h1 className="font-arabic text-3xl font-bold text-white">My Maqtab</h1>
+        <Logo size={56} className="mx-auto mb-3" />
+        <h1 className="font-arabic text-3xl font-bold text-white">Islam Seekho</h1>
         <p className="text-sand text-xs mt-1 tracking-widest uppercase">
-          Begin your learning journey
+          Learn Islam · Begin your journey
         </p>
       </div>
 
@@ -61,37 +94,41 @@ export function LoginPage() {
       <div className="bg-white mx-5 -mt-6 rounded-2xl shadow-lg px-5 py-6 relative z-10">
         {step === 'name' && (
           <>
-            <p className="text-ink-muted text-sm mb-4 leading-relaxed">
-              Enter your name to get started. No password needed.
-            </p>
+            <button
+              onClick={handleGoogle}
+              disabled={loading}
+              className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <span className="bg-white text-teal-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                G
+              </span>
+              {loading ? 'Please wait…' : 'Continue with Google'}
+            </button>
+
+            <div className="flex items-center gap-2 my-4">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[11px] text-ink-muted uppercase tracking-wide">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
             <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
-              Your name
+              Continue as guest
             </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Ahmed Khan"
-              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-4"
+              placeholder="Your name (e.g. Ahmed Khan)"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3"
             />
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button
-              onClick={handleContinue}
+              onClick={handleContinueGuest}
               className="w-full bg-gold text-teal-900 font-bold rounded-xl py-3 text-sm"
             >
-              Continue →
+              Continue as guest →
             </button>
-            <div className="flex items-center gap-2 my-4">
-              <div className="flex-1 h-px bg-border" />
-              <svg width="14" height="14" viewBox="0 0 100 100">
-                <polygon
-                  points="50,5 61,38 96,38 67,59 78,92 50,71 22,92 33,59 4,38 39,38"
-                  fill="#C8962C"
-                />
-              </svg>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <p className="text-xs text-ink-muted text-center">
-              No account needed · No password · Free to use
+            <p className="text-xs text-ink-muted text-center mt-4">
+              Guest data stays on this device. Sign in with Google to sync your progress.
             </p>
           </>
         )}
@@ -102,7 +139,7 @@ export function LoginPage() {
               Welcome {name}! A few details.
             </p>
             <p className="text-ink-muted text-xs mb-4 leading-relaxed">
-              This helps us show the correct rulings for your school of thought.
+              This helps us show the correct rulings and content for you.
             </p>
 
             <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
@@ -172,7 +209,7 @@ export function LoginPage() {
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button
-              onClick={handleLogin}
+              onClick={handleSubmitProfile}
               disabled={loading}
               className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm disabled:opacity-60"
             >
@@ -184,9 +221,7 @@ export function LoginPage() {
         {step === 'done' && (
           <div className="text-center py-6">
             <div className="text-4xl mb-3">✅</div>
-            <h3 className="font-arabic text-teal-900 text-xl font-bold mb-1">
-              Ahlan wa Sahlan!
-            </h3>
+            <h3 className="font-arabic text-teal-900 text-xl font-bold mb-1">Ahlan wa Sahlan!</h3>
             <p className="text-ink-muted text-sm">Taking you to your home page...</p>
           </div>
         )}

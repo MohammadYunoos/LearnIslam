@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { getMaqtabChapters, getMaqtabProgress } from '../../services/supabaseService'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 interface Lesson {
   id: string
@@ -14,6 +15,17 @@ interface Lesson {
   sort_order: number
   level: string
   lesson_num: number
+}
+
+// Chapter titles (no column in the DB). Keyed by "level-chapter".
+const CHAPTER_TITLES: Record<string, string> = {
+  'Beginner-1': 'Foundations of Iman',
+  'Beginner-2': 'Taharah — Purification',
+  'Beginner-3': 'Salah — Prayer',
+}
+
+function chapterTitle(level: string, chapter: number): string {
+  return CHAPTER_TITLES[`${level}-${chapter}`] ?? ''
 }
 
 export function MaqtabPage() {
@@ -38,9 +50,13 @@ export function MaqtabPage() {
 
   const completedCount = lessons.filter((l) => done.has(l.id)).length
 
-  // Group: Level → Chapter → lessons (keep sort_order within each).
+  // Group: Level → Chapter → lessons. sort_order repeats per chapter, so order
+  // by chapter number then lesson number.
+  const ordered = [...lessons].sort(
+    (a, b) => a.chapter_num - b.chapter_num || a.lesson_num - b.lesson_num || a.sort_order - b.sort_order
+  )
   const levels: { level: string; chapters: { chapter: number; lessons: Lesson[] }[] }[] = []
-  for (const l of [...lessons].sort((a, b) => a.sort_order - b.sort_order)) {
+  for (const l of ordered) {
     let lvl = levels.find((x) => x.level === l.level)
     if (!lvl) {
       lvl = { level: l.level || 'Lessons', chapters: [] }
@@ -54,6 +70,26 @@ export function MaqtabPage() {
     ch.lessons.push(l)
   }
 
+  const tOverall = useTr('Overall progress')
+  const tChapter = useTr('Chapter')
+  const tLesson = useTr('Lesson')
+  const tMin = useTr('min')
+  const tLoading = useTr('Loading lessons…')
+  const tNone = useTr('No lessons found. Check your Supabase content.')
+  const lessonTitles = useTrList(lessons.map((l) => l.title))
+  const titleMap = new Map(lessons.map((l, i) => [l.title, lessonTitles[i]]))
+  const levelNames = useTrList(levels.map((l) => l.level))
+  const levelMap = new Map(levels.map((l, i) => [l.level, levelNames[i]]))
+  const chapLabels = levels.flatMap((lvl) =>
+    lvl.chapters.map((ch) => chapterTitle(lvl.level, ch.chapter)).filter(Boolean)
+  )
+  const trChap = useTrList(chapLabels)
+  const chapMap = new Map(chapLabels.map((t, i) => [t, trChap[i]]))
+  const chapLabel = (level: string, chapter: number) => {
+    const en = chapterTitle(level, chapter)
+    return en ? chapMap.get(en) ?? en : ''
+  }
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       <PageHeader title="Maqtab" subtitle="Your learning journey" backTo="/home" />
@@ -62,7 +98,7 @@ export function MaqtabPage() {
         {lessons.length > 0 && (
           <div className="bg-white border border-border rounded-2xl p-4 mb-4">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-semibold text-teal-900">Overall progress</p>
+              <p className="text-sm font-semibold text-teal-900">{tOverall}</p>
               <p className="text-xs font-bold text-gold-dark">
                 {completedCount} / {lessons.length}
               </p>
@@ -78,12 +114,10 @@ export function MaqtabPage() {
           </div>
         )}
 
-        {loading && <p className="text-ink-muted text-sm text-center py-8">Loading lessons…</p>}
+        {loading && <p className="text-ink-muted text-sm text-center py-8">{tLoading}</p>}
 
         {!loading && lessons.length === 0 && (
-          <p className="text-ink-muted text-sm text-center py-8">
-            No lessons found. Check your Supabase content.
-          </p>
+          <p className="text-ink-muted text-sm text-center py-8">{tNone}</p>
         )}
 
         {levels.map((lvl) => (
@@ -91,7 +125,7 @@ export function MaqtabPage() {
             {/* Level */}
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1 uppercase tracking-wide">
-                {lvl.level}
+                {levelMap.get(lvl.level) ?? lvl.level}
               </span>
               <div className="flex-1 h-px bg-border" />
             </div>
@@ -99,7 +133,10 @@ export function MaqtabPage() {
             {lvl.chapters.map((ch) => (
               <div key={ch.chapter} className="mb-4">
                 {/* Chapter */}
-                <p className="text-sm font-bold text-gold-dark mb-2 pl-1">Chapter {ch.chapter}</p>
+                <p className="text-sm font-bold text-gold-dark mb-2 pl-1">
+                  {tChapter} {ch.chapter}
+                  {chapLabel(lvl.level, ch.chapter) ? ` · ${chapLabel(lvl.level, ch.chapter)}` : ''}
+                </p>
                 <div className="space-y-2">
                   {ch.lessons.map((lesson) => {
                     const isDone = done.has(lesson.id)
@@ -118,11 +155,11 @@ export function MaqtabPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-teal-900 truncate">
-                            {lesson.title}
+                            {titleMap.get(lesson.title) ?? lesson.title}
                           </p>
                           <p className="text-xs text-ink-muted">
-                            Lesson {lesson.lesson_num}
-                            {lesson.duration_min ? ` · ${lesson.duration_min} min` : ''}
+                            {tLesson} {lesson.lesson_num}
+                            {lesson.duration_min ? ` · ${lesson.duration_min} ${tMin}` : ''}
                           </p>
                         </div>
                         <span className="text-gold-dark text-lg">›</span>

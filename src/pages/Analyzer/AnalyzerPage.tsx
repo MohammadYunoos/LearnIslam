@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { getAnalyzerSummary } from '../../services/supabaseService'
+import { useTrList } from '../../i18n/useTr'
 
 interface Summary {
   hifzBasicCompleted: number
@@ -27,6 +28,15 @@ export function AnalyzerPage() {
   const user = useAppStore((s) => s.user)
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
+  const L = useTrList([
+    'You have a surah in progress that has not been revised in 5+ days. Time for a quick revision!',
+    'Day streak',
+    'Lessons completed',
+    'Basic Hifz done',
+    'Recent activities',
+    'Recent activity',
+    'No activity yet. Start a lesson!',
+  ])
 
   useEffect(() => {
     if (!user) return
@@ -48,31 +58,24 @@ export function AnalyzerPage() {
             {summary.staleSurahId != null && (
               <div className="bg-gold/15 border border-gold rounded-2xl p-4 mb-4 flex items-start gap-3">
                 <span className="text-xl">⏰</span>
-                <p className="text-sm text-gold-dark font-medium">
-                  You have a surah in progress that has not been revised in 5+ days. Time for a
-                  quick revision!
-                </p>
+                <p className="text-sm text-gold-dark font-medium">{L[0]}</p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <Stat value={`${summary.streakDays} 🔥`} label="Day streak" />
-              <Stat value={summary.lessonsCompleted} label="Lessons completed" />
+              <Stat value={`${summary.streakDays} 🔥`} label={L[1]} />
+              <Stat value={summary.lessonsCompleted} label={L[2]} />
               <Stat
                 value={`${summary.hifzBasicCompleted}/${summary.hifzBasicTotal}`}
-                label="Basic Hifz done"
+                label={L[3]}
               />
-              <Stat value={summary.recentEvents.length} label="Recent activities" />
+              <Stat value={summary.recentEvents.length} label={L[4]} />
             </div>
 
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">
-              Recent activity
-            </p>
+            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">{L[5]}</p>
             <div className="bg-white border border-border rounded-2xl divide-y divide-border">
               {summary.recentEvents.length === 0 && (
-                <p className="text-sm text-ink-muted p-4 text-center">
-                  No activity yet. Start a lesson!
-                </p>
+                <p className="text-sm text-ink-muted p-4 text-center">{L[6]}</p>
               )}
               {summary.recentEvents.map((e, i) => (
                 <div key={i} className="flex justify-between items-center px-4 py-3">

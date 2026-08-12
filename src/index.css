@@ -8,7 +8,27 @@ body,
   margin: 0;
   min-height: 100%;
   background: #faf6ec;
-  font-family: 'Inter', system-ui, sans-serif;
+  /* Latin → Inter; Urdu/Arabic script falls back to Nastaliq. */
+  font-family: 'Inter', 'Noto Nastaliq Urdu', system-ui, sans-serif;
+}
+
+/* Urdu mode: Nastaliq legibility + RTL alignment */
+.lang-ur {
+  line-height: 2.1;
+}
+.lang-ur .text-left {
+  text-align: right !important;
+}
+html[dir='rtl'] .qa-content .qa-q,
+html[dir='rtl'] .qa-content .qa-a {
+  border-left: none;
+  border-right: 4px solid;
+}
+html[dir='rtl'] .qa-content .qa-q {
+  border-right-color: #1b5e52;
+}
+html[dir='rtl'] .qa-content .qa-a {
+  border-right-color: #c8962c;
 }
 
 /* Keep the app centred on wide screens; full width on phones */
@@ -30,4 +50,169 @@ body,
 }
 .step-enter {
   animation: stepEnter 0.35s ease-out;
+}
+
+/* Islamic Q&A — rendered .docx content */
+.docx-content h1,
+.docx-content h2,
+.docx-content h3 {
+  color: #0e3b36;
+  font-weight: 700;
+  margin: 0.8em 0 0.3em;
+  line-height: 1.3;
+}
+.docx-content h1 {
+  font-size: 1.15rem;
+}
+.docx-content h2 {
+  font-size: 1.05rem;
+}
+.docx-content h3 {
+  font-size: 1rem;
+}
+.docx-content p {
+  margin: 0 0 0.7em;
+}
+.docx-content ul,
+.docx-content ol {
+  margin: 0 0 0.7em 1.2em;
+  list-style: revert;
+}
+.docx-content li {
+  margin-bottom: 0.3em;
+}
+.docx-content strong {
+  color: #1f2a28;
+}
+.docx-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.7em 0;
+}
+.docx-content td,
+.docx-content th {
+  border: 1px solid #e3d9be;
+  padding: 6px 8px;
+}
+
+/* Islamic Q&A — premium reading style */
+.qa-content {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #2c2a24;
+}
+.qa-content h1,
+.qa-content h2,
+.qa-content h3 {
+  font-family: Georgia, 'Amiri', serif;
+  color: #0e3b36;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.1em 0 0.4em;
+}
+.qa-content h1 {
+  font-size: 1.4rem;
+  text-align: center;
+  margin-top: 0.2em;
+}
+.qa-content h2 {
+  font-size: 1.15rem;
+  border-bottom: 2px solid #e3d9be;
+  padding-bottom: 0.25em;
+}
+.qa-content h3 {
+  font-size: 1.02rem;
+  color: #1b5e52;
+}
+.qa-content p {
+  margin: 0 0 0.85em;
+  line-height: 1.85;
+  font-size: 0.95rem;
+  letter-spacing: 0.1px;
+}
+.qa-content strong {
+  color: #9c7320;
+  font-weight: 700;
+}
+.qa-content em {
+  color: #1b5e52;
+  font-style: italic;
+}
+.qa-content ul,
+.qa-content ol {
+  margin: 0 0 0.9em 1.3em;
+  list-style: revert;
+  line-height: 1.8;
+}
+.qa-content li {
+  margin-bottom: 0.35em;
+}
+.qa-content blockquote {
+  margin: 0.9em 0;
+  padding: 0.6em 1em;
+  background: #f3ecd9;
+  border-left: 4px solid #c8962c;
+  border-radius: 8px;
+  color: #4a4230;
+  font-style: italic;
+}
+.qa-content hr {
+  border: none;
+  border-top: 1px solid #e3d9be;
+  margin: 1.3em 0;
+}
+.qa-content a {
+  color: #1b5e52;
+  text-decoration: underline;
+}
+.qa-content code {
+  background: #f3ecd9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+/* Section header — teal banner, gold serif */
+.qa-content .qa-sec {
+  background: #0e3b36;
+  border-radius: 10px;
+  margin: 1.4em 0 0.9em;
+  padding: 0.7em 1em;
+}
+.qa-content .qa-sec p,
+.qa-content .qa-sec h1,
+.qa-content .qa-sec h2,
+.qa-content .qa-sec h3 {
+  margin: 0;
+  color: #e9c877;
+  font-family: Georgia, 'Amiri', serif;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.5px;
+  border: none;
+}
+/* Question block — teal */
+.qa-content .qa-q {
+  background: #e8f0ee;
+  border-left: 4px solid #1b5e52;
+  padding: 0.55em 0.85em;
+  border-radius: 8px;
+  margin: 1.1em 0 0.35em;
+}
+.qa-content .qa-q p {
+  margin: 0;
+  color: #0e3b36;
+  font-weight: 700;
+  line-height: 1.6;
+}
+/* Answer block — gold/warm (spans multiple paragraphs) */
+.qa-content .qa-a {
+  background: #fbf6e9;
+  border-left: 4px solid #c8962c;
+  padding: 0.55em 0.85em 0.2em;
+  border-radius: 8px;
+  margin: 0 0 1.1em;
+}
+.qa-content .qa-a p {
+  margin: 0 0 0.55em;
+  color: #3a352b;
+  line-height: 1.8;
 }

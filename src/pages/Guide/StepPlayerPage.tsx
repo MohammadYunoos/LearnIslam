@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { getTopic, itemsForGender } from '../../content/guide'
 import { useNarration } from '../../hooks/useNarration'
 import { useAppStore } from '../../store/appStore'
+import { supabase } from '../../lib/supabase'
 
 export function StepPlayerPage() {
   const { slug } = useParams()
@@ -12,7 +13,12 @@ export function StepPlayerPage() {
   const topic = slug ? getTopic(slug) : undefined
   const steps = itemsForGender(topic?.steps ?? [], gender)
   const [index, setIndex] = useState(0)
+  const [imgError, setImgError] = useState(false)
   const narration = useNarration()
+
+  useEffect(() => {
+    setImgError(false) // reset when the step changes
+  }, [index])
 
   const step = steps[index]
 
@@ -37,6 +43,11 @@ export function StepPlayerPage() {
 
   const atStart = index === 0
   const atEnd = index === steps.length - 1
+  const imgUrl =
+    step.animationUrl ||
+    (step.image
+      ? supabase.storage.from('LearnIslam').getPublicUrl(step.image).data.publicUrl
+      : null)
 
   return (
     <div className="bg-cream min-h-screen flex flex-col">
@@ -73,19 +84,28 @@ export function StepPlayerPage() {
         </h2>
       </div>
 
-      {/* Animation frame */}
+      {/* Animation / image frame */}
       <div className="px-4 pt-3 flex-1 flex flex-col items-center">
-        <div className="relative w-56 h-56 flex items-center justify-center">
-          <span className="absolute inset-0 rounded-full bg-sand animate-ping opacity-40" />
-          <span className="absolute inset-4 rounded-full bg-white border border-border" />
-          {/* key remounts the frame so the entrance animation replays each step */}
-          <div key={index} className="step-enter relative text-7xl">
-            {step.icon ?? '🕌'}
+        {imgUrl && !imgError ? (
+          <div
+            key={index}
+            className="step-enter w-60 h-64 rounded-2xl overflow-hidden bg-white border border-gold/30 shadow-md flex items-center justify-center"
+          >
+            <img
+              src={imgUrl}
+              alt={step.title}
+              className="w-full h-full object-contain"
+              onError={() => setImgError(true)}
+            />
           </div>
-        </div>
-
-        {step.animationUrl && (
-          <img src={step.animationUrl} alt="" className="w-56 h-56 object-contain -mt-56" />
+        ) : (
+          <div className="relative w-56 h-56 flex items-center justify-center">
+            <span className="absolute inset-0 rounded-full bg-sand animate-ping opacity-40" />
+            <span className="absolute inset-4 rounded-full bg-white border border-border" />
+            <div key={index} className="step-enter relative text-7xl">
+              {step.icon ?? '🕌'}
+            </div>
+          </div>
         )}
 
         <div className="mt-6 text-center px-2">

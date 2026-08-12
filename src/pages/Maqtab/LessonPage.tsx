@@ -1,10 +1,11 @@
 // src/pages/Maqtab/LessonPage.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { PageHeader } from '../../components/PageHeader'
 import { getLessonContent } from '../../services/supabaseService'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 interface Lesson {
   id: string
@@ -31,6 +32,30 @@ export function LessonPage() {
   }, [lessonId])
 
   const body = lesson?.content_md ?? lesson?.content ?? ''
+  const blocks = useMemo(() => {
+    const raw = body.split(/\n{2,}/)
+    const out: string[] = []
+    for (const b of raw) {
+      if (b.length <= 1500) {
+        out.push(b)
+        continue
+      }
+      // Split oversized blocks by sentence so each translate call stays small.
+      let cur = ''
+      for (const s of b.split(/(?<=[.!?۔])\s+/)) {
+        if (cur && cur.length + s.length > 1500) {
+          out.push(cur)
+          cur = ''
+        }
+        cur += (cur ? ' ' : '') + s
+      }
+      if (cur) out.push(cur)
+    }
+    return out
+  }, [body])
+  const trBlocks = useTrList(blocks)
+  const trBody = trBlocks.join('\n\n')
+  const tQuiz = useTr('Take the quiz')
 
   return (
     <div className="bg-cream min-h-screen pb-28">
@@ -40,14 +65,14 @@ export function LessonPage() {
         {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}
 
         {!loading && lesson && (
-          <div className="bg-white border border-border rounded-2xl p-5">
+          <div className="rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6">
             {lesson.arabic_text && (
-              <p className="font-arabic text-2xl text-teal-900 leading-relaxed text-right mb-4">
+              <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-4">
                 {lesson.arabic_text}
               </p>
             )}
-            <div className="prose-maqtab text-sm text-ink leading-relaxed space-y-3">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+            <div className="qa-content">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{trBody}</ReactMarkdown>
             </div>
           </div>
         )}
@@ -60,7 +85,7 @@ export function LessonPage() {
             onClick={() => navigate(`/maqtab/${lessonId}/quiz`)}
             className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"
           >
-            Take the quiz →
+            {tQuiz} →
           </button>
         </div>
       )}

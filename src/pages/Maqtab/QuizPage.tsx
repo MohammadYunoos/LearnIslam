@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { useAppStore } from '../../store/appStore'
 import { getQuiz, completeLesson } from '../../services/supabaseService'
+import { useTrList } from '../../i18n/useTr'
 
 interface RawQuiz {
   id: string
@@ -120,16 +121,42 @@ export function QuizPage() {
 
   const allCorrect = total > 0 && score === total
 
+  const L = useTrList([
+    'Loading quiz…', // 0
+    'No quiz for this lesson yet.', // 1
+    'Back to Maqtab', // 2
+    'Lesson completed', // 3
+    'Saving progress…', // 4
+    'Submit answers', // 5
+    'Try again', // 6
+    'Back', // 7
+    'Finish → Back to Maqtab', // 8
+    'Mashallah!', // 9
+    'Good job — all answers correct!', // 10
+    'Alhamdulillah, continue →', // 11
+    'Review answers', // 12
+    'correct', // 13
+  ])
+  const qTexts = useTrList(questions.map((q) => q.question))
+  const qMap = new Map(questions.map((q, i) => [q.question, qTexts[i]]))
+  const optList = questions.flatMap((q) => q.options)
+  const trOpt = useTrList(optList)
+  const optMap = new Map(optList.map((o, i) => [o, trOpt[i]]))
+  const explList = questions.map((q) => q.explanation ?? '')
+  const trExpl = useTrList(explList)
+  const explMap = new Map(explList.map((e, i) => [e, trExpl[i]]))
+
   const handleSubmit = async () => {
     setSubmitted(true)
+    // Only mark the lesson completed when every answer is correct.
     if (allCorrect) {
       playCelebration()
       setCelebrate(true)
-    }
-    if (user && lessonId) {
-      setSaving(true)
-      await completeLesson(user.id, lessonId, percent)
-      setSaving(false)
+      if (user && lessonId) {
+        setSaving(true)
+        await completeLesson(user.id, lessonId, percent)
+        setSaving(false)
+      }
     }
   }
 
@@ -138,16 +165,16 @@ export function QuizPage() {
       <PageHeader title="Quiz" backTo={`/maqtab/${lessonId}`} />
 
       <div className="px-4 pt-4 space-y-4">
-        {loading && <p className="text-ink-muted text-sm text-center py-8">Loading quiz…</p>}
+        {loading && <p className="text-ink-muted text-sm text-center py-8">{L[0]}</p>}
 
         {!loading && total === 0 && (
           <div className="bg-white border border-border rounded-2xl p-5 text-center">
-            <p className="text-sm text-ink-muted mb-4">No quiz for this lesson yet.</p>
+            <p className="text-sm text-ink-muted mb-4">{L[1]}</p>
             <button
               onClick={() => navigate('/maqtab')}
               className="bg-teal-900 text-white font-bold rounded-xl py-2.5 px-6 text-sm"
             >
-              Back to Maqtab
+              {L[2]}
             </button>
           </div>
         )}
@@ -156,21 +183,21 @@ export function QuizPage() {
           <div className="bg-white border-t-4 border-gold rounded-2xl p-5 text-center">
             <p className="text-3xl font-bold text-teal-900">{percent}%</p>
             <p className="text-sm text-ink-muted mt-1">
-              You got {score} of {total} correct
+              {score} / {total} {L[13]}
             </p>
             {allCorrect && (
               <span className="inline-block mt-2 text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1">
-                ✓ Lesson completed
+                ✓ {L[3]}
               </span>
             )}
-            {saving && <p className="text-xs text-ink-muted mt-2">Saving progress…</p>}
+            {saving && <p className="text-xs text-ink-muted mt-2">{L[4]}</p>}
           </div>
         )}
 
         {questions.map((q, qi) => (
           <div key={q.id} className="bg-white border border-border rounded-2xl p-4">
             <p className="text-sm font-bold text-teal-900 mb-3">
-              {qi + 1}. {q.question}
+              {qi + 1}. {qMap.get(q.question) ?? q.question}
             </p>
             <div className="space-y-2">
               {q.options.map((opt, oi) => {
@@ -190,7 +217,7 @@ export function QuizPage() {
                     onClick={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
                     className={`w-full text-left border rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${cls}`}
                   >
-                    {opt}
+                    {optMap.get(opt) ?? opt}
                     {submitted && isCorrect && ' ✓'}
                   </button>
                 )
@@ -198,7 +225,7 @@ export function QuizPage() {
             </div>
             {submitted && q.explanation && (
               <p className="text-xs text-ink-muted mt-3 bg-sand rounded-xl px-3 py-2 leading-relaxed">
-                💡 {q.explanation}
+                💡 {explMap.get(q.explanation ?? '') ?? q.explanation}
               </p>
             )}
           </div>
@@ -213,15 +240,33 @@ export function QuizPage() {
               disabled={Object.keys(answers).length < total}
               className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm disabled:opacity-50"
             >
-              Submit answers
+              {L[5]}
             </button>
-          ) : (
+          ) : allCorrect ? (
             <button
               onClick={() => navigate('/maqtab')}
               className="w-full bg-gold text-teal-900 font-bold rounded-xl py-3 text-sm"
             >
-              Finish → Back to Maqtab
+              {L[8]}
             </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setAnswers({})
+                  setSubmitted(false)
+                }}
+                className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"
+              >
+                {L[6]}
+              </button>
+              <button
+                onClick={() => navigate('/maqtab')}
+                className="flex-1 bg-white border border-border text-teal-900 font-bold rounded-xl py-3 text-sm"
+              >
+                {L[7]}
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -237,22 +282,22 @@ export function QuizPage() {
               <span className="step-enter">⭐</span>
             </div>
             <div className="text-5xl mb-3">🎉</div>
-            <h3 className="font-arabic text-teal-900 text-2xl font-bold mb-1">Mashallah!</h3>
-            <p className="text-sm text-ink font-semibold mb-1">Good job — all answers correct!</p>
+            <h3 className="font-arabic text-teal-900 text-2xl font-bold mb-1">{L[9]}</h3>
+            <p className="text-sm text-ink font-semibold mb-1">{L[10]}</p>
             <span className="inline-block my-3 text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1">
-              ✓ Lesson completed
+              ✓ {L[3]}
             </span>
             <button
               onClick={() => navigate('/maqtab')}
               className="w-full bg-gold text-teal-900 font-bold rounded-xl py-2.5 text-sm mt-2"
             >
-              Alhamdulillah, continue →
+              {L[11]}
             </button>
             <button
               onClick={() => setCelebrate(false)}
               className="w-full text-ink-muted text-xs font-semibold mt-2"
             >
-              Review answers
+              {L[12]}
             </button>
           </div>
         </div>

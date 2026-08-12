@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { SURAHS } from '../../content/surahs'
 import { getStatus, getMemorised, type HifzStatus } from '../../services/hifzLocal'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 const STATUS_META: Record<HifzStatus, { label: string; cls: string }> = {
   NotStarted: { label: 'Not started', cls: 'bg-sand text-ink-muted' },
@@ -13,7 +14,17 @@ const STATUS_META: Record<HifzStatus, { label: string; cls: string }> = {
 
 export function HifzPage() {
   const navigate = useNavigate()
+  const surahs = [...SURAHS].sort((a, b) => a.number - b.number)
   const completed = SURAHS.filter((s) => getStatus(s.slug) === 'Completed').length
+  const meanings = useTrList(surahs.map((s) => s.meaning))
+  const statusLabels = useTrList(['Not started', 'In progress', 'Completed'])
+  const statusT: Record<string, string> = {
+    'Not started': statusLabels[0],
+    'In progress': statusLabels[1],
+    Completed: statusLabels[2],
+  }
+  const tSurahsMemorised = useTr('surahs memorised')
+  const tAyah = useTr('ayah')
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -22,7 +33,7 @@ export function HifzPage() {
       <div className="px-4 pt-4">
         <div className="bg-white border border-border rounded-2xl p-4 mb-4">
           <p className="text-sm font-semibold text-teal-900">
-            {completed} of {SURAHS.length} surahs memorised
+            {completed} / {SURAHS.length} {tSurahsMemorised}
           </p>
           <div className="h-2 bg-sand rounded-full overflow-hidden mt-2">
             <div
@@ -33,7 +44,7 @@ export function HifzPage() {
         </div>
 
         <div className="space-y-3">
-          {SURAHS.map((s) => {
+          {surahs.map((s, idx) => {
             const status = getStatus(s.slug)
             const meta = STATUS_META[status]
             const memo = getMemorised(s.slug).length
@@ -49,12 +60,12 @@ export function HifzPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-teal-900">{s.name}</p>
                   <p className="text-xs text-ink-muted">
-                    {s.meaning} · {s.ayahs.length} ayah
-                    {memo > 0 ? ` · ${memo}/${s.ayahs.length} memorised` : ''}
+                    {meanings[idx]} · {s.ayahs.length} {tAyah}
+                    {memo > 0 ? ` · ${memo}/${s.ayahs.length}` : ''}
                   </p>
                 </div>
                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${meta.cls}`}>
-                  {meta.label}
+                  {statusT[meta.label] ?? meta.label}
                 </span>
               </button>
             )

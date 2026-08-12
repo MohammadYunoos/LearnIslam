@@ -2,8 +2,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import type { ReactElement } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { App as CapacitorApp } from '@capacitor/app'
 import { useAppStore } from './store/appStore'
-import { getLocalUser } from './services/authService'
+import { supabase } from './lib/supabase'
+import { getLocalUser, getSessionUser } from './services/authService'
+import { Logo } from './components/Logo'
 import { LoginPage } from './pages/Login/LoginPage'
 import { HomePage } from './pages/Home/HomePage'
 import { GuideHomePage } from './pages/Guide/GuideHomePage'
@@ -33,34 +37,99 @@ function SplashScreen() {
   return (
     <div className="flex items-center justify-center h-screen bg-teal-900">
       <div className="text-center">
-        <p className="font-arabic text-4xl text-gold font-bold">My Maqtab</p>
-        <p className="text-sand text-sm mt-2">Loading...</p>
+        <Logo size={72} className="mx-auto mb-4" />
+        <p className="font-arabic text-4xl text-gold font-bold">Islam Seekho</p>
+        <p className="text-sand text-xs mt-1 tracking-widest uppercase">Learn Islam</p>
+        <p className="text-sand text-sm mt-3">Loading...</p>
       </div>
     </div>
   )
 }
 
+// Decide the landing route from auth state: logged in → Home, else Login.
+function RootRedirect() {
+  const user = useAppStore((s) => s.user)
+  const needsProfile = useAppStore((s) => s.needsProfile)
+  if (user && !needsProfile) return <Navigate to="/home" replace />
+  return <Navigate to="/login" replace />
+}
+
 function PrivateRoute({ element }: { element: ReactElement }) {
   const user = useAppStore((s) => s.user)
-  return user ? element : <Navigate to="/login" replace />
+  const needsProfile = useAppStore((s) => s.needsProfile)
+  if (!user) return <Navigate to="/login" replace />
+  // Signed in but profile not completed → force the login/profile screen.
+  if (needsProfile) return <Navigate to="/login" replace />
+  return element
 }
 
 export default function App() {
   const setUser = useAppStore((s) => s.setUser)
+  const setNeedsProfile = useAppStore((s) => s.setNeedsProfile)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check localStorage for an existing user — no API call needed
-    const local = getLocalUser()
-    if (local) setUser(local)
-    setLoading(false)
-  }, [setUser])
+    let active = true
+
+    async function loadSession() {
+      const res = await getSessionUser()
+      if (!active) return
+      if (res) {
+        setUser(res.user)
+        setNeedsProfile(!res.hasProfile)
+        return true
+      }
+      return false
+    }
+
+    async function bootstrap() {
+      const signedIn = await loadSession()
+      if (!signedIn) {
+        const local = getLocalUser()
+        if (local) setUser(local)
+      }
+      if (active) setLoading(false)
+    }
+    bootstrap()
+
+    // React to sign-in / sign-out.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') loadSession()
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setNeedsProfile(false)
+      }
+    })
+
+    // Native: handle the OAuth deep-link return and complete the PKCE exchange.
+    let removeListener: (() => void) | undefined
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        if (url && url.startsWith('com.learnislam.app://auth')) {
+          try {
+            await supabase.auth.exchangeCodeForSession(url)
+          } catch {
+            /* ignore */
+          }
+        }
+      }).then((h) => {
+        removeListener = () => h.remove()
+      })
+    }
+
+    return () => {
+      active = false
+      sub.subscription.unsubscribe()
+      removeListener?.()
+    }
+  }, [setUser, setNeedsProfile])
 
   if (loading) return <SplashScreen />
 
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/home" element={<PrivateRoute element={<HomePage />} />} />
         <Route path="/guide" element={<PrivateRoute element={<GuideHomePage />} />} />
@@ -91,7 +160,7 @@ export default function App() {
         />
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
         <Route path="/settings" element={<PrivateRoute element={<SettingsPage />} />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,5 +1,6 @@
 // src/components/BottomNav.tsx
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTrList } from '../i18n/useTr'
 
 const NAV_ITEMS = [
   { label: 'Home', icon: '🏠', path: '/home' },
@@ -13,10 +14,11 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
+  const labels = useTrList(NAV_ITEMS.map((i) => i.label))
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex z-40 max-w-lg mx-auto">
-      {NAV_ITEMS.map((item) => {
+      {NAV_ITEMS.map((item, idx) => {
         const active = location.pathname.startsWith(item.path)
         return (
           <button
@@ -27,7 +29,7 @@ export function BottomNav() {
             }`}
           >
             <span className="text-base mb-0.5">{item.icon}</span>
-            {item.label}
+            {labels[idx]}
           </button>
         )
       })}

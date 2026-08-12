@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { logout as clearDevice } from '../../services/authService'
+import { useTr, useTrList } from '../../i18n/useTr'
 
 const MADHAB_LABEL: Record<string, string> = {
   hanafi: 'Hanafi',
@@ -33,6 +34,21 @@ export function SettingsPage() {
     navigate('/login', { replace: true })
   }
 
+  const L = useTrList([
+    'member',
+    'Age',
+    'Gender',
+    'Madhab',
+    'Language',
+    'View plans',
+    'Log out (clear this device)',
+    'Male',
+    'Female',
+    'Premium',
+    'Free',
+  ])
+  const tMadhabVal = useTr(user ? MADHAB_LABEL[user.madhab] ?? user.madhab : '')
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       <PageHeader title="Settings" backTo="/home" />
@@ -43,28 +59,30 @@ export function SettingsPage() {
             {user?.name?.charAt(0).toUpperCase() ?? '?'}
           </div>
           <p className="text-lg font-bold text-teal-900">{user?.name}</p>
-          <p className="text-xs text-ink-muted">{user?.tier === 'premium' ? 'Premium' : 'Free'} member</p>
+          <p className="text-xs text-ink-muted">
+            {user?.tier === 'premium' ? L[9] : L[10]} {L[0]}
+          </p>
         </div>
 
         <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
-          <Row label="Age" value={user?.age ? String(user.age) : '—'} />
-          <Row label="Gender" value={user?.gender === 'female' ? 'Female' : user?.gender === 'male' ? 'Male' : '—'} />
-          <Row label="Madhab" value={user ? MADHAB_LABEL[user.madhab] ?? user.madhab : '—'} />
-          <Row label="Language" value={user?.language?.toUpperCase() ?? '—'} />
+          <Row label={L[1]} value={user?.age ? String(user.age) : '—'} />
+          <Row label={L[2]} value={user?.gender === 'female' ? L[8] : user?.gender === 'male' ? L[7] : '—'} />
+          <Row label={L[3]} value={user ? tMadhabVal : '—'} />
+          <Row label={L[4]} value={user?.language?.toUpperCase() ?? '—'} />
         </div>
 
         <button
           onClick={() => navigate('/plans')}
           className="w-full bg-gold text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
         >
-          View plans
+          {L[5]}
         </button>
 
         <button
           onClick={handleLogout}
           className="w-full bg-white border border-red-300 text-red-500 font-bold rounded-xl py-3 text-sm"
         >
-          Log out (clear this device)
+          {L[6]}
         </button>
 
         <p className="text-center text-xs text-ink-muted mt-6">

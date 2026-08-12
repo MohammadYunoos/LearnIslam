@@ -4,24 +4,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { GuideDisclaimer } from '../../components/GuideDisclaimer'
-import { getTopic, itemsForGender, type Reference } from '../../content/guide'
+import { getTopic, itemsForGender } from '../../content/guide'
 import { useAppStore } from '../../store/appStore'
-
-function Refs({ refs }: { refs?: Reference[] }) {
-  if (!refs || refs.length === 0) return null
-  return (
-    <div className="flex flex-wrap gap-1.5 mt-1.5">
-      {refs.map((r, i) => (
-        <span
-          key={i}
-          className="text-[10px] font-semibold text-teal-700 bg-teal-500/10 border border-teal-500/20 rounded-full px-2 py-0.5"
-        >
-          {r.source}
-        </span>
-      ))}
-    </div>
-  )
-}
+import { useTr, useTrList } from '../../i18n/useTr'
+import { RefChips } from '../../components/RefChips'
 
 export function TopicPage() {
   const { slug } = useParams()
@@ -33,6 +19,14 @@ export function TopicPage() {
     .map((s) => ({ ...s, items: itemsForGender(s.items, gender) }))
     .filter((s) => s.items.length > 0)
   const [open, setOpen] = useState<string | null>(topic?.sections[0]?.key ?? null)
+
+  const sectionTitles = useTrList(sections.map((s) => s.title))
+  const itemTexts = sections.flatMap((s) => s.items.map((i) => i.text))
+  const trItems = useTrList(itemTexts)
+  const trMap = new Map(itemTexts.map((t, i) => [t, trItems[i]]))
+  const tPlay = useTr('Play step-by-step')
+  const tAsk = useTr('Ask Ulema')
+  const tComing = useTr('Content coming soon, In sha Allah.')
 
   if (!topic) {
     return (
@@ -52,7 +46,7 @@ export function TopicPage() {
         <GuideDisclaimer maslak={topic.maslak} />
 
         <div className="space-y-3">
-          {sections.map((section) => {
+          {sections.map((section, si) => {
             const isOpen = open === section.key
             return (
               <div key={section.key} className="bg-white border border-border rounded-2xl overflow-hidden">
@@ -60,7 +54,7 @@ export function TopicPage() {
                   onClick={() => setOpen(isOpen ? null : section.key)}
                   className="w-full flex items-center justify-between px-4 py-3 text-left"
                 >
-                  <span className="text-sm font-bold text-teal-900">{section.title}</span>
+                  <span className="text-sm font-bold text-teal-900">{sectionTitles[si]}</span>
                   <span className={`text-gold-dark transition-transform ${isOpen ? 'rotate-90' : ''}`}>
                     ›
                   </span>
@@ -68,7 +62,7 @@ export function TopicPage() {
                 {isOpen && (
                   <div className="px-4 pb-3">
                     {section.items.length === 0 ? (
-                      <p className="text-xs text-ink-muted italic">Content coming soon, In sha Allah.</p>
+                      <p className="text-xs text-ink-muted italic">{tComing}</p>
                     ) : (
                       <ol className="space-y-2.5">
                         {section.items.map((item, i) => (
@@ -81,9 +75,9 @@ export function TopicPage() {
                                     {item.gender === 'female' ? '♀ Women' : '♂ Men'}
                                   </span>
                                 )}
-                                {item.text}
+                                {trMap.get(item.text) ?? item.text}
                               </p>
-                              <Refs refs={item.refs} />
+                              <RefChips refs={item.refs} />
                             </div>
                           </li>
                         ))}
@@ -104,29 +98,15 @@ export function TopicPage() {
             onClick={() => navigate(`/guide/${topic.slug}/steps`)}
             className="w-full bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"
           >
-            ▶ Play step-by-step
+            ▶ {tPlay}
           </button>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() =>
-              navigate(
-                `/masail?q=${encodeURIComponent(
-                  `According to Hanafi fiqh, regarding ${topic.title}: `
-                )}`
-              )
-            }
-            className="flex items-center justify-center gap-1.5 bg-gold text-teal-900 text-xs font-bold rounded-xl py-2.5"
-          >
-            🤖 Ask Masail AI
-          </button>
-          <button
-            onClick={() => navigate('/ulema')}
-            className="flex items-center justify-center gap-1.5 bg-white border border-teal-700 text-teal-900 text-xs font-bold rounded-xl py-2.5"
-          >
-            🕌 Connect Ulema
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/masail')}
+          className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"
+        >
+          🕌 {tAsk}
+        </button>
       </div>
 
       <BottomNav />

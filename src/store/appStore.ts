@@ -7,6 +7,10 @@ interface AppStore {
   setUser: (u: AppUser | null) => void
   logout: () => void
 
+  // True when signed in (Google) but the profile detail is not filled yet.
+  needsProfile: boolean
+  setNeedsProfile: (v: boolean) => void
+
   showHadeesPopup: boolean
   setShowHadeesPopup: (v: boolean) => void
 }
@@ -14,7 +18,9 @@ interface AppStore {
 export const useAppStore = create<AppStore>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  logout: () => set({ user: null }),
+  logout: () => set({ user: null, needsProfile: false }),
+  needsProfile: false,
+  setNeedsProfile: (needsProfile) => set({ needsProfile }),
   showHadeesPopup: true,
   setShowHadeesPopup: (v) => set({ showHadeesPopup: v }),
 }))

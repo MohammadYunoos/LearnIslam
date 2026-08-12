@@ -33,6 +33,16 @@ export async function completeLesson(userId: string, lessonId: string, score: nu
   await api.post('/maqtab/complete', { userId, lessonId, score })
 }
 
+// ── ISLAMIC Q&A ─────────────────────────────────────────
+
+export async function getQaVolumes() {
+  return api.get<any[]>('/qa/volumes')
+}
+
+export async function getQaVolume(id: string) {
+  return api.get<any>(`/qa/volume/${id}`)
+}
+
 // ── HIFZ ────────────────────────────────────────────────
 
 export async function getHifzSurahs(isPremium: boolean) {

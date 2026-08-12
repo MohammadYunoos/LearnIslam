@@ -30,7 +30,8 @@ export interface GuideStep {
   title: string
   description: string
   icon?: string
-  animationUrl?: string
+  animationUrl?: string // full external image/GIF URL
+  image?: string // storage path in the LearnIslam bucket, e.g. "Namaaz/ruku.png"
   refs?: Reference[]
   gender?: Audience
 }
@@ -433,16 +434,16 @@ const namaaz: GuideTopic = {
   steps: [
     // ── Rak'ah 1 ──────────────────────────────────────────
     { title: 'Rak’ah 1 — Niyyah & Takbir', description: 'Intend two rak’ah nafl. Men raise the hands to the ears, women to the shoulders, say “Allahu Akbar”, then fold the hands (men below the navel, women on the chest).', icon: '🧍' },
-    { title: 'Thana', description: 'Recite the Thana: “Subhanakal-lahumma wa bihamdika, wa tabarakasmuka, wa ta’ala jadduka, wa la ilaha ghairuk.”', icon: '🤲' },
-    { title: 'Fatiha & Surah', description: 'Recite Ta’awwudh and Bismillah, then Surah Al-Fatiha, say Ameen quietly, then recite another surah (e.g. Al-Ikhlas).', icon: '📖', refs: [R.fatiha] },
+    { title: 'Sana(Thana)', description: 'Recite the Sana(Thana): “Subhanakal-lahumma wa bihamdika, wa tabarakasmuka, wa ta’ala jadduka, wa la ilaha ghairuk.”', icon: '🤲' },
+    { title: 'Qirat', description: 'Recite Ta’awwudh and Bismillah, then Surah Al-Fatiha, say Ameen quietly, then recite another surah (e.g. Al-Ikhlas).', icon: '📖', refs: [R.fatiha] },
     { title: 'Ruku', description: 'Say “Allahu Akbar” and bow; recite “Subhana Rabbiyal Azeem” three times.', icon: '🙇', refs: [R.rukuSujudAyah] },
     { title: 'Qawmah', description: 'Rise fully upright, saying “Sami’Allahu liman hamidah, Rabbana lakal hamd.”', icon: '🧍' },
-    { title: 'Sajdah 1', description: 'Say “Allahu Akbar”, prostrate with forehead and nose on the ground; recite “Subhana Rabbiyal A’la” three times.', icon: '🧎', refs: [R.rukuSujudAyah] },
+    { title: 'Sajdah 1', description: 'Say “Allahu Akbar”, prostrate with forehead and nose on the ground; recite “Subhana Rabbiyal A’la” 3 or 5 or 7 times.', icon: '🧎', refs: [R.rukuSujudAyah] },
     { title: 'Jalsa', description: 'Say “Allahu Akbar” and sit up calmly for a moment between the two prostrations.', icon: '🪑' },
     { title: 'Sajdah 2', description: 'Say “Allahu Akbar” and prostrate a second time with the same tasbih.', icon: '🧎' },
     // ── Rak'ah 2 ──────────────────────────────────────────
-    { title: 'Rak’ah 2 — Stand', description: 'Say “Allahu Akbar” and rise to stand for the second rak’ah, folding the hands. (No Thana or Ta’awwudh this time.)', icon: '🧍' },
-    { title: 'Fatiha & Surah', description: 'Recite Bismillah, then Surah Al-Fatiha, Ameen, then another surah.', icon: '📖', refs: [R.fatiha] },
+    { title: 'Rak’ah 2 — Stand', description: 'Say “Allahu Akbar” and rise to stand for the second rak’ah, folding the hands. (No Sana(Thana) or Ta’awwudh this time.)', icon: '🧍' },
+    { title: 'Qirat', description: 'Recite Bismillah, then Surah Al-Fatiha, Ameen, then another surah.', icon: '📖', refs: [R.fatiha] },
     { title: 'Ruku', description: 'Bow and recite “Subhana Rabbiyal Azeem” three times.', icon: '🙇', refs: [R.rukuSujudAyah] },
     { title: 'Qawmah', description: 'Rise upright saying “Sami’Allahu liman hamidah, Rabbana lakal hamd.”', icon: '🧍' },
     { title: 'Sajdah 1', description: 'Prostrate and recite “Subhana Rabbiyal A’la” three times.', icon: '🧎', refs: [R.rukuSujudAyah] },
@@ -455,6 +456,34 @@ const namaaz: GuideTopic = {
     { title: 'Salam', description: 'Turn the face to the right saying “Assalamu ‘alaikum wa rahmatullah”, then to the left with the same words. The two rak’ah nafl are complete.', icon: '👐' },
   ],
 }
+
+// Map each namaaz step to a pose image in the LearnIslam bucket (Namaaz/<pose>.png).
+// Upload one image per pose; steps that share a pose reuse the same image.
+const NAMAAZ_POSES = [
+  'takbeer', // 1 Niyyah & Takbir
+  'qiyam', // 2 Thana
+  'qirat', // 3 Qirat (Fatiha & Surah)
+  'ruku', // 4 Ruku
+  'qawmah', // 5 Qawmah
+  'sajdah', // 6 Sajdah 1
+  'jalsa', // 7 Jalsa
+  'sajdah', // 8 Sajdah 2
+  'qiyam', // 9 Rak'ah 2 — Stand
+  'qirat', // 10 Qirat (Fatiha & Surah)
+  'ruku', // 11 Ruku
+  'qawmah', // 12 Qawmah
+  'sajdah', // 13 Sajdah 1
+  'jalsa', // 14 Jalsa
+  'sajdah', // 15 Sajdah 2
+  'qadah', // 16 Qa'dah — At-tahiyyat
+  'qadah', // 17 Durood
+  'qadah', // 18 Dua-e-Masura
+  'salaam', // 19 Salam
+]
+namaaz.steps?.forEach((s, i) => {
+  const pose = NAMAAZ_POSES[i]
+  if (pose) s.image = `Namaaz/${pose}.png`
+})
 
 const roza: GuideTopic = {
   slug: 'roza',
