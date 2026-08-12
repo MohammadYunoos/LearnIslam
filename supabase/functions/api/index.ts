@@ -209,6 +209,36 @@ app.post('/translate', async (c) => {
   return c.json({ translations: out })
 })
 
+// ── APP VERSION (update banner) ─────────────────────────
+app.get('/app/version', async (c) => {
+  const { data } = await supabase.from('app_config').select('*').limit(1).single()
+  return c.json(data ?? null)
+})
+
+// ── FEEDBACK (Ulema / tester review) ────────────────────
+app.post('/feedback', async (c) => {
+  const body = await c.req.json()
+  const userId = uid(c, body.userId)
+  const { error } = await supabase.from('feedback').insert({
+    user_id: userId,
+    user_name: body.userName ?? null,
+    screen: body.screen ?? null,
+    message: body.message ?? '',
+    context: body.context ?? null,
+  })
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ ok: true })
+})
+
+app.get('/feedback', async (c) => {
+  const { data } = await supabase
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  return c.json(data ?? [])
+})
+
 // ── PROFILE ─────────────────────────────────────────────
 app.put('/profile', async (c) => {
   const body = await c.req.json()

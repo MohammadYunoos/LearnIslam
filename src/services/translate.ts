@@ -5,6 +5,32 @@ import { api } from './apiClient'
 
 const mem = new Map<string, string>() // key `${lang}|${text}` -> translated
 
+// Manual overrides for app-specific terms that machine translation leaves in
+// English (proper nouns) or renders poorly. Keyed by language then source text.
+const OVERRIDES: Record<string, Record<string, string>> = {
+  ur: {
+    Hifz: 'حفظ',
+    Detoxify: 'تزکیۂ نفس',
+    Maqtab: 'مکتب',
+    Masail: 'مسائل',
+    Adaab: 'آداب',
+    Wajifa: 'وظیفہ',
+    Tasbih: 'تسبیح',
+    Qirat: 'قرأت',
+    Ruku: 'رکوع',
+    Salam: 'سلام',
+    Muhasaba: 'محاسبہ',
+  },
+  hi: {
+    Hifz: 'हिफ़्ज़',
+    Detoxify: 'तज़्किया',
+    Maqtab: 'मकतब',
+    Masail: 'मसाइल',
+    Adaab: 'आदाब',
+    Muhasaba: 'मुहासबा',
+  },
+}
+
 function cacheKey(lang: string, text: string) {
   return `tr_${lang}_${text}`
 }
@@ -70,6 +96,8 @@ function queue(lang: string, text: string): Promise<void> {
 // Translate a single string (cached). Returns the source unchanged for English.
 export async function translateOne(text: string, lang: string): Promise<string> {
   if (!lang || lang === 'en' || !text.trim()) return text
+  const override = OVERRIDES[lang]?.[text.trim()]
+  if (override) return override
   const k = `${lang}|${text}`
   if (mem.has(k)) return mem.get(k)!
   const local = readLocal(lang, text)

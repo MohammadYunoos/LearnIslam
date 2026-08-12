@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { label: 'Hifz', icon: '⭐', path: '/hifz' },
   { label: 'Ulema', icon: '🕌', path: '/ulema' },
   { label: 'Messages', icon: '💬', path: '/messages' },
-  { label: 'Analyzer', icon: '📊', path: '/analyzer' },
+  { label: 'Muhasaba', icon: '📊', path: '/analyzer' },
 ]
 
 export function BottomNav() {

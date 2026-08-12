@@ -33,6 +33,13 @@ const eating: AdaabTopic = {
     { text: 'Eat and drink in moderation; do not overfill the stomach.', refs: [{ source: "Qur'an 7:31 — “eat and drink, but do not be excessive”" }] },
     { text: 'Do not use gold or silver utensils.', refs: [{ source: 'Bukhari & Muslim — Hudhayfah' }] },
     { text: 'Praise Allah when finished: “Alhamdulillahil-ladhi at‘amana wa saqana wa ja‘alana muslimin”.', refs: [{ source: 'Tirmidhi / Abu Dawud' }] },
+    { text: 'If a morsel falls, pick it up, remove any dirt and eat it; do not leave it for Shaytan.', refs: [{ source: 'Sahih Muslim — Jabir' }] },
+    { text: 'Do not blow on hot food or drink; wait for it to cool.', refs: [{ source: 'Tirmidhi / Abu Dawud — Ibn Abbas' }] },
+    { text: 'Eat together, not separately — there is blessing in eating in a group.', refs: [{ source: 'Sunan Abu Dawud — Wahshi ibn Harb' }] },
+    { text: 'The food of two suffices three, and the food of three suffices four.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Lick the fingers and wipe the plate clean; you do not know in which part the blessing lies.', refs: [{ source: 'Sahih Muslim — Jabir / Ibn Abbas' }] },
+    { text: 'Do not waste food; honour it and give any surplus to others.', refs: [{ source: "Qur'an 6:141 — “do not be wasteful”" }] },
+    { text: 'Make du’a for the one who feeds you: “Allahumma at‘im man at‘amani…”.', refs: [{ source: 'Sahih Muslim — Miqdad' }] },
   ],
 }
 
@@ -48,6 +55,9 @@ const drinking: AdaabTopic = {
     { text: 'Look at the water before drinking; do not drink from a cracked or broken edge.' },
     { text: 'When sharing, pass to the one on the right.', refs: [{ source: 'Bukhari & Muslim — Anas' }] },
     { text: 'The one who pours/serves drinks last.', refs: [{ source: 'Sahih Muslim — Abu Qatadah' }] },
+    { text: 'Do not drink directly from the mouth of a water-skin or large vessel.', refs: [{ source: 'Sahih al-Bukhari — Abu Hurayrah' }] },
+    { text: 'When given milk, say: “Allahumma barik lana fihi wa zidna minhu”.', refs: [{ source: 'Tirmidhi / Abu Dawud — Ibn Abbas' }] },
+    { text: 'Do not throw away leftover water; give it to others or an animal.' },
     { text: 'Say “Alhamdulillah” after drinking.' },
   ],
 }
@@ -66,6 +76,11 @@ const sleeping: AdaabTopic = {
     { text: 'Say the sleeping du’a: “Allahumma bismika amutu wa ahya”.', refs: [{ source: 'Sahih al-Bukhari — Hudhayfah' }] },
     { text: 'On waking say: “Alhamdulillahil-ladhi ahyana ba‘da ma amatana wa ilayhin-nushur”.', refs: [{ source: 'Sahih al-Bukhari — Hudhayfah' }] },
     { text: 'Do not sleep on the stomach — this posture is disliked.', refs: [{ source: 'Tirmidhi / Abu Dawud — Ya‘ish / Abu Dharr' }] },
+    { text: 'Recite Tasbih-e-Fatima before sleeping — SubhanAllah 33, Alhamdulillah 33, Allahu Akbar 34.', refs: [{ source: 'Bukhari & Muslim — Ali ibn Abi Talib' }] },
+    { text: 'Sleep early after Isha; avoid staying up needlessly.', refs: [{ source: 'Sahih al-Bukhari — Abu Barzah' }] },
+    { text: 'Cover food and drink vessels and put out any open flame before sleeping.', refs: [{ source: 'Bukhari & Muslim — Jabir' }] },
+    { text: 'On a bad dream, seek refuge in Allah, spit lightly to the left three times, change side, and do not tell anyone.', refs: [{ source: 'Bukhari & Muslim — Abu Qatadah' }] },
+    { text: 'Sleep with a clean heart — forgive others before sleeping.' },
   ],
 }
 
@@ -82,6 +97,9 @@ const toilet: AdaabTopic = {
     { text: 'Clean thoroughly with water (or stones/tissue where water is unavailable).' },
     { text: 'Do not carry anything bearing the name of Allah or Qur’an unnecessarily, and avoid talking inside.' },
     { text: 'Choose a concealed place and do not expose the satr before others.' },
+    { text: 'Do not face or expose oneself towards the sun or moon while relieving oneself.' },
+    { text: 'Do not relieve oneself in still water, on pathways, or where people rest.', refs: [{ source: 'Sahih Muslim — Abu Hurayrah' }] },
+    { text: 'Remove any impurity and make wudu afterwards for prayer.' },
   ],
 }
 

@@ -32,6 +32,9 @@ import { MessagesPage } from './pages/Messages/MessagesPage'
 import { ThreadPage } from './pages/Messages/ThreadPage'
 import { PlansPage } from './pages/Plans/PlansPage'
 import { SettingsPage } from './pages/Settings/SettingsPage'
+import { FeedbackPage } from './pages/Admin/FeedbackPage'
+import { UpdateBanner } from './components/UpdateBanner'
+import { ReportButton } from './components/ReportButton'
 
 function SplashScreen() {
   return (
@@ -128,6 +131,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <UpdateBanner />
+      <ReportButton />
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
@@ -160,6 +165,7 @@ export default function App() {
         />
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
         <Route path="/settings" element={<PrivateRoute element={<SettingsPage />} />} />
+        <Route path="/admin/feedback" element={<PrivateRoute element={<FeedbackPage />} />} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>

@@ -6,7 +6,6 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { getZikr } from '../../content/masnoon'
 import { useTr } from '../../i18n/useTr'
-import { shortRef } from '../../components/RefChips'
 
 const key = (slug: string) => `mymaqtab_zikr_count_${slug}`
 
@@ -18,7 +17,7 @@ export function TasbihPage() {
     return raw ? parseInt(raw, 10) || 0 : 0
   })
   const tMeaning = useTr(zikr?.meaning ?? '')
-  const tRef = useTr(zikr?.ref ? shortRef(zikr.ref) : '')
+  const tRef = useTr(zikr?.ref ?? '')
 
   if (!zikr) {
     return (

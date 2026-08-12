@@ -6,6 +6,8 @@ import { getTopic, itemsForGender } from '../../content/guide'
 import { useNarration } from '../../hooks/useNarration'
 import { useAppStore } from '../../store/appStore'
 import { supabase } from '../../lib/supabase'
+import { useTr, useTrList } from '../../i18n/useTr'
+import { shortRef } from '../../components/RefChips'
 
 export function StepPlayerPage() {
   const { slug } = useParams()
@@ -22,15 +24,32 @@ export function StepPlayerPage() {
 
   const step = steps[index]
 
-  // Narrate the current step whenever it changes (if narration is on).
+  // Translations (English until ready; no-op for lang 'en').
+  const tTitle = useTr(step?.title ?? '')
+  const tDesc = useTr(step?.description ?? '')
+  const tStepsTitle = useTr(topic?.stepsTitle ?? (topic ? `Method — ${topic.title}` : ''))
+  const tRefs = useTrList((step?.refs ?? []).map((r) => shortRef(r.source)))
+  const L = useTrList([
+    'Narration On',
+    'Narration Off',
+    'Voice',
+    'Replay',
+    'Prev',
+    'Next',
+    'Step',
+    'of',
+    'Narration not supported on this device',
+  ])
+
+  // Narrate the current step (in the user's language) whenever it changes.
   useEffect(() => {
     if (step && narration.enabled) {
-      narration.speak(`${step.title}. ${step.description}`)
+      narration.speak(`${tTitle}. ${tDesc}`)
     } else {
       narration.cancel()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, narration.enabled])
+  }, [index, narration.enabled, tTitle, tDesc])
 
   if (!topic || steps.length === 0) {
     return (
@@ -51,7 +70,11 @@ export function StepPlayerPage() {
 
   return (
     <div className="bg-cream min-h-screen flex flex-col">
-      <PageHeader title={topic.title} subtitle={`Step ${index + 1} of ${steps.length}`} backTo={`/guide/${slug}`} />
+      <PageHeader
+        title={topic.title}
+        subtitle={`${L[6]} ${index + 1} ${L[7]} ${steps.length}`}
+        backTo={`/guide/${slug}`}
+      />
 
       {/* Narration toggle */}
       <div className="px-4 pt-3 flex flex-col items-end">
@@ -65,23 +88,23 @@ export function StepPlayerPage() {
                   : 'bg-white text-ink-muted border-border'
               }`}
             >
-              {narration.enabled ? '🔊 Narration On' : '🔈 Narration Off'}
+              {narration.enabled ? `🔊 ${L[0]}` : `🔈 ${L[1]}`}
               {narration.speaking ? ' …' : ''}
             </button>
             {narration.enabled && (
-              <span className="text-[10px] text-ink-muted mt-1">Voice: {narration.voiceLabel}</span>
+              <span className="text-[10px] text-ink-muted mt-1">
+                {L[2]}: {narration.voiceLabel}
+              </span>
             )}
           </>
         ) : (
-          <span className="text-[11px] text-ink-muted">Narration not supported on this device</span>
+          <span className="text-[11px] text-ink-muted">{L[8]}</span>
         )}
       </div>
 
       {/* Method title */}
       <div className="px-4 pt-2">
-        <h2 className="text-base font-bold text-teal-900 text-center">
-          {topic.stepsTitle ?? `Method — ${topic.title}`}
-        </h2>
+        <h2 className="text-base font-bold text-teal-900 text-center">{tStepsTitle}</h2>
       </div>
 
       {/* Animation / image frame */}
@@ -109,17 +132,17 @@ export function StepPlayerPage() {
         )}
 
         <div className="mt-6 text-center px-2">
-          <p className="text-lg font-bold text-teal-900">{step.title}</p>
-          <p className="text-sm text-ink-muted mt-2 leading-relaxed">{step.description}</p>
+          <p className="text-lg font-bold text-teal-900">{tTitle}</p>
+          <p className="text-sm text-ink-muted mt-2 leading-relaxed">{tDesc}</p>
 
           {step.refs && step.refs.length > 0 && (
             <div className="flex flex-wrap gap-1.5 justify-center mt-3">
-              {step.refs.map((r, i) => (
+              {step.refs.map((_, i) => (
                 <span
                   key={i}
                   className="text-[10px] font-semibold text-teal-700 bg-teal-500/10 border border-teal-500/20 rounded-full px-2 py-0.5"
                 >
-                  {r.source}
+                  {tRefs[i]}
                 </span>
               ))}
             </div>
@@ -133,7 +156,7 @@ export function StepPlayerPage() {
               key={i}
               onClick={() => setIndex(i)}
               className={`w-2 h-2 rounded-full ${i === index ? 'bg-gold' : 'bg-border'}`}
-              aria-label={`Go to step ${i + 1}`}
+              aria-label={`step ${i + 1}`}
             />
           ))}
         </div>
@@ -146,14 +169,14 @@ export function StepPlayerPage() {
           disabled={atStart}
           className="bg-white border border-border text-teal-900 font-bold rounded-xl py-3 px-6 text-sm disabled:opacity-40"
         >
-          ← Prev
+          ← {L[4]}
         </button>
         {narration.supported && narration.enabled && (
           <button
-            onClick={() => narration.speak(`${step.title}. ${step.description}`)}
+            onClick={() => narration.speak(`${tTitle}. ${tDesc}`)}
             className="text-teal-900 font-bold text-sm"
           >
-            ↻ Replay
+            ↻ {L[3]}
           </button>
         )}
         <button
@@ -161,7 +184,7 @@ export function StepPlayerPage() {
           disabled={atEnd}
           className="bg-teal-900 text-white font-bold rounded-xl py-3 px-6 text-sm disabled:opacity-40"
         >
-          Next →
+          {L[5]} →
         </button>
       </div>
     </div>

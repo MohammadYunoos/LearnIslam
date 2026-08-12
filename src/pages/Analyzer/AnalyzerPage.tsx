@@ -48,7 +48,7 @@ export function AnalyzerPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title="Analyzer" subtitle="Your progress" backTo="/home" />
+      <PageHeader title="Muhasaba" subtitle="Your progress" backTo="/home" />
 
       <div className="px-4 pt-4">
         {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}

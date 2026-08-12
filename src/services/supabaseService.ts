@@ -33,6 +33,26 @@ export async function completeLesson(userId: string, lessonId: string, score: nu
   await api.post('/maqtab/complete', { userId, lessonId, score })
 }
 
+// ── APP VERSION + FEEDBACK ──────────────────────────────
+
+export async function getAppVersion() {
+  return api.get<any>('/app/version')
+}
+
+export async function sendFeedback(payload: {
+  userId?: string
+  userName?: string
+  screen?: string
+  message: string
+  context?: string
+}) {
+  await api.post('/feedback', payload)
+}
+
+export async function getFeedback() {
+  return api.get<any[]>('/feedback')
+}
+
 // ── ISLAMIC Q&A ─────────────────────────────────────────
 
 export async function getQaVolumes() {

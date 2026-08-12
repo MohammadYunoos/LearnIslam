@@ -1,10 +1,13 @@
 // src/pages/Settings/SettingsPage.tsx
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { logout as clearDevice } from '../../services/authService'
 import { useTr, useTrList } from '../../i18n/useTr'
+import { isAdmin } from '../../lib/admin'
+import { APP_VERSION_NAME } from '../../version'
 
 const MADHAB_LABEL: Record<string, string> = {
   hanafi: 'Hanafi',
@@ -27,6 +30,11 @@ export function SettingsPage() {
   const navigate = useNavigate()
   const user = useAppStore((s) => s.user)
   const storeLogout = useAppStore((s) => s.logout)
+
+  const [admin, setAdmin] = useState(false)
+  useEffect(() => {
+    isAdmin().then(setAdmin)
+  }, [])
 
   const handleLogout = () => {
     clearDevice()
@@ -78,6 +86,15 @@ export function SettingsPage() {
           {L[5]}
         </button>
 
+        {admin && (
+          <button
+            onClick={() => navigate('/admin/feedback')}
+            className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
+          >
+            🛠 Admin: Feedback
+          </button>
+        )}
+
         <button
           onClick={handleLogout}
           className="w-full bg-white border border-red-300 text-red-500 font-bold rounded-xl py-3 text-sm"
@@ -86,7 +103,7 @@ export function SettingsPage() {
         </button>
 
         <p className="text-center text-xs text-ink-muted mt-6">
-          Alpha testing build · v0.0.0
+          Alpha testing build · v{APP_VERSION_NAME}
         </p>
       </div>
 

@@ -39,10 +39,27 @@ export function HomePage() {
     if (user) getMaqtabProgress(user.id).then(setProgress)
   }, [user])
 
+  // Show the Hadees popup only once per day.
+  useEffect(() => {
+    const today = new Date().toDateString()
+    const shown = localStorage.getItem('mymaqtab_hadees_date')
+    setPopup(shown !== today)
+  }, [setPopup])
+
+  const dismissHadees = () => {
+    localStorage.setItem('mymaqtab_hadees_date', new Date().toDateString())
+    setPopup(false)
+  }
+
   const tGreet = useTr('Assalamu Alaikum')
   const tPrompt = useTr('What would you like to learn?')
   const titles = useTrList(MENU_ITEMS.map((i) => i.title))
   const subs = useTrList(MENU_ITEMS.map((i) => i.sub))
+  const tHadeesTitle = useTr('Hadees of the day')
+  const tAmeen = useTr('Ameen, continue')
+  const tMaqtabProgress = useTr('Maqtab progress')
+  const tLessonsDone = useTr('lessons done')
+  const tHadeesTranslation = useTr(hadees?.translation ?? '')
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -68,8 +85,8 @@ export function HomePage() {
         {progress.length > 0 && (
           <div className="bg-white border border-border rounded-2xl p-4 mb-4">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-semibold text-teal-900">Maqtab progress</p>
-              <p className="text-xs font-bold text-gold-dark">{progress.length} lessons done</p>
+              <p className="text-sm font-semibold text-teal-900">{tMaqtabProgress}</p>
+              <p className="text-xs font-bold text-gold-dark">{progress.length} {tLessonsDone}</p>
             </div>
             <div className="h-2 bg-sand rounded-full overflow-hidden">
               <div
@@ -105,7 +122,7 @@ export function HomePage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6">
           <div className="bg-cream rounded-2xl p-6 text-center border-t-4 border-gold w-full max-w-sm">
             <p className="text-xs font-bold text-gold-dark uppercase tracking-widest mb-3">
-              Hadees of the day
+              {tHadeesTitle}
             </p>
             {hadees.arabic_text && (
               <p className="font-arabic text-lg text-teal-900 leading-relaxed mb-3">
@@ -113,16 +130,16 @@ export function HomePage() {
               </p>
             )}
             <p className="text-sm text-ink leading-relaxed mb-2">
-              &ldquo;{hadees.translation}&rdquo;
+              &ldquo;{tHadeesTranslation || hadees.translation}&rdquo;
             </p>
             <p className="text-xs text-ink-muted mb-4">
               — {hadees.collection}, Hadith {hadees.hadith_num} · {hadees.grading}
             </p>
             <button
-              onClick={() => setPopup(false)}
+              onClick={dismissHadees}
               className="bg-teal-900 text-white font-bold px-8 py-2.5 rounded-full text-sm"
             >
-              Ameen, continue
+              {tAmeen}
             </button>
           </div>
         </div>

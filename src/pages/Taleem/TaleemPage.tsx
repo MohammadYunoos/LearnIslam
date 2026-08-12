@@ -131,7 +131,7 @@ export function TaleemPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-48">
-      <PageHeader title="Islamic Q & A" subtitle="Question & answer volumes" backTo="/home" />
+      <PageHeader title="Islamic Q & A" subtitle="Inspired by the famous book Taleem ul islaam" backTo="/home" />
 
       <div className="px-4 pt-4">
         {loadingList && <p className="text-sm text-ink-muted text-center py-8">Loading…</p>}
