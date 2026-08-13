@@ -163,7 +163,7 @@ export function StepPlayerPage() {
       </div>
 
       {/* Controls */}
-      <div className="sticky bottom-0 bg-cream border-t border-border p-4 flex items-center justify-between gap-3">
+      <div className="sticky bottom-0 bg-cream border-t border-border p-4 flex items-center justify-between gap-3 safe-bottom">
         <button
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={atStart}

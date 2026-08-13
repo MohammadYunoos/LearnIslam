@@ -25,7 +25,11 @@ interface Segment {
 // and answers keep their styling across multiple paragraphs (until the next
 // question or section).
 function classifySegments(md: string): Segment[] {
-  const blocks = md.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean)
+  const blocks = md
+    .replace(/\r\n/g, '\n')
+    .split(/\n{2,}/)
+    .map((b) => b.trim())
+    .filter(Boolean)
   const segs: Segment[] = []
   let answer: string[] | null = null
   const flush = () => {

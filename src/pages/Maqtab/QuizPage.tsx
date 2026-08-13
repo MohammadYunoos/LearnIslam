@@ -233,7 +233,7 @@ export function QuizPage() {
       </div>
 
       {!loading && total > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4">
+        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4 safe-bottom">
           {!submitted ? (
             <button
               onClick={handleSubmit}

@@ -31,28 +31,10 @@ export function LessonPage() {
     })
   }, [lessonId])
 
-  const body = lesson?.content_md ?? lesson?.content ?? ''
-  const blocks = useMemo(() => {
-    const raw = body.split(/\n{2,}/)
-    const out: string[] = []
-    for (const b of raw) {
-      if (b.length <= 1500) {
-        out.push(b)
-        continue
-      }
-      // Split oversized blocks by sentence so each translate call stays small.
-      let cur = ''
-      for (const s of b.split(/(?<=[.!?۔])\s+/)) {
-        if (cur && cur.length + s.length > 1500) {
-          out.push(cur)
-          cur = ''
-        }
-        cur += (cur ? ' ' : '') + s
-      }
-      if (cur) out.push(cur)
-    }
-    return out
-  }, [body])
+  // Normalise CRLF → LF, then split on blank lines so each heading / list /
+  // rule / paragraph is its own markdown block (kept intact for translation).
+  const body = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
+  const blocks = useMemo(() => body.split(/\n{2,}/).filter((b) => b.trim()), [body])
   const trBlocks = useTrList(blocks)
   const trBody = trBlocks.join('\n\n')
   const tQuiz = useTr('Take the quiz')
@@ -106,7 +88,7 @@ export function LessonPage() {
 
       {/* Fixed action bar */}
       {!loading && lesson && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4">
+        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4 safe-bottom">
           <button
             onClick={() => navigate(`/maqtab/${lessonId}/quiz`)}
             className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"

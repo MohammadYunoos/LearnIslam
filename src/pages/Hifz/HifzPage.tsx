@@ -53,7 +53,7 @@ export function HifzPage() {
               <button
                 key={s.slug}
                 onClick={() => navigate(`/hifz/${s.slug}`)}
-                style={{ animationDelay: `${idx * 40}ms` }}
+                style={{ animationDelay: `${idx * 90}ms` }}
                 className="tile-in glossy-gold w-full rounded-2xl p-4 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
               >
                 <div className="w-11 h-11 rounded-xl bg-teal-900/10 flex items-center justify-center shrink-0">

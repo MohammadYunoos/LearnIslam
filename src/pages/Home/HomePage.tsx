@@ -104,7 +104,7 @@ export function HomePage() {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              style={{ animationDelay: `${idx * 40}ms` }}
+              style={{ animationDelay: `${idx * 90}ms` }}
               className="tile-in glossy group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform"
             >
               <span className="text-xs font-bold text-white/70 group-active:text-teal-900 block mb-1">
