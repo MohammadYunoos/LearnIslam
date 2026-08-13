@@ -215,7 +215,7 @@ export function HifzSurahPage() {
                       className="text-teal-900 text-xl shrink-0"
                       aria-label="Play ayah"
                     >
-                      {isActive && isPlaying ? '⏸️' : '🔊'}
+                      {isActive && isPlaying ? '⏸️' : '▶️'}
                     </button>
                   )}
                 </div>
@@ -256,7 +256,7 @@ export function HifzSurahPage() {
       </div>
 
       {/* Playback bar */}
-      <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 flex items-center gap-2">
+      <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 flex items-center gap-2">
         <button
           onClick={() => (isPlaying ? stop() : playIndex(0, 'all'))}
           className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"

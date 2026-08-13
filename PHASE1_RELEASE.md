@@ -90,6 +90,34 @@ This is a **debug APK** — auto-signed, installable, ideal for alpha/Ulema revi
 - `.env.local`, `*.jks`, `node_modules/`, `dist/` are git-ignored — never pushed.
 - Production (Play Store) later = a **signed release** APK/AAB with your own keystore.
 
+## Native setup (Google login + app icon)
+
+### Google Sign-In on Android
+Uses the browser + deep-link flow (no SHA needed). To make it work in the APK:
+1. **Google Cloud** → OAuth consent screen (add testers) → Credentials → **Web** OAuth client;
+   Authorized redirect URI: `https://wpdalidqkfsizgdvdbqi.supabase.co/auth/v1/callback`.
+2. **Supabase → Auth → Providers → Google**: enable, paste the Web client ID + secret.
+3. **Supabase → Auth → URL Configuration → Redirect URLs**: add `com.learnislam.app://auth`
+   (the AndroidManifest deep-link is already in place).
+4. Rebuild + reinstall the APK → "Continue with Google" opens the browser and returns signed in.
+   Until then, testers use **Continue as guest**.
+
+### App launcher icon (replace the default Capacitor icon)
+`@capacitor/assets` is pure Node (no Android SDK), so it runs locally in VS Code:
+```bash
+npm i -D @capacitor/assets
+# put a 1024x1024 PNG of the logo at  assets/icon.png  (and optional assets/splash.png 2732x2732)
+npx @capacitor/assets generate --android
+npx cap sync android
+git add android assets && git commit -m "app icon" && git push
+```
+The next cloud build produces an APK with the real icon.
+
+### Narration
+Now uses the **native Android TTS** engine (Capacitor plugin) — works in the APK with no config.
+If a device has no voice for the chosen language, install it via Android
+Settings → System → Text-to-speech.
+
 ## Verify
 - `curl .../functions/v1/api/app/version` → returns the row.
 - Submit a Report in the app → row appears in `feedback` + the admin list.

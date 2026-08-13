@@ -1,5 +1,5 @@
 // src/pages/Maqtab/LessonPage.tsx
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -57,6 +57,22 @@ export function LessonPage() {
   const trBody = trBlocks.join('\n\n')
   const tQuiz = useTr('Take the quiz')
 
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [isFs, setIsFs] = useState(false)
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+  const toggleFullscreen = () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen()
+      else cardRef.current?.requestFullscreen?.()
+    } catch {
+      /* WebView may not support fullscreen */
+    }
+  }
+
   return (
     <div className="bg-cream min-h-screen pb-28">
       <PageHeader title={lesson?.title ?? 'Lesson'} backTo="/maqtab" />
@@ -65,9 +81,19 @@ export function LessonPage() {
         {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}
 
         {!loading && lesson && (
-          <div className="rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6">
+          <div
+            ref={cardRef}
+            className="fs-card relative rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6"
+          >
+            <button
+              onClick={toggleFullscreen}
+              className="fixed top-24 right-4 z-50 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg"
+              aria-label="Toggle fullscreen"
+            >
+              {isFs ? '🗕' : '⛶'}
+            </button>
             {lesson.arabic_text && (
-              <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-4">
+              <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-4 pr-10">
                 {lesson.arabic_text}
               </p>
             )}

@@ -62,7 +62,7 @@ export function AdaabDetailPage() {
       </div>
 
       {/* Always-visible action bar */}
-      <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3">
+      <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3">
         <button
           onClick={() => navigate('/masail')}
           className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"

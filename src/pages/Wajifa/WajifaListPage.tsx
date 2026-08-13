@@ -24,7 +24,7 @@ export function WajifaListPage() {
   const tHint = useTr('Tap any zikr to open the counter for your daily wird.')
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
+    <div className="bg-cream min-h-screen pb-20 page-fade">
       <PageHeader title="Masnoon Dua & Zikr" subtitle="Duas · Kalimas · Tasbih" backTo="/home" />
 
       <div className="px-4 pt-4">
@@ -69,16 +69,17 @@ export function WajifaListPage() {
               <button
                 key={z.slug}
                 onClick={() => navigate(`/wajifa/${z.slug}`)}
-                className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+                style={{ animationDelay: `${idx * 40}ms` }}
+                className="tile-in glossy-gold w-full rounded-2xl p-4 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
               >
-                <div className="w-11 h-11 rounded-xl bg-sand flex items-center justify-center text-lg shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-teal-900/10 flex items-center justify-center text-lg shrink-0">
                   📿
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-teal-900">{zikrTitles[idx]}</p>
-                  <p className="font-arabic text-base text-ink truncate">{z.arabic}</p>
+                  <p className="font-arabic text-base text-teal-900 truncate">{z.arabic}</p>
                 </div>
-                <span className="text-xs font-bold text-gold-dark shrink-0">×{z.target}</span>
+                <span className="text-xs font-bold text-teal-900 shrink-0">×{z.target}</span>
               </button>
             ))}
           </div>

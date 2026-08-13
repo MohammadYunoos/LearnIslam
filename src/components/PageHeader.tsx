@@ -14,7 +14,7 @@ export function PageHeader({ title, subtitle, back = true, backTo }: Props) {
   const tTitle = useTr(title)
   const tSub = useTr(subtitle ?? '')
   return (
-    <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center gap-3">
+    <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center gap-3 safe-top">
       {back && (
         <button
           onClick={() => (backTo ? navigate(backTo) : navigate(-1))}

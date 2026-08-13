@@ -17,7 +17,7 @@ export function BottomNav() {
   const labels = useTrList(NAV_ITEMS.map((i) => i.label))
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex z-40 max-w-lg mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex z-40 max-w-lg mx-auto safe-bottom">
       {NAV_ITEMS.map((item, idx) => {
         const active = location.pathname.startsWith(item.path)
         return (

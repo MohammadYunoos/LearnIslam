@@ -92,7 +92,7 @@ export function TopicPage() {
       </div>
 
       {/* Always-visible action bar (no scrolling needed) */}
-      <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 space-y-2">
+      <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 space-y-2">
         {topic.hasSteps && topic.steps && topic.steps.length > 0 && (
           <button
             onClick={() => navigate(`/guide/${topic.slug}/steps`)}

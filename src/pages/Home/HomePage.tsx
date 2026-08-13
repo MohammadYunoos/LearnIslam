@@ -62,9 +62,9 @@ export function HomePage() {
   const tHadeesTranslation = useTr(hadees?.translation ?? '')
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
+    <div className="bg-cream min-h-screen pb-20 page-fade">
       {/* Top bar */}
-      <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center justify-between">
+      <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center justify-between safe-top">
         <div className="flex items-center gap-2">
           <Logo size={34} ring={false} />
           <div>
@@ -104,14 +104,21 @@ export function HomePage() {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className="bg-white border border-border rounded-2xl p-4 text-left active:scale-95 transition-transform"
+              style={{ animationDelay: `${idx * 40}ms` }}
+              className="tile-in glossy group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform"
             >
-              <span className="text-xs font-bold text-gold-dark block mb-1">{item.num}</span>
-              <div className="w-8 h-8 rounded-xl bg-sand flex items-center justify-center text-base mb-2">
+              <span className="text-xs font-bold text-white/70 group-active:text-teal-900 block mb-1">
+                {item.num}
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-white/15 group-active:bg-teal-900/15 flex items-center justify-center text-lg mb-2">
                 {item.icon}
               </div>
-              <p className="text-sm font-bold text-teal-900">{titles[idx]}</p>
-              <p className="text-xs text-ink-muted mt-0.5">{subs[idx]}</p>
+              <p className="text-sm font-bold leading-tight group-active:text-teal-900">
+                {titles[idx]}
+              </p>
+              <p className="text-xs text-white/80 group-active:text-teal-900/80 mt-0.5">
+                {subs[idx]}
+              </p>
             </button>
           ))}
         </div>

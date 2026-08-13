@@ -6,10 +6,22 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100%;
+  min-height: 100dvh;
   background: #faf6ec;
   /* Latin → Inter; Urdu/Arabic script falls back to Nastaliq. */
   font-family: 'Inter', 'Noto Nastaliq Urdu', system-ui, sans-serif;
+}
+
+/* Safe-area helpers for Android nav bar / status bar / display cutouts */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Fixed bottom bars sit above the nav, which itself clears the OS nav buttons */
+.bottom-bar {
+  bottom: calc(4rem + env(safe-area-inset-bottom));
 }
 
 /* Urdu mode: Nastaliq legibility + RTL alignment */
@@ -31,10 +43,18 @@ html[dir='rtl'] .qa-content .qa-a {
   border-right-color: #c8962c;
 }
 
-/* Keep the app centred on wide screens; full width on phones */
+/* Centred column; wider on tablets, full width on phones */
 #root {
-  max-width: 512px;
+  max-width: 768px;
   margin: 0 auto;
+}
+/* Use dynamic viewport height so the WebView fills the real screen */
+.min-h-screen {
+  min-height: 100dvh;
+}
+/* Keep fixed bars/nav the same width as the content column */
+.max-w-lg {
+  max-width: 768px !important;
 }
 
 /* Guide step-player entrance animation */
@@ -50,6 +70,96 @@ html[dir='rtl'] .qa-content .qa-a {
 }
 .step-enter {
   animation: stepEnter 0.35s ease-out;
+}
+
+/* Glossy button surface (lighter teal + top shine) */
+.glossy {
+  position: relative;
+  background-image: linear-gradient(160deg, #2f8676 0%, #1f6a5c 55%, #185a4e 100%);
+  color: #fff;
+  isolation: isolate;
+}
+.glossy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 48%);
+  pointer-events: none;
+  z-index: -1;
+}
+.glossy:active {
+  background-image: linear-gradient(160deg, #d4a53a 0%, #c8962c 100%);
+}
+
+/* Glossy gold surface (light) — for sub-menu buttons, dark teal text */
+.glossy-gold {
+  position: relative;
+  background-image: linear-gradient(160deg, #f0d187 0%, #d9ad45 55%, #c8962c 100%);
+  color: #0e3b36;
+  isolation: isolate;
+}
+.glossy-gold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+.glossy-gold:active {
+  background-image: linear-gradient(160deg, #2f8676 0%, #1f6a5c 100%);
+  color: #fff;
+}
+
+/* Home tiles fade/slide in (staggered via inline animation-delay) */
+@keyframes tileIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tile-in {
+  animation: tileIn 0.4s ease-out both;
+}
+
+/* Page fade-in on route change */
+@keyframes pageFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.page-fade {
+  animation: pageFade 0.25s ease-out;
+}
+
+/* Gentle press feedback for all buttons */
+button {
+  transition: transform 0.08s ease;
+}
+button:active {
+  transform: scale(0.97);
+}
+
+/* Fullscreen lesson card — allow scrolling the full content */
+.fs-card:fullscreen {
+  overflow-y: auto;
+  background: #fffdf7;
+  padding: 1.5rem 1.25rem 3rem;
+  border-radius: 0;
+}
+.fs-card:-webkit-full-screen {
+  overflow-y: auto;
+  background: #fffdf7;
+  padding: 1.5rem 1.25rem 3rem;
 }
 
 /* Islamic Q&A — rendered .docx content */

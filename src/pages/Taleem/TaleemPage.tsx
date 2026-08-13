@@ -1,7 +1,7 @@
 // src/pages/Taleem/TaleemPage.tsx
 // Islamic Q & A — volumes read from the `qa_volumes` table (like Maqtab).
 // Each volume's markdown is paginated and rendered with react-markdown.
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { PageHeader } from '../../components/PageHeader'
@@ -88,6 +88,21 @@ export function TaleemPage() {
   const [goto, setGoto] = useState('')
   const [loadingList, setLoadingList] = useState(true)
   const [loadingDoc, setLoadingDoc] = useState(false)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [isFs, setIsFs] = useState(false)
+  useEffect(() => {
+    const onChange = () => setIsFs(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+  const toggleFullscreen = () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen()
+      else cardRef.current?.requestFullscreen?.()
+    } catch {
+      /* WebView may not support fullscreen */
+    }
+  }
 
   // Load the volume list once.
   useEffect(() => {
@@ -161,8 +176,36 @@ export function TaleemPage() {
           </div>
         )}
 
+        {/* Horizontal page slider */}
+        {volumes.length > 0 && numPages > 1 && !loadingDoc && (
+          <div className="flex items-center gap-2 mb-3">
+            <input
+              type="range"
+              min={1}
+              max={numPages}
+              value={page}
+              onChange={(e) => setPage(clampPage(parseInt(e.target.value, 10)))}
+              className="flex-1 accent-teal-900"
+              aria-label="Jump to page"
+            />
+            <span className="text-xs font-bold text-teal-900 shrink-0 w-14 text-right">
+              {page}/{numPages}
+            </span>
+          </div>
+        )}
+
         {volumes.length > 0 && (
-          <div className="rounded-2xl overflow-hidden min-h-[55vh] shadow-md border border-gold/30 bg-[#FFFDF7]">
+          <div
+            ref={cardRef}
+            className="fs-card relative rounded-2xl overflow-hidden min-h-[55vh] shadow-md border border-gold/30 bg-[#FFFDF7]"
+          >
+            <button
+              onClick={toggleFullscreen}
+              className="fixed top-24 right-4 z-50 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg"
+              aria-label="Toggle fullscreen"
+            >
+              {isFs ? '🗕' : '⛶'}
+            </button>
             {loadingDoc || content === null ? (
               <p className="text-sm text-ink-muted p-8">Loading volume…</p>
             ) : (
@@ -183,7 +226,7 @@ export function TaleemPage() {
 
       {/* Page controls */}
       {numPages > 1 && !loadingDoc && (
-        <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 space-y-2">
+        <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => setPage((p) => clampPage(p - 1))}

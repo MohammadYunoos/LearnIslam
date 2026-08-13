@@ -27,13 +27,14 @@ export function HifzPage() {
   const tAyah = useTr('ayah')
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
+    <div className="bg-cream min-h-screen pb-20 page-fade">
       <PageHeader title="Hifz" subtitle="Listen · learn · memorise" backTo="/home" />
 
       <div className="px-4 pt-4">
         <div className="bg-white border border-border rounded-2xl p-4 mb-4">
           <p className="text-sm font-semibold text-teal-900">
-            {completed} / {SURAHS.length} {tSurahsMemorised}
+            {Math.round((completed / SURAHS.length) * 100)}% · {completed} / {SURAHS.length}{' '}
+            {tSurahsMemorised}
           </p>
           <div className="h-2 bg-sand rounded-full overflow-hidden mt-2">
             <div
@@ -52,14 +53,15 @@ export function HifzPage() {
               <button
                 key={s.slug}
                 onClick={() => navigate(`/hifz/${s.slug}`)}
-                className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+                style={{ animationDelay: `${idx * 40}ms` }}
+                className="tile-in glossy-gold w-full rounded-2xl p-4 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
               >
-                <div className="w-11 h-11 rounded-xl bg-sand flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-teal-900/10 flex items-center justify-center shrink-0">
                   <span className="font-arabic text-lg text-teal-900">{s.arabicName}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-teal-900">{s.name}</p>
-                  <p className="text-xs text-ink-muted">
+                  <p className="text-xs text-teal-900/70">
                     {meanings[idx]} · {s.ayahs.length} {tAyah}
                     {memo > 0 ? ` · ${memo}/${s.ayahs.length}` : ''}
                   </p>

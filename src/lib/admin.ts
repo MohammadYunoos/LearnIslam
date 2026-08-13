@@ -2,7 +2,7 @@
 import { supabase } from './supabase'
 
 // Emails allowed to see the feedback admin list. Add reviewers here.
-export const ADMIN_EMAILS = ['mohammadyunoos.shiddique@cognizant.com']
+export const ADMIN_EMAILS = ['lucky.yuny@gmail.com']
 
 export async function isAdmin(): Promise<boolean> {
   const {

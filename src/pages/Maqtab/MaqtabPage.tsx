@@ -91,7 +91,7 @@ export function MaqtabPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
+    <div className="bg-cream min-h-screen pb-20 page-fade">
       <PageHeader title="Maqtab" subtitle="Your learning journey" backTo="/home" />
 
       <div className="px-4 pt-4">
@@ -100,6 +100,7 @@ export function MaqtabPage() {
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-semibold text-teal-900">{tOverall}</p>
               <p className="text-xs font-bold text-gold-dark">
+                {lessons.length ? Math.round((completedCount / lessons.length) * 100) : 0}% ·{' '}
                 {completedCount} / {lessons.length}
               </p>
             </div>
@@ -144,11 +145,11 @@ export function MaqtabPage() {
                       <button
                         key={lesson.id}
                         onClick={() => navigate(`/maqtab/${lesson.id}`)}
-                        className="w-full bg-white border border-border rounded-2xl p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+                        className="tile-in glossy-gold w-full rounded-2xl p-3.5 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
                       >
                         <div
                           className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                            isDone ? 'bg-teal-900 text-white' : 'bg-sand text-teal-900'
+                            isDone ? 'bg-teal-900 text-white' : 'bg-teal-900/10 text-teal-900'
                           }`}
                         >
                           {isDone ? '✓' : lesson.lesson_num}
@@ -157,12 +158,12 @@ export function MaqtabPage() {
                           <p className="text-sm font-bold text-teal-900 truncate">
                             {titleMap.get(lesson.title) ?? lesson.title}
                           </p>
-                          <p className="text-xs text-ink-muted">
+                          <p className="text-xs text-teal-900/70">
                             {tLesson} {lesson.lesson_num}
                             {lesson.duration_min ? ` · ${lesson.duration_min} ${tMin}` : ''}
                           </p>
                         </div>
-                        <span className="text-gold-dark text-lg">›</span>
+                        <span className="text-teal-900/70 text-lg">›</span>
                       </button>
                     )
                   })}
