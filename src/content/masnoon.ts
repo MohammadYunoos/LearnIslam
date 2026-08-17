@@ -157,6 +157,51 @@ export const MASNOON_DUAS: Dua[] = [
     translit: 'Bismillah',
     meaning: 'In the name of Allah. (Drink with the right hand, in three sips.)',
   },
+  {
+    slug: 'iftar',
+    title: 'Breaking the fast (Iftar)',
+    arabic: 'ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ وَثَبَتَ الْأَجْرُ إِنْ شَاءَ اللهُ',
+    translit: 'Dhahaba-z-zama’u wa-btallatil-‘uruqu wa thabatal-ajru in sha’Allah',
+    meaning: 'The thirst is gone, the veins are moistened, and the reward is confirmed, if Allah wills.',
+  },
+  {
+    slug: 'rain',
+    title: 'When it rains',
+    arabic: 'اللّهُمَّ صَيِّبًا نَافِعًا',
+    translit: 'Allahumma sayyiban nafi‘a',
+    meaning: 'O Allah, (send) a beneficial rain.',
+  },
+  {
+    slug: 'distress',
+    title: 'In anxiety & grief',
+    arabic:
+      'اللّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ وَالْعَجْزِ وَالْكَسَلِ',
+    translit: 'Allahumma inni a‘udhu bika minal-hammi wal-hazani wal-‘ajzi wal-kasal',
+    meaning: 'O Allah, I seek refuge in You from worry, grief, incapacity and laziness.',
+  },
+  {
+    slug: 'sick',
+    title: 'Visiting the sick',
+    arabic: 'لَا بَأْسَ طَهُورٌ إِنْ شَاءَ اللهُ',
+    translit: 'La ba’sa tahurun in sha’Allah',
+    meaning: 'No harm, (it is) a purification, if Allah wills.',
+  },
+  {
+    slug: 'entering-market',
+    title: 'Entering the market',
+    arabic:
+      'لَا إِلَٰهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ حَيٌّ لَا يَمُوتُ، بِيَدِهِ الْخَيْرُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
+    translit: 'La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, yuhyi wa yumit, wa huwa hayyun la yamut, bi-yadihil-khayr, wa huwa ‘ala kulli shay’in qadir',
+    meaning: 'There is no god but Allah alone… In His hand is all good and He is over all things competent. (Great reward for reciting on entering the market.)',
+  },
+  {
+    slug: 'sayyidul-istighfar',
+    title: 'Sayyidul Istighfar (best du’a for forgiveness)',
+    arabic:
+      'اللّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ',
+    translit: 'Allahumma anta Rabbi la ilaha illa anta, khalaqtani wa ana ‘abduka…',
+    meaning: 'O Allah, You are my Lord… forgive me, for none forgives sins but You. (Whoever says it with certainty by day and dies that day is of the people of Paradise.)',
+  },
 ]
 
 export const ZIKR: Zikr[] = [
@@ -264,6 +309,71 @@ export const ZIKR: Zikr[] = [
     meaning: 'Allah is the Greatest.',
     target: 34,
     ref: 'Bukhari & Muslim — Abu Hurayrah: Tasbih Fatima after every salah (33/33/34).',
+  },
+  // ── Wajifa (purpose-based wird) ──
+  {
+    slug: 'la-hawla',
+    title: 'For strength — La hawla wa la quwwata illa billah',
+    arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ',
+    translit: 'La hawla wa la quwwata illa billah',
+    meaning: 'There is no power nor strength except with Allah.',
+    target: 100,
+    ref: 'Bukhari & Muslim — Abu Musa: it is a treasure from the treasures of Paradise.',
+  },
+  {
+    slug: 'subhanallah-azim',
+    title: 'Beloved words — SubhanAllahi wa bihamdihi, SubhanAllahil-Azim',
+    arabic: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ، سُبْحَانَ اللهِ الْعَظِيمِ',
+    translit: 'SubhanAllahi wa bihamdih, SubhanAllahil-‘Azim',
+    meaning: 'Glory and praise to Allah; glory to Allah the Most Great.',
+    target: 100,
+    ref: 'Bukhari & Muslim — Abu Hurayrah: two words light on the tongue, heavy on the scale, beloved to the Most Merciful.',
+  },
+  {
+    slug: 'rizq-istighfar',
+    title: 'For rizq & barkat — Istighfar',
+    arabic: 'أَسْتَغْفِرُ اللهَ رَبِّي وَأَتُوبُ إِلَيْهِ',
+    translit: 'Astaghfirullaha Rabbi wa atubu ilayh',
+    meaning: 'I seek forgiveness of Allah my Lord and turn to Him.',
+    target: 100,
+    ref: 'Sunan Abu Dawud — Ibn Abbas: whoever persists in istighfar, Allah grants relief, a way out, and provision from where he does not expect.',
+  },
+  {
+    slug: 'dua-yunus',
+    title: 'For relief from distress — Dua of Yunus',
+    arabic: 'لَا إِلَٰهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ',
+    translit: 'La ilaha illa anta subhanaka inni kuntu minaz-zalimin',
+    meaning: 'There is no god but You; glory be to You; indeed I was among the wrongdoers.',
+    target: 100,
+    ref: 'Tirmidhi — Sa‘d ibn Abi Waqqas: no Muslim supplicates with it in any matter but Allah answers him.',
+  },
+  {
+    slug: 'hasbunallah',
+    title: 'For reliance & protection — Hasbunallah',
+    arabic: 'حَسْبُنَا اللهُ وَنِعْمَ الْوَكِيلُ',
+    translit: 'Hasbunallahu wa ni‘mal-wakil',
+    meaning: 'Allah is sufficient for us and the best Disposer of affairs.',
+    target: 100,
+    ref: "Qur'an 3:173 — said by Ibrahim ﷺ in the fire and by the Prophet ﷺ; Allah turned harm away.",
+  },
+  {
+    slug: 'salawat-need',
+    title: 'For needs — Durood upon the Prophet ﷺ',
+    arabic: 'اللّهُمَّ صَلِّ وَسَلِّمْ عَلَىٰ نَبِيِّنَا مُحَمَّدٍ',
+    translit: 'Allahumma salli wa sallim ‘ala nabiyyina Muhammad',
+    meaning: 'O Allah, send blessings and peace upon our Prophet Muhammad.',
+    target: 100,
+    ref: 'Tirmidhi — Ubayy ibn Ka‘b: abundant durood brings the removal of worries and forgiveness of sins.',
+  },
+  {
+    slug: 'tahlil-100',
+    title: 'For great reward — La ilaha illallah…',
+    arabic:
+      'لَا إِلَٰهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
+    translit: 'La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, wa huwa ‘ala kulli shay’in qadir',
+    meaning: 'There is no god but Allah alone… and He is over all things competent.',
+    target: 100,
+    ref: 'Bukhari & Muslim — Abu Hurayrah: said 100× a day equals freeing ten slaves and is a shield from Shaytan that day.',
   },
 ]
 

@@ -1,0 +1,10 @@
+i18n coverage report
+curated entries : 742
+live strings    : 677
+missing (no ur/roman) : 0
+orphaned (drifted en) : 0
+
+── MISSING — add these to a src/content/i18n/*.i18n.ts ──
+
+── ORPHANED — curated en no longer in source (fix en or remove) ──
+

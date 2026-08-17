@@ -128,6 +128,14 @@ const home: AdaabTopic = {
     { text: 'Mention Allah’s name when entering and when eating — it keeps Shaytan out.', refs: [{ source: 'Sahih Muslim — Jabir' }] },
     { text: 'When leaving say: “Bismillahi tawakkaltu ‘alallah, la hawla wa la quwwata illa billah”.', refs: [{ source: 'Tirmidhi / Abu Dawud — Anas' }] },
     { text: 'Seek permission (isti’dhan) before entering others’ homes, up to three times.', refs: [{ source: "Qur'an 24:27-28" }] },
+    { text: 'Give salam even if the house is empty: “Assalamu ‘alaina wa ‘ala ‘ibadillahis-salihin”.', refs: [{ source: "Qur'an 24:61" }] },
+    { text: 'Use the miswak on entering the home, as was the Prophet’s ﷺ habit.', refs: [{ source: 'Sahih Muslim — Aisha' }] },
+    { text: 'Help the household with chores — the Prophet ﷺ served his family.', refs: [{ source: 'Sahih al-Bukhari — Aisha' }] },
+    { text: 'Recite Surah Al-Baqarah in the home; Shaytan flees from a house in which it is recited.', refs: [{ source: 'Sahih Muslim — Abu Hurayrah' }] },
+    { text: 'At nightfall close the doors, cover the vessels and mention Allah’s name.', refs: [{ source: 'Bukhari & Muslim — Jabir' }] },
+    { text: 'Do not keep pictures of living beings or a dog (except for guarding/farming) in the home.', refs: [{ source: 'Bukhari & Muslim — Abu Talha' }] },
+    { text: 'Keep the home clean and remove anything harmful from the path/entrance.' },
+    { text: 'Do not return to the family suddenly late at night without notice.', refs: [{ source: 'Bukhari & Muslim — Jabir' }] },
   ],
 }
 
@@ -142,6 +150,14 @@ const masjid: AdaabTopic = {
     { text: 'Pray two rak’ah (Tahiyyat al-Masjid) before sitting down.', refs: [{ source: 'Bukhari & Muslim — Abu Qatadah' }] },
     { text: 'Come in a state of wudu, in clean clothes, without the smell of raw onion/garlic.', refs: [{ source: 'Bukhari & Muslim — Jabir' }] },
     { text: 'Keep the masjid clean and quiet; no worldly buying and selling inside.', refs: [{ source: 'Tirmidhi — Abu Hurayrah (trading in the masjid)' }] },
+    { text: 'Walk to the masjid calmly and with dignity; do not run, even if the prayer has started.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Do not disturb others’ prayer or raise the voice in recitation over them.', refs: [{ source: 'Sunan Abu Dawud — Abu Sa‘id' }] },
+    { text: 'Do not announce lost property in the masjid.', refs: [{ source: 'Sahih Muslim — Abu Hurayrah' }] },
+    { text: 'Seek the front rows — there is great virtue in the first row.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Pray towards a sutrah (barrier) and do not let anyone pass directly in front.', refs: [{ source: 'Bukhari & Muslim — Abu Sa‘id' }] },
+    { text: 'While waiting for salah you are “in prayer”, and the angels send blessings upon you.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Women’s rows are behind the men’s; maintain modesty and order.', refs: [{ source: 'Sahih Muslim — Abu Hurayrah' }] },
+    { text: 'Straighten and fill the rows, closing gaps for the congregation.', refs: [{ source: 'Bukhari & Muslim — Anas' }] },
   ],
 }
 
@@ -170,6 +186,12 @@ const clothing: AdaabTopic = {
     { text: 'Men must not wear silk or gold.', gender: 'male', refs: [{ source: 'Bukhari & Muslim — Umar / Ali' }] },
     { text: 'Women should observe full, loose, modest covering (hijab) before non-mahram.', gender: 'female', refs: [{ source: "Qur'an 33:59, 24:31" }] },
     { text: 'Dress modestly and cleanly; avoid imitating the opposite gender.', refs: [{ source: 'Sahih al-Bukhari — Ibn Abbas' }] },
+    { text: 'Always keep the awrah covered — men from navel to knee, women all but the face and hands.', refs: [{ source: "Qur'an 24:31" }] },
+    { text: 'White garments are recommended, and keep clothes clean.', refs: [{ source: 'Tirmidhi / Abu Dawud — Ibn Abbas' }] },
+    { text: 'Avoid clothing worn for fame or show (libas ash-shuhrah).', refs: [{ source: 'Sunan Abu Dawud — Ibn Umar' }] },
+    { text: 'Wear both shoes or neither; put on the right first, take off the left first.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Women must not wear tight, transparent clothing, nor perfume before non-mahram.', gender: 'female', refs: [{ source: 'Sahih Muslim — Abu Hurayrah' }] },
+    { text: 'Men should keep the beard and trim the moustache (fitrah).', gender: 'male', refs: [{ source: 'Bukhari & Muslim — Ibn Umar' }] },
   ],
 }
 
@@ -184,6 +206,62 @@ const travel: AdaabTopic = {
     { text: 'Appoint a leader (amir) when three or more travel together.', refs: [{ source: 'Sunan Abu Dawud — Abu Hurayrah' }] },
     { text: 'A traveller may shorten (qasr) the four-rak’ah fard to two.', refs: [{ source: "Qur'an 4:101" }] },
     { text: 'Seek Allah’s protection and return promptly to the family once the need is met.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Travel in company; a single rider is a devil, two are devils, three are a travelling party.', refs: [{ source: 'Tirmidhi / Abu Dawud — Amr ibn Shu‘ayb' }] },
+    { text: 'When three set out, they should appoint one of them as amir (leader).', refs: [{ source: 'Sunan Abu Dawud — Abu Sa‘id' }] },
+    { text: 'Make plentiful du’a — the traveller’s supplication is accepted.', refs: [{ source: 'Tirmidhi — Abu Hurayrah' }] },
+    { text: 'Bid farewell to loved ones: “Astawdi‘ullaha dinaka wa amanataka wa khawatima ‘amalika”.', refs: [{ source: 'Tirmidhi — Ibn Umar' }] },
+    { text: 'A traveller may combine and shorten prayers as permitted.', refs: [{ source: 'Sahih Muslim — Ibn Abbas' }] },
+    { text: 'On returning, it is Sunnah to first go to the masjid and pray two rak’ah.', refs: [{ source: 'Sahih al-Bukhari — Ka‘b ibn Malik' }] },
+    { text: 'Do not arrive home unannounced late at night.', refs: [{ source: 'Bukhari & Muslim — Jabir' }] },
+  ],
+}
+
+const gatherings: AdaabTopic = {
+  slug: 'gatherings',
+  title: 'Gatherings (Majlis)',
+  arabic: 'آداب المجلس',
+  icon: '👥',
+  items: [
+    { text: 'Give salam when arriving at a gathering and when leaving it.', refs: [{ source: 'Tirmidhi / Abu Dawud — Abu Hurayrah' }] },
+    { text: 'Make room for others; do not make anyone rise to take his seat.', refs: [{ source: "Qur'an 58:11" }, { source: 'Bukhari & Muslim — Ibn Umar' }] },
+    { text: 'Sit where there is space; do not sit between two people without their permission.', refs: [{ source: 'Sunan Abu Dawud — Amr ibn Shu‘ayb' }] },
+    { text: 'Do not whisper between two people while excluding a third.', refs: [{ source: 'Bukhari & Muslim — Ibn Mas‘ud' }] },
+    { text: 'Speak good or remain silent; avoid backbiting and idle talk.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Lower the gaze and be humble; do not dominate the gathering.' },
+    { text: 'Recite the du’a on leaving (kaffarah al-majlis): “Subhanaka Allahumma wa bihamdika, ash-hadu an la ilaha illa anta, astaghfiruka wa atubu ilayk”.', refs: [{ source: 'Tirmidhi — Abu Hurayrah' }] },
+    { text: 'Honour the guest and the elder; begin serving from the right.', refs: [{ source: 'Bukhari & Muslim — Anas' }] },
+  ],
+}
+
+const parents: AdaabTopic = {
+  slug: 'parents',
+  title: 'Parents & Elders',
+  arabic: 'بر الوالدين',
+  icon: '👴',
+  items: [
+    { text: 'Be kind and obedient to parents; lower the wing of humility to them.', refs: [{ source: "Qur'an 17:23-24" }] },
+    { text: 'Never say “uff” to them nor rebuke them; speak a gracious word.', refs: [{ source: "Qur'an 17:23" }] },
+    { text: 'Seek their pleasure — Allah’s pleasure lies in the pleasure of the parents.', refs: [{ source: 'Tirmidhi — Abdullah ibn Amr' }] },
+    { text: 'Serve them, spend on them, and make du’a: “Rabbir-hamhuma kama rabbayani saghira”.', refs: [{ source: "Qur'an 17:24" }] },
+    { text: 'Respect elders and show mercy to the young.', refs: [{ source: 'Sunan Abu Dawud / Tirmidhi — Ibn Amr' }] },
+    { text: 'Maintain kindness after their death — du’a, charity, and keeping ties with their friends.', refs: [{ source: 'Sahih Muslim — Ibn Umar' }] },
+    { text: 'Keep ties of kinship (silah rahm); do not sever relations.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+  ],
+}
+
+const speech: AdaabTopic = {
+  slug: 'speech',
+  title: 'Speech & the Tongue',
+  arabic: 'آداب الكلام',
+  icon: '🗣️',
+  items: [
+    { text: 'Whoever believes in Allah and the Last Day, let him speak good or remain silent.', refs: [{ source: 'Bukhari & Muslim — Abu Hurayrah' }] },
+    { text: 'Be truthful; truthfulness leads to righteousness and to Paradise.', refs: [{ source: 'Bukhari & Muslim — Ibn Mas‘ud' }] },
+    { text: 'Avoid backbiting (gheebah) and tale-carrying (nameemah).', refs: [{ source: "Qur'an 49:12" }] },
+    { text: 'Lower your voice; the harshest of voices is the braying of a donkey.', refs: [{ source: "Qur'an 31:19" }] },
+    { text: 'Do not argue even when you are right; abandon lying even in jest.', refs: [{ source: 'Sunan Abu Dawud — Abu Umamah' }] },
+    { text: 'Fulfil promises and speak with justice, even against oneself.', refs: [{ source: "Qur'an 6:152" }] },
+    { text: 'Do not mock, insult, or call others by offensive nicknames.', refs: [{ source: "Qur'an 49:11" }] },
   ],
 }
 
@@ -198,6 +276,9 @@ export const ADAAB_TOPICS: AdaabTopic[] = [
   sneezing,
   clothing,
   travel,
+  gatherings,
+  parents,
+  speech,
 ]
 
 export function getAdaab(slug: string): AdaabTopic | undefined {

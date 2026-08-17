@@ -87,12 +87,20 @@ export function SettingsPage() {
         </button>
 
         {admin && (
-          <button
-            onClick={() => navigate('/admin/feedback')}
-            className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
-          >
-            🛠 Admin: Feedback
-          </button>
+          <>
+            <button
+              onClick={() => navigate('/admin/feedback')}
+              className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
+            >
+              🛠 Admin: Feedback
+            </button>
+            <button
+              onClick={() => navigate('/admin/translations')}
+              className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
+            >
+              🌐 Admin: Translations
+            </button>
+          </>
         )}
 
         <button

@@ -13,6 +13,7 @@ const NATIVE = Capacitor.isNativePlatform()
 const LOCALE: Record<string, string> = {
   en: 'en-US',
   ur: 'ur-PK',
+  'ur-roman': 'ur-PK',
   hi: 'hi-IN',
   bn: 'bn-IN',
   ms: 'ms-MY',

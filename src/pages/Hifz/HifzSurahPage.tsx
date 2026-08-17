@@ -73,7 +73,7 @@ export function HifzSurahPage() {
       getSurahTransliteration(surah.number).then((arr) => {
         if (alive) setTranslit(arr)
       })
-      if (lang && lang !== 'en') {
+      if (lang && lang !== 'en' && lang !== 'ur-roman') {
         getSurahTranslation(surah.number, lang).then((arr) => {
           if (alive) setTranslation(arr)
         })

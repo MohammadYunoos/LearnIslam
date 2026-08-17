@@ -53,6 +53,16 @@ export async function getFeedback() {
   return api.get<any[]>('/feedback')
 }
 
+// ── CURATED TRANSLATION OVERRIDES ───────────────────────
+
+export async function setTranslation(target: string, source: string, text: string) {
+  await api.post('/translate/set', { target, source_text: source, translated_text: text })
+}
+
+export async function listTranslations(target: string) {
+  return api.get<any[]>(`/translate/list?target=${encodeURIComponent(target)}`)
+}
+
 // ── ISLAMIC Q&A ─────────────────────────────────────────
 
 export async function getQaVolumes() {

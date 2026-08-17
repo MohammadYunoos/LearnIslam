@@ -161,14 +161,19 @@ app.post('/translate', async (c) => {
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+  // Roman Urdu: translate to Urdu but return Google's romanization (Latin letters).
+  const roman = tl === 'ur-roman'
+  const googleTl = roman ? 'ur' : tl
+
   // Translate one text with retry/backoff to survive the free endpoint's rate limits.
   async function gtx(text: string): Promise<string | null> {
+    const dt = roman ? '&dt=t&dt=rm' : '&dt=t'
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         const res = await fetch(
           `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
-            tl
-          )}&dt=t`,
+            googleTl
+          )}${dt}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
@@ -180,7 +185,17 @@ app.post('/translate', async (c) => {
           continue
         }
         const json = await res.json()
-        const t = (json?.[0] ?? []).map((seg: any[]) => seg?.[0] ?? '').join('')
+        const chunks = json?.[0] ?? []
+        if (roman) {
+          // Romanization lives in trailing chunks: [null, null, "roman text"].
+          const rm = chunks
+            .filter((seg: any[]) => seg?.[0] == null && typeof seg?.[2] === 'string')
+            .map((seg: any[]) => seg[2])
+            .join('')
+          if (rm) return rm
+          // fall back to plain Urdu translation if no romanization returned
+        }
+        const t = chunks.map((seg: any[]) => seg?.[0] ?? '').join('')
         if (t) return t
       } catch {
         /* retry */
@@ -207,6 +222,35 @@ app.post('/translate', async (c) => {
   }
 
   return c.json({ translations: out })
+})
+
+// ── CURATED TRANSLATION OVERRIDES ───────────────────────
+app.post('/translate/set', async (c) => {
+  const { target, source_text, translated_text } = await c.req.json()
+  if (!target || !source_text || translated_text == null) {
+    return c.json({ error: 'target, source_text, translated_text required' }, 400)
+  }
+  const hash = await sha256(String(target) + '|' + String(source_text))
+  const { error } = await supabase.from('translations').upsert({
+    hash,
+    target_lang: target,
+    source_text,
+    translated_text,
+  })
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ ok: true })
+})
+
+app.get('/translate/list', async (c) => {
+  const target = c.req.query('target')
+  let q = supabase
+    .from('translations')
+    .select('hash, target_lang, source_text, translated_text')
+    .order('source_text')
+    .limit(500)
+  if (target) q = q.eq('target_lang', target)
+  const { data } = await q
+  return c.json(data ?? [])
 })
 
 // ── APP VERSION (update banner) ─────────────────────────

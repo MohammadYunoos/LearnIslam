@@ -201,6 +201,7 @@ export function LoginPage() {
             >
               <option value="en">English</option>
               <option value="ur">اردو Urdu</option>
+              <option value="ur-roman">Roman Urdu (English letters)</option>
               <option value="hi">हिन्दी Hindi</option>
               <option value="ms">Bahasa Melayu</option>
               <option value="bn">বাংলা Bengali</option>

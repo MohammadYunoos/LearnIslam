@@ -35,6 +35,16 @@ function cacheKey(lang: string, text: string) {
   return `tr_${lang}_${text}`
 }
 
+// Drop a cached translation so a freshly-curated wording shows immediately.
+export function clearCached(lang: string, text: string) {
+  mem.delete(`${lang}|${text}`)
+  try {
+    localStorage.removeItem(cacheKey(lang, text))
+  } catch {
+    /* ignore */
+  }
+}
+
 function readLocal(lang: string, text: string): string | null {
   try {
     return localStorage.getItem(cacheKey(lang, text))

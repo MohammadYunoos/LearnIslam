@@ -5,7 +5,18 @@ import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { getZikr } from '../../content/masnoon'
+import { Capacitor } from '@capacitor/core'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { useTr } from '../../i18n/useTr'
+
+// Short buzz on each count — native haptics on device, vibrate API on web.
+function buzz() {
+  if (Capacitor.isNativePlatform()) {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {})
+  } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(25)
+  }
+}
 
 const key = (slug: string) => `mymaqtab_zikr_count_${slug}`
 
@@ -33,7 +44,14 @@ export function TasbihPage() {
   const persist = (n: number) => {
     if (slug) localStorage.setItem(key(slug), String(n))
   }
-  const increment = () => setCount((c) => { const n = c + 1; persist(n); return n })
+  const increment = () => {
+    buzz()
+    setCount((c) => {
+      const n = c + 1
+      persist(n)
+      return n
+    })
+  }
   const reset = () => { setCount(0); persist(0) }
 
   const inRound = count % target

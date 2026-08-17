@@ -457,6 +457,11 @@ const namaaz: GuideTopic = {
   ],
 }
 
+// Wudu step images: wudu/1.png … wudu/10.png (in order).
+wudu.steps?.forEach((s, i) => {
+  s.image = `wudu/${i + 1}.png`
+})
+
 // Map each namaaz step to a pose image in the LearnIslam bucket (Namaaz/<pose>.png).
 // Upload one image per pose; steps that share a pose reuse the same image.
 const NAMAAZ_POSES = [

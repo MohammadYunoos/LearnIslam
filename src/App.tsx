@@ -33,6 +33,7 @@ import { ThreadPage } from './pages/Messages/ThreadPage'
 import { PlansPage } from './pages/Plans/PlansPage'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { FeedbackPage } from './pages/Admin/FeedbackPage'
+import { TranslationsPage } from './pages/Admin/TranslationsPage'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReportButton } from './components/ReportButton'
 
@@ -166,6 +167,7 @@ export default function App() {
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
         <Route path="/settings" element={<PrivateRoute element={<SettingsPage />} />} />
         <Route path="/admin/feedback" element={<PrivateRoute element={<FeedbackPage />} />} />
+        <Route path="/admin/translations" element={<PrivateRoute element={<TranslationsPage />} />} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>
