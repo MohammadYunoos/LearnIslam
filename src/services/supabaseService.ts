@@ -11,8 +11,8 @@ export async function getHadeesOfTheDay() {
 
 // ── MAQTAB ──────────────────────────────────────────────
 
-export async function getMaqtabChapters() {
-  return api.get<any[]>('/maqtab/chapters')
+export async function getMaqtabChapters(lang = 'english') {
+  return api.get<any[]>(`/maqtab/chapters?lang=${encodeURIComponent(lang)}`)
 }
 
 export async function getLessonContent(lessonId: string) {
@@ -65,8 +65,8 @@ export async function listTranslations(target: string) {
 
 // ── ISLAMIC Q&A ─────────────────────────────────────────
 
-export async function getQaVolumes() {
-  return api.get<any[]>('/qa/volumes')
+export async function getQaVolumes(lang = 'english') {
+  return api.get<any[]>(`/qa/volumes?lang=${encodeURIComponent(lang)}`)
 }
 
 export async function getQaVolume(id: string) {

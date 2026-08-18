@@ -5,7 +5,8 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { getMaqtabChapters, getMaqtabProgress } from '../../services/supabaseService'
-import { useTr, useTrList } from '../../i18n/useTr'
+import { useTr, useTrList, useLang } from '../../i18n/useTr'
+import { contentDbLang } from '../../i18n/contentLang'
 
 interface Lesson {
   id: string
@@ -34,11 +35,12 @@ export function MaqtabPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [done, setDone] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const lang = useLang()
 
   useEffect(() => {
     async function load() {
       const [chapters, progress] = await Promise.all([
-        getMaqtabChapters(),
+        getMaqtabChapters(contentDbLang(lang)),
         user ? getMaqtabProgress(user.id) : Promise.resolve([]),
       ])
       setLessons(chapters as Lesson[])
@@ -46,7 +48,7 @@ export function MaqtabPage() {
       setLoading(false)
     }
     load()
-  }, [user])
+  }, [user, lang])
 
   const completedCount = lessons.filter((l) => done.has(l.id)).length
 

@@ -79,12 +79,26 @@ app.get('/hadees/today', async (c) => {
   return c.json(data)
 })
 
+// A lesson (level + chapter_num + lesson_num) can exist in several languages.
+// Return one row per lesson: requested language if present, else English.
 app.get('/maqtab/chapters', async (c) => {
+  const lang = c.req.query('lang') || 'english'
   const { data } = await supabase
     .from('maqtab_lessons')
-    .select('id, chapter_num, title, duration_min, sort_order, level, lesson_num')
+    .select('id, chapter_num, title, duration_min, sort_order, level, lesson_num, language')
     .order('sort_order')
-  return c.json(data ?? [])
+  const rows = data ?? []
+  const key = (r: any) => `${r.level}-${r.chapter_num}-${r.lesson_num}`
+  const byLesson = new Map<string, any>()
+  for (const r of rows) {
+    const k = key(r)
+    const cur = byLesson.get(k)
+    if (r.language === lang) byLesson.set(k, r) // exact match always wins
+    else if (!cur) byLesson.set(k, r) // first-seen fallback
+    else if (cur.language !== lang && r.language === 'english') byLesson.set(k, r) // prefer English fallback
+  }
+  const out = [...byLesson.values()].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  return c.json(out)
 })
 
 app.get('/maqtab/lesson/:id', async (c) => {
@@ -115,13 +129,28 @@ app.get('/wajifa/categories', async (c) => {
 })
 
 // ── ISLAMIC Q&A (volumes) ───────────────────────────────
+// A volume_no can exist in several languages (e.g. 'english', 'english-urdu').
+// Return one row per volume_no: the requested language if present, else the
+// English row as fallback. `lang` is the DB language value (see client map).
 app.get('/qa/volumes', async (c) => {
+  const lang = c.req.query('lang') || 'english'
   const { data } = await supabase
     .from('qa_volumes')
-    .select('id, volume_no, title, sort_order')
+    .select('id, volume_no, title, sort_order, language')
     .order('sort_order')
     .order('volume_no')
-  return c.json(data ?? [])
+  const rows = data ?? []
+  const byVol = new Map<number, any>()
+  for (const r of rows) {
+    const cur = byVol.get(r.volume_no)
+    if (r.language === lang) byVol.set(r.volume_no, r) // exact match always wins
+    else if (!cur) byVol.set(r.volume_no, r) // first-seen fallback
+    else if (cur.language !== lang && r.language === 'english') byVol.set(r.volume_no, r) // prefer English fallback
+  }
+  const out = [...byVol.values()].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.volume_no - b.volume_no
+  )
+  return c.json(out)
 })
 
 app.get('/qa/volume/:id', async (c) => {

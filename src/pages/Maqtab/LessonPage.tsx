@@ -15,6 +15,7 @@ interface Lesson {
   arabic_text?: string
   duration_min?: number
   level?: string
+  language?: string
 }
 
 export function LessonPage() {
@@ -36,7 +37,9 @@ export function LessonPage() {
   const body = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
   const blocks = useMemo(() => body.split(/\n{2,}/).filter((b) => b.trim()), [body])
   const trBlocks = useTrList(blocks)
-  const trBody = trBlocks.join('\n\n')
+  // A lesson already stored in the chosen language must NOT be MT-translated again.
+  const alreadyLocalized = !!lesson?.language && lesson.language !== 'english'
+  const trBody = (alreadyLocalized ? blocks : trBlocks).join('\n\n')
   const tQuiz = useTr('Take the quiz')
 
   const cardRef = useRef<HTMLDivElement | null>(null)
