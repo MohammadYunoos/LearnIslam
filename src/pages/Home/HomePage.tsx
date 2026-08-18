@@ -16,6 +16,8 @@ const MENU_ITEMS = [
   { num: '06', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', path: '/detoxify' },
   { num: '07', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', path: '/wajifa' },
   { num: '08', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', path: '/masail' },
+  { num: '09', title: 'Find Qibla', sub: 'Direction of the Ka‘bah', icon: '🧭', path: '/qibla' },
+  { num: '10', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', path: '/namaaz-timings', variant: 'glossy-sky' },
 ]
 
 interface Hadees {
@@ -100,27 +102,34 @@ export function HomePage() {
         {/* Menu grid */}
         <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">{tPrompt}</p>
         <div className="grid grid-cols-2 gap-3">
-          {MENU_ITEMS.map((item, idx) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{ animationDelay: `${idx * 90}ms` }}
-              className="tile-in glossy group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform"
-            >
-              <span className="text-xs font-bold text-white/70 group-active:text-teal-900 block mb-1">
-                {item.num}
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-white/15 group-active:bg-teal-900/15 flex items-center justify-center text-lg mb-2">
-                {item.icon}
-              </div>
-              <p className="text-sm font-bold leading-tight group-active:text-teal-900">
-                {titles[idx]}
-              </p>
-              <p className="text-xs text-white/80 group-active:text-teal-900/80 mt-0.5">
-                {subs[idx]}
-              </p>
-            </button>
-          ))}
+          {MENU_ITEMS.map((item, idx) => {
+            const sky = item.variant === 'glossy-sky' // light bg → dark text
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                style={{ animationDelay: `${idx * 90}ms` }}
+                className={`tile-in ${item.variant ?? 'glossy'} group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform`}
+              >
+                <span
+                  className={`text-xs font-bold block mb-1 ${sky ? 'text-teal-900/60' : 'text-white/70 group-active:text-teal-900'}`}
+                >
+                  {item.num}
+                </span>
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-2 ${sky ? 'bg-teal-900/10' : 'bg-white/15 group-active:bg-teal-900/15'}`}
+                >
+                  {item.icon}
+                </div>
+                <p className={`text-sm font-bold leading-tight ${sky ? 'text-teal-900' : 'group-active:text-teal-900'}`}>
+                  {titles[idx]}
+                </p>
+                <p className={`text-xs mt-0.5 ${sky ? 'text-teal-900/70' : 'text-white/80 group-active:text-teal-900/80'}`}>
+                  {subs[idx]}
+                </p>
+              </button>
+            )
+          })}
         </div>
       </div>
 

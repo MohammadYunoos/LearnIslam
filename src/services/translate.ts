@@ -33,7 +33,7 @@ const OVERRIDES: Record<string, Record<string, string>> = {
 
 // Bump this whenever curated wording is bulk-seeded so existing devices drop
 // their stale localStorage entries and re-fetch fresh translations.
-const TR_CACHE_VERSION = 'v2'
+const TR_CACHE_VERSION = 'v3'
 
 function cacheKey(lang: string, text: string) {
   return `tr_${TR_CACHE_VERSION}_${lang}_${text}`
@@ -105,6 +105,24 @@ function queue(lang: string, text: string): Promise<void> {
     if (p!.timer) clearTimeout(p!.timer)
     p!.timer = setTimeout(() => flush(lang), 50)
   })
+}
+
+// Synchronous cache read: returns the already-known translation (override,
+// in-memory, or localStorage) without any network call. Returns `text` for
+// English, or null when nothing is cached yet (caller should show source then
+// fetch). Lets the UI paint the right text on first render — no English flash.
+export function cachedTranslation(text: string, lang: string): string | null {
+  if (!lang || lang === 'en' || !text.trim()) return text
+  const override = OVERRIDES[lang]?.[text.trim()]
+  if (override) return override
+  const k = `${lang}|${text}`
+  if (mem.has(k)) return mem.get(k)!
+  const local = readLocal(lang, text)
+  if (local != null) {
+    mem.set(k, local)
+    return local
+  }
+  return null
 }
 
 // Translate a single string (cached). Returns the source unchanged for English.

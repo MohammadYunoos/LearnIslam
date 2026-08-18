@@ -28,7 +28,8 @@ export function StepPlayerPage() {
   const tTitle = useTr(step?.title ?? '')
   const tDesc = useTr(step?.description ?? '')
   const tStepsTitle = useTr(topic?.stepsTitle ?? (topic ? `Method — ${topic.title}` : ''))
-  const tRefs = useTrList((step?.refs ?? []).map((r) => shortRef(r.source)))
+  // Refs are proper nouns — shown as-is (no MT, which garbled "Qur'an").
+  const tRefs = (step?.refs ?? []).map((r) => shortRef(r.source))
   const L = useTrList([
     'Narration On',
     'Narration Off',

@@ -19,7 +19,7 @@ export interface AdaabTr {
 
 export const ADAAB_I18N: AdaabTr[] = [
   // ── Topic titles ──────────────────────────────────────
-  { en: 'Eating', ur: 'کھانا کھانا', roman: 'khana khana' },
+  { en: 'Eating', ur: 'کھانے کے آداب', roman: 'khane ke adaab' },
   { en: 'Drinking', ur: 'پانی پینا', roman: 'pani peena' },
   { en: 'Sleeping', ur: 'سونا', roman: 'sona' },
   { en: 'Toilet & Istinja', ur: 'بیت الخلاء اور استنجا', roman: 'baitul khala aur istinja' },

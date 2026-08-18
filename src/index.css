@@ -113,6 +113,69 @@ html[dir='rtl'] .qa-content .qa-a {
   color: #fff;
 }
 
+/* Glossy sky-blue surface — Ehtimam-e-Namaaz tile */
+.glossy-sky {
+  position: relative;
+  background-image: linear-gradient(160deg, #9fd8f7 0%, #63b8e8 55%, #3a9fd6 100%);
+  color: #0e3b36;
+  isolation: isolate;
+}
+.glossy-sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+.glossy-sky:active {
+  background-image: linear-gradient(160deg, #2f8676 0%, #1f6a5c 100%);
+  color: #fff;
+}
+
+/* Qibla compass animations */
+@keyframes qiblaPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.qibla-pulse {
+  animation: qiblaPulse 2.2s ease-out infinite;
+}
+@keyframes qiblaFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.qibla-float {
+  animation: qiblaFloat 2.4s ease-in-out infinite;
+}
+@keyframes qiblaGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(22, 163, 74, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(22, 163, 74, 0.9));
+  }
+}
+.qibla-glow {
+  animation: qiblaGlow 1.3s ease-in-out infinite;
+}
+
 /* Home tiles fade/slide in (staggered via inline animation-delay) */
 @keyframes tileIn {
   from {

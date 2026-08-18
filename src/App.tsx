@@ -34,6 +34,8 @@ import { PlansPage } from './pages/Plans/PlansPage'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { FeedbackPage } from './pages/Admin/FeedbackPage'
 import { TranslationsPage } from './pages/Admin/TranslationsPage'
+import { QiblaPage } from './pages/Qibla/QiblaPage'
+import { NamaazPage } from './pages/Namaaz/NamaazPage'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReportButton } from './components/ReportButton'
 
@@ -155,6 +157,8 @@ export default function App() {
         <Route path="/wajifa" element={<PrivateRoute element={<WajifaListPage />} />} />
         <Route path="/wajifa/:slug" element={<PrivateRoute element={<TasbihPage />} />} />
         <Route path="/detoxify" element={<PrivateRoute element={<DetoxifyPage />} />} />
+        <Route path="/qibla" element={<PrivateRoute element={<QiblaPage />} />} />
+        <Route path="/namaaz-timings" element={<PrivateRoute element={<NamaazPage />} />} />
         <Route path="/masail" element={<PrivateRoute element={<MasailPage />} />} />
         <Route path="/analyzer" element={<PrivateRoute element={<AnalyzerPage />} />} />
         <Route path="/ulema" element={<PrivateRoute element={<UlemaListPage />} />} />

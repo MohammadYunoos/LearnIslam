@@ -5,8 +5,8 @@
 -- Idempotent: re-running updates the wording for existing hashes.
 -- Sources: adaab.i18n.ts, detoxify.i18n.ts, guide.i18n.ts, masnoon.i18n.ts, surahs.i18n.ts, ui.i18n.ts
 insert into translations (hash, target_lang, source_text, translated_text) values
-  ('e4a9a29ad7cd41ccee7fbed5d351b383eb715d4dc698f7bddfaf7efbea5301a0', 'ur', 'Eating', 'کھانا کھانا'),
-  ('96048449de366ce628f751b5f92363378a54cec3878fb845e9e616ba4b46907f', 'ur-roman', 'Eating', 'khana khana'),
+  ('e4a9a29ad7cd41ccee7fbed5d351b383eb715d4dc698f7bddfaf7efbea5301a0', 'ur', 'Eating', 'کھانے کے آداب'),
+  ('96048449de366ce628f751b5f92363378a54cec3878fb845e9e616ba4b46907f', 'ur-roman', 'Eating', 'khane ke adaab'),
   ('4bf554941bf5e13653bb1c4972ec941b8f504fbef5c597b88b44ac7bcc428406', 'ur', 'Drinking', 'پانی پینا'),
   ('a24eb1df34ddcd51478ad4d28bcbaef665267db3d2adb9baa8f1b0564519ac00', 'ur-roman', 'Drinking', 'pani peena'),
   ('d858370c042f60e98ebba42d85a8dbcf5af690be153f29b5632d0e6862a28364', 'ur', 'Sleeping', 'سونا'),

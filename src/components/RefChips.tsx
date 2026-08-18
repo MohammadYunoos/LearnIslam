@@ -1,6 +1,5 @@
 // src/components/RefChips.tsx
 import type { Reference } from '../content/guide'
-import { useTrList } from '../i18n/useTr'
 
 // Shorten a reference for display: drop the explanatory clause after ':' and
 // add "(ra)" for a named companion. Qur'an ayah refs are kept as-is.
@@ -12,8 +11,9 @@ export function shortRef(source: string): string {
 }
 
 export function RefChips({ refs }: { refs?: Reference[] }) {
-  const shorts = (refs ?? []).map((r) => shortRef(r.source))
-  const labels = useTrList(shorts)
+  // References (collections, narrators, Qur'an ayah refs) are proper nouns —
+  // rendered as-is; MT was garbling them (e.g. "Qur'an" → "qaran").
+  const labels = (refs ?? []).map((r) => shortRef(r.source))
   if (!refs || refs.length === 0) return null
   return (
     <div className="flex flex-wrap gap-1.5 mt-1.5">

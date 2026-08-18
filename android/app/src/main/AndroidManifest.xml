@@ -46,4 +46,12 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Qibla + prayer times: device location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Compass (Qibla arrow) -->
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
 </manifest>
