@@ -8,6 +8,12 @@ import { BottomNav } from '../../components/BottomNav'
 import { computeTimings, fmtTime, type Timing } from '../../lib/prayerTimes'
 import { getSavedCoords, saveCoords, requestGpsCoords, type Coords } from '../../lib/location'
 
+const SR_KEY = 'namaaz_sunrise_offset'
+const readInt = (k: string) => {
+  const n = parseInt(localStorage.getItem(k) ?? '0', 10)
+  return Number.isNaN(n) ? 0 : n
+}
+
 function isoToday(): string {
   const d = new Date()
   const p = (n: number) => String(n).padStart(2, '0')
@@ -36,6 +42,7 @@ export function NamaazPage() {
   const [latIn, setLatIn] = useState('')
   const [lngIn, setLngIn] = useState('')
   const [err, setErr] = useState<string | null>(null)
+  const [srOff, setSrOff] = useState<number>(() => readInt(SR_KEY))
 
   useEffect(() => {
     if (coords) return
@@ -77,8 +84,18 @@ export function NamaazPage() {
     if (!coords) return null
     const [y, m, d] = dateStr.split('-').map(Number)
     const date = new Date(y, (m || 1) - 1, d || 1, 12, 0, 0) // noon avoids DST edge issues
-    return computeTimings(coords.lat, coords.lng, date)
-  }, [coords, dateStr])
+    return computeTimings(coords.lat, coords.lng, date, srOff)
+  }, [coords, dateStr, srOff])
+
+  const applyOff = (val: string) => {
+    const n = Math.max(-60, Math.min(60, parseInt(val || '0', 10) || 0))
+    setSrOff(n)
+    localStorage.setItem(SR_KEY, String(n))
+  }
+  const resetOff = () => {
+    setSrOff(0)
+    localStorage.setItem(SR_KEY, '0')
+  }
 
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
@@ -99,10 +116,55 @@ export function NamaazPage() {
           />
           <button
             onClick={() => setDateStr(isoToday())}
-            className="text-xs font-bold px-3 py-2 rounded-xl bg-teal-900 text-white whitespace-nowrap"
+            className="glossy-sky text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap shadow"
           >
             Today
           </button>
+        </div>
+
+        {/* Sunrise calibration — shifts ALL times to match the local chart */}
+        <div className="bg-white border border-sky-200 rounded-2xl p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wide">
+              Sunrise offset (minutes)
+            </p>
+            {srOff !== 0 && (
+              <button
+                onClick={resetOff}
+                className="text-[11px] font-bold text-gold-dark underline"
+              >
+                Switch to default
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => applyOff(String(srOff - 1))}
+              className="w-9 h-9 rounded-xl bg-sky-100 text-teal-900 font-bold text-lg shrink-0"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={-60}
+              max={60}
+              value={srOff}
+              onChange={(e) => applyOff(e.target.value)}
+              className="flex-1 text-center border border-border rounded-xl px-3 py-2 text-sm bg-white text-ink"
+            />
+            <button
+              onClick={() => applyOff(String(srOff + 1))}
+              className="w-9 h-9 rounded-xl bg-sky-100 text-teal-900 font-bold text-lg shrink-0"
+            >
+              +
+            </button>
+          </div>
+          <p className="text-[10px] text-ink-muted mt-2 leading-relaxed">
+            Set the difference between your local chart's sunrise and the app's. Every time —
+            Subah Sadiq, Tulu, Zawal, Asr, Maghrib, Isha and all nafl — shifts by this amount.
+            Saved automatically. Default is 0.
+          </p>
         </div>
 
         {!coords && !manual && (
@@ -127,18 +189,24 @@ export function NamaazPage() {
 
         {timings && (
           <>
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">Fard prayers</p>
-            <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
+            <div className="glossy-sky rounded-t-2xl px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-sm">
+              Fard prayers
+            </div>
+            <div className="bg-white border border-sky-200 rounded-b-2xl divide-y divide-border mb-4">
               {timings.fard.map((t) => <Row key={t.key} t={t} />)}
             </div>
 
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">Sunnah &amp; Nafl</p>
-            <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
+            <div className="glossy-sky rounded-t-2xl px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-sm">
+              Sunnah &amp; Nafl
+            </div>
+            <div className="bg-white border border-sky-200 rounded-b-2xl divide-y divide-border mb-4">
               {timings.sunnah.map((t) => <Row key={t.key} t={t} />)}
             </div>
 
-            <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-2">Roza (fasting)</p>
-            <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
+            <div className="glossy-sky rounded-t-2xl px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-sm">
+              Roza (fasting)
+            </div>
+            <div className="bg-white border border-sky-200 rounded-b-2xl divide-y divide-border mb-4">
               {timings.roza.map((t) => <Row key={t.key} t={t} />)}
             </div>
 

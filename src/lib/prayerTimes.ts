@@ -39,58 +39,74 @@ export function qiblaBearing(lat: number, lng: number): number {
 
 const addMin = (d: Date, m: number) => new Date(d.getTime() + m * 60000)
 
-export function computeTimings(lat: number, lng: number, date: Date): DayTimings {
+export function computeTimings(
+  lat: number,
+  lng: number,
+  date: Date,
+  offsetMin = 0
+): DayTimings {
   const coords = new Coordinates(lat, lng)
   const pt = karachiHanafi(coords, date)
   const sunnah = new SunnahTimes(pt)
 
-  // Roza (fasting) window uses today's Fajr (Subah Sadiq) and Maghrib.
+  // Isha lasts until the next day's Subah Sadiq (Fajr).
+  const nextDay = new Date(date.getTime() + 86400000)
+  const ptNext = karachiHanafi(coords, nextDay)
+
+  // A single sunrise-calibration offset (minutes) shifts EVERY time equally so
+  // the whole chart lines up with the local masjid timetable.
+  const o = (d: Date) => addMin(d, offsetMin)
+
+  const zawal = o(pt.dhuhr)
+  const sr = o(pt.sunrise)
+
+  // Each fard waqt shown as start → end (the valid time window).
   const fard: Timing[] = [
-    { key: 'fajr', label: 'Fajr', time: pt.fajr, note: 'Subah Sadiq → sunrise' , end: pt.sunrise },
-    { key: 'sunrise', label: 'Sunrise (Tulu)', time: pt.sunrise, note: 'No salah (makruh)' },
-    { key: 'dhuhr', label: 'Zuhr', time: pt.dhuhr, note: 'After Zawal' },
-    { key: 'asr', label: 'Asr (Hanafi)', time: pt.asr },
-    { key: 'maghrib', label: 'Maghrib', time: pt.maghrib },
-    { key: 'isha', label: 'Isha', time: pt.isha },
+    { key: 'fajr', label: 'Fajr (Subah Sadiq)', time: o(pt.fajr), end: sr, note: 'Subah Sadiq until sunrise' },
+    { key: 'sunrise', label: 'Sunrise (Tulu)', time: sr, note: 'No salah (makruh)' },
+    { key: 'dhuhr', label: 'Zuhr (Zawal)', time: zawal, end: o(pt.asr), note: 'After Zawal until Asr' },
+    { key: 'asr', label: 'Asr (Hanafi)', time: o(pt.asr), end: o(pt.maghrib), note: 'Until sunset (avoid the makruh time just before)' },
+    { key: 'maghrib', label: 'Maghrib', time: o(pt.maghrib), end: o(pt.isha), note: 'After sunset until Isha' },
+    { key: 'isha', label: 'Isha', time: o(pt.isha), end: o(ptNext.fajr), note: 'Until Subah Sadiq (next Fajr)' },
   ]
 
-  // Sunnah / Nafl windows.
-  const ishraqStart = addMin(pt.sunrise, 15) // ~ a spear's length after sunrise
-  const zawal = pt.dhuhr // Zuhr begins just after Zawal
+  // Sunnah / Nafl times (all shifted by the same offset).
+  const forenoonMs = zawal.getTime() - sr.getTime()
+  const ishraqTime = addMin(sr, 15) // single start time, not a window
+  const chashtStart = new Date(sr.getTime() + forenoonMs * 0.5) // mid-morning
   const sunnahList: Timing[] = [
     {
       key: 'tahajjud',
       label: 'Tahajjud',
-      time: sunnah.lastThirdOfTheNight,
-      end: pt.fajr,
+      time: o(sunnah.lastThirdOfTheNight),
+      end: o(pt.fajr),
       note: 'Last third of the night → Subah Sadiq',
     },
     {
       key: 'ishraq',
       label: 'Ishraq',
-      time: ishraqStart,
-      end: addMin(pt.sunrise, 45),
-      note: '~15 min after sunrise',
+      time: ishraqTime,
+      note: '~15–20 min after sunrise',
     },
     {
       key: 'chasht',
       label: 'Chasht (Duha)',
-      time: addMin(pt.sunrise, 45),
+      time: chashtStart,
       end: addMin(zawal, -10),
-      note: 'Mid-morning until before Zawal',
+      note: 'Mid-morning until just before Zawal',
     },
     {
       key: 'awabin',
       label: 'Awabin',
-      time: addMin(pt.maghrib, 5),
-      end: pt.isha,
+      time: addMin(o(pt.maghrib), 5),
+      end: o(pt.isha),
       note: 'After Maghrib fard until Isha',
     },
   ]
 
   const roza: Timing[] = [
-    { key: 'sehri', label: 'Sehri ends (Subah Sadiq)', time: pt.fajr, note: 'Stop eating at Fajr' },
-    { key: 'iftar', label: 'Iftar (Maghrib)', time: pt.maghrib, note: 'Open the fast' },
+    { key: 'sehri', label: 'Sehri ends (Subah Sadiq)', time: o(pt.fajr), note: 'Stop eating at Fajr' },
+    { key: 'iftar', label: 'Iftar (Maghrib)', time: o(pt.maghrib), note: 'Open the fast' },
   ]
 
   return { fard, sunnah: sunnahList, roza }

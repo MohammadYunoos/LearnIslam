@@ -16,6 +16,7 @@ export const SCHOLARS = [
   'Maulana Tariq Jameel',
   'Tariq Masood',
   'Nouman Ali Khan',
+  'Maulana Israr Ahmad',
 ]
 
 export function ytSearch(query: string): string {

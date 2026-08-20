@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store/appStore'
 import { BottomNav } from '../../components/BottomNav'
 import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseService'
-import { useTr, useTrList } from '../../i18n/useTr'
+import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { Logo } from '../../components/Logo'
 
 const MENU_ITEMS = [
@@ -17,7 +17,7 @@ const MENU_ITEMS = [
   { num: '07', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', path: '/wajifa' },
   { num: '08', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', path: '/masail' },
   { num: '09', title: 'Find Qibla', sub: 'Direction of the Ka‘bah', icon: '🧭', path: '/qibla' },
-  { num: '10', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', path: '/namaaz-timings', variant: 'glossy-sky' },
+  { num: '10', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', path: '/namaaz-timings' },
 ]
 
 interface Hadees {
@@ -62,6 +62,10 @@ export function HomePage() {
   const tMaqtabProgress = useTr('Maqtab progress')
   const tLessonsDone = useTr('lessons done')
   const tHadeesTranslation = useTr(hadees?.translation ?? '')
+  const lang = useLang()
+  // For non-English users the translation arrives async; show a loader until
+  // the Roman/Urdu text is ready instead of flashing the English source.
+  const hadeesReady = lang === 'en' || !hadees?.translation || tHadeesTranslation !== ''
 
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
@@ -102,34 +106,27 @@ export function HomePage() {
         {/* Menu grid */}
         <p className="text-xs font-bold text-ink-muted uppercase tracking-widest mb-3">{tPrompt}</p>
         <div className="grid grid-cols-2 gap-3">
-          {MENU_ITEMS.map((item, idx) => {
-            const sky = item.variant === 'glossy-sky' // light bg → dark text
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                style={{ animationDelay: `${idx * 90}ms` }}
-                className={`tile-in ${item.variant ?? 'glossy'} group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform`}
-              >
-                <span
-                  className={`text-xs font-bold block mb-1 ${sky ? 'text-teal-900/60' : 'text-white/70 group-active:text-teal-900'}`}
-                >
-                  {item.num}
-                </span>
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-2 ${sky ? 'bg-teal-900/10' : 'bg-white/15 group-active:bg-teal-900/15'}`}
-                >
-                  {item.icon}
-                </div>
-                <p className={`text-sm font-bold leading-tight ${sky ? 'text-teal-900' : 'group-active:text-teal-900'}`}>
-                  {titles[idx]}
-                </p>
-                <p className={`text-xs mt-0.5 ${sky ? 'text-teal-900/70' : 'text-white/80 group-active:text-teal-900/80'}`}>
-                  {subs[idx]}
-                </p>
-              </button>
-            )
-          })}
+          {MENU_ITEMS.map((item, idx) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              style={{ animationDelay: `${idx * 90}ms` }}
+              className="tile-in glossy group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform"
+            >
+              <span className="text-xs font-bold text-white/70 group-active:text-teal-900 block mb-1">
+                {item.num}
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-white/15 group-active:bg-teal-900/15 flex items-center justify-center text-lg mb-2">
+                {item.icon}
+              </div>
+              <p className="text-sm font-bold leading-tight group-active:text-teal-900">
+                {titles[idx]}
+              </p>
+              <p className="text-xs text-white/80 group-active:text-teal-900/80 mt-0.5">
+                {subs[idx]}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -145,18 +142,26 @@ export function HomePage() {
                 {hadees.arabic_text}
               </p>
             )}
-            <p className="text-sm text-ink leading-relaxed mb-2">
-              &ldquo;{tHadeesTranslation || hadees.translation}&rdquo;
-            </p>
-            <p className="text-xs text-ink-muted mb-4">
-              — {hadees.collection}, Hadith {hadees.hadith_num} · {hadees.grading}
-            </p>
-            <button
-              onClick={dismissHadees}
-              className="bg-teal-900 text-white font-bold px-8 py-2.5 rounded-full text-sm"
-            >
-              {tAmeen}
-            </button>
+            {hadeesReady ? (
+              <>
+                <p className="text-sm text-ink leading-relaxed mb-2">
+                  &ldquo;{tHadeesTranslation || hadees.translation}&rdquo;
+                </p>
+                <p className="text-xs text-ink-muted mb-4">
+                  — {hadees.collection}, Hadith {hadees.hadith_num} · {hadees.grading}
+                </p>
+                <button
+                  onClick={dismissHadees}
+                  className="bg-teal-900 text-white font-bold px-8 py-2.5 rounded-full text-sm"
+                >
+                  {tAmeen}
+                </button>
+              </>
+            ) : (
+              <div className="flex justify-center py-6">
+                <span className="w-7 h-7 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </div>
         </div>
       )}

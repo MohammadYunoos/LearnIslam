@@ -92,7 +92,7 @@ export const UI_I18N: Tr[] = [
   { en: 'Repeat', ur: 'دہرائیں', roman: 'dohrayein' },
 
   // ── Maqtab / Lesson / Quiz chrome ─────────────────────
-  { en: 'Overall progress', ur: 'مجموعی پیش رفت', roman: 'majmooi paish-raft' },
+  { en: 'Overall progress', ur: 'مجموعی پیش رفت', roman: 'majmoi peshraft' },
   { en: 'Chapter', ur: 'باب', roman: 'baab' },
   { en: 'min', ur: 'منٹ', roman: 'minute' },
   { en: 'Loading lessons…', ur: 'اسباق لوڈ ہو رہے ہیں…', roman: 'asbaaq load ho rahe hain…' },
@@ -171,4 +171,17 @@ export const UI_I18N: Tr[] = [
   { en: 'Urdu (script)', ur: 'اردو (رسم الخط)', roman: 'Urdu (script)' },
   { en: 'Roman Urdu', ur: 'رومن اردو', roman: 'Roman Urdu' },
   { en: 'Hindi', ur: 'ہندی', roman: 'Hindi' },
+
+  // ── Qibla + Namaaz chrome ─────────────────────────────
+  { en: 'Find Qibla', ur: 'قبلہ تلاش کریں', roman: 'Qibla dhoondein' },
+  { en: 'Direction of the Ka‘bah', ur: 'کعبہ کی سمت', roman: 'Kaaba ki simt' },
+  { en: 'Ehtimam-e-Namaaz', ur: 'اہتمامِ نماز', roman: 'Ehtimam-e-Namaaz' },
+  { en: 'Prayer & Roza timings', ur: 'نماز اور روزہ کے اوقات', roman: 'namaz aur roza ke auqaat' },
+  { en: 'Timings · Hanafi / Deobandi', ur: 'اوقات · حنفی / دیوبندی', roman: 'auqaat · Hanafi / Deobandi' },
+
+  // ── Maqtab chapter/level names (were MT-garbled) ──────
+  { en: 'Beginner', ur: 'ابتدائی', roman: 'ibtidai' },
+  { en: 'Foundations of Iman', ur: 'ایمان کی بنیادیں', roman: 'imaan ki buniyadein' },
+  { en: 'Taharah — Purification', ur: 'طہارت — پاکی', roman: 'taharat — paaki' },
+  { en: 'Salah — Prayer', ur: 'نماز', roman: 'namaz' },
 ]

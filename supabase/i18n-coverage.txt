@@ -1,10 +1,26 @@
 i18n coverage report
-curated entries : 742
-live strings    : 677
-missing (no ur/roman) : 0
+curated entries : 746
+live strings    : 693
+missing (no ur/roman) : 16
 orphaned (drifted en) : 0
 
 ── MISSING — add these to a src/content/i18n/*.i18n.ts ──
+  [src\lib\prayerTimes.ts]  Asr (Hanafi)
+  [src\lib\prayerTimes.ts]  Awabin
+  [src\lib\prayerTimes.ts]  Chasht (Duha)
+  [src\pages\Qibla\QiblaPage.tsx]  Direction of the Ka'bah
+  [src\pages\Home\HomePage.tsx]  Ehtimam-e-Namaaz
+  [src\lib\prayerTimes.ts]  Fajr
+  [src\pages\Home\HomePage.tsx]  Find Qibla
+  [src\lib\prayerTimes.ts]  Iftar (Maghrib)
+  [src\lib\prayerTimes.ts]  Isha
+  [src\lib\prayerTimes.ts]  Ishraq
+  [src\lib\prayerTimes.ts]  Maghrib
+  [src\lib\prayerTimes.ts]  Sehri ends (Subah Sadiq)
+  [src\lib\prayerTimes.ts]  Sunrise (Tulu)
+  [src\lib\prayerTimes.ts]  Tahajjud
+  [src\pages\Namaaz\NamaazPage.tsx]  Timings · Hanafi / Deobandi
+  [src\lib\prayerTimes.ts]  Zuhr
 
 ── ORPHANED — curated en no longer in source (fix en or remove) ──
 

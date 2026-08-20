@@ -33,7 +33,7 @@ const OVERRIDES: Record<string, Record<string, string>> = {
 
 // Bump this whenever curated wording is bulk-seeded so existing devices drop
 // their stale localStorage entries and re-fetch fresh translations.
-const TR_CACHE_VERSION = 'v3'
+const TR_CACHE_VERSION = 'v4'
 
 function cacheKey(lang: string, text: string) {
   return `tr_${TR_CACHE_VERSION}_${lang}_${text}`

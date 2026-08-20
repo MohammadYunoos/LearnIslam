@@ -7,12 +7,17 @@ interface Props {
   subtitle?: string
   back?: boolean
   backTo?: string
+  // Skip runtime translation — for titles already in the user's language
+  // (e.g. a localized DB lesson title). Prevents MT re-garbling.
+  noTranslate?: boolean
 }
 
-export function PageHeader({ title, subtitle, back = true, backTo }: Props) {
+export function PageHeader({ title, subtitle, back = true, backTo, noTranslate }: Props) {
   const navigate = useNavigate()
-  const tTitle = useTr(title)
-  const tSub = useTr(subtitle ?? '')
+  const trTitle = useTr(title)
+  const trSub = useTr(subtitle ?? '')
+  const tTitle = noTranslate ? title : trTitle
+  const tSub = noTranslate ? subtitle ?? '' : trSub
   return (
     <div className="bg-teal-900 px-4 pt-10 pb-4 flex items-center gap-3 safe-top">
       {back && (

@@ -107,7 +107,7 @@ export function QiblaPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
-      <PageHeader title="Find Qibla" subtitle="Direction of the Ka'bah" backTo="/home" />
+      <PageHeader title="Find Qibla" subtitle="Direction of the Ka‘bah" backTo="/home" />
 
       <div className="px-4 pt-4">
         {!coords && !manual && (

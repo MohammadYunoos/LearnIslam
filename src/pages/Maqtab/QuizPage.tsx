@@ -137,14 +137,7 @@ export function QuizPage() {
     'Review answers', // 12
     'correct', // 13
   ])
-  const qTexts = useTrList(questions.map((q) => q.question))
-  const qMap = new Map(questions.map((q, i) => [q.question, qTexts[i]]))
-  const optList = questions.flatMap((q) => q.options)
-  const trOpt = useTrList(optList)
-  const optMap = new Map(optList.map((o, i) => [o, trOpt[i]]))
-  const explList = questions.map((q) => q.explanation ?? '')
-  const trExpl = useTrList(explList)
-  const explMap = new Map(explList.map((e, i) => [e, trExpl[i]]))
+  // Quiz text is served verbatim from maqtab_quiz — no runtime translation.
 
   const handleSubmit = async () => {
     setSubmitted(true)
@@ -197,7 +190,7 @@ export function QuizPage() {
         {questions.map((q, qi) => (
           <div key={q.id} className="bg-white border border-border rounded-2xl p-4">
             <p className="text-sm font-bold text-teal-900 mb-3">
-              {qi + 1}. {qMap.get(q.question) ?? q.question}
+              {qi + 1}. {q.question}
             </p>
             <div className="space-y-2">
               {q.options.map((opt, oi) => {
@@ -217,7 +210,7 @@ export function QuizPage() {
                     onClick={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
                     className={`w-full text-left border rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${cls}`}
                   >
-                    {optMap.get(opt) ?? opt}
+                    {opt}
                     {submitted && isCorrect && ' ✓'}
                   </button>
                 )
@@ -225,7 +218,7 @@ export function QuizPage() {
             </div>
             {submitted && q.explanation && (
               <p className="text-xs text-ink-muted mt-3 bg-sand rounded-xl px-3 py-2 leading-relaxed">
-                💡 {explMap.get(q.explanation ?? '') ?? q.explanation}
+                💡 {q.explanation}
               </p>
             )}
           </div>

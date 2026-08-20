@@ -18,6 +18,12 @@ export interface Ayah {
   audioFile?: string // override the derived filename (e.g. non-standard name)
 }
 
+// Grouping for the Hifz list:
+//   'must'  — required to pray a 4-rakat salah (memorise first)
+//   'salah' — the salah recitations (Attahiyat, Durood, duas)
+//   'short' — other short surahs, easy to memorise next
+export type SurahGroup = 'must' | 'salah' | 'short'
+
 export interface Surah {
   slug: string
   folder: string // exact storage folder name
@@ -25,6 +31,7 @@ export interface Surah {
   name: string
   arabicName: string
   meaning: string
+  group?: SurahGroup // defaults to 'short'
   ayahs: Ayah[]
 }
 
@@ -47,6 +54,7 @@ export const SURAHS: Surah[] = [
     name: 'Al-Fatiha',
     arabicName: 'الفاتحة',
     meaning: 'The Opening',
+    group: 'must',
     ayahs: [
       { arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', translation: 'In the name of Allah, the Most Gracious, the Most Merciful.', audioFile: '001001 (1).mp3' },
       { arabic: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', translation: 'All praise is for Allah, Lord of all the worlds.' },
@@ -64,6 +72,7 @@ export const SURAHS: Surah[] = [
     name: 'Al-Asr',
     arabicName: 'العصر',
     meaning: 'The Declining Day',
+    group: 'must',
     ayahs: [
       { arabic: 'وَالْعَصْرِ', translation: 'By time,' },
       { arabic: 'إِنَّ الْإِنسَانَ لَفِي خُسْرٍ', translation: 'Indeed, mankind is in loss,' },
@@ -77,6 +86,7 @@ export const SURAHS: Surah[] = [
     name: 'Al-Ikhlas',
     arabicName: 'الإخلاص',
     meaning: 'Sincerity',
+    group: 'must',
     ayahs: [
       { arabic: 'قُلْ هُوَ اللَّهُ أَحَدٌ', translation: 'Say, He is Allah, the One.' },
       { arabic: 'اللَّهُ الصَّمَدُ', translation: 'Allah, the Eternal Refuge.' },
@@ -122,6 +132,7 @@ export const SURAHS: Surah[] = [
     name: 'Al-Kawthar',
     arabicName: 'الكوثر',
     meaning: 'Abundance',
+    group: 'must',
     ayahs: [
       { arabic: 'إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ', translation: 'Indeed, We have granted you al-Kawthar.' },
       { arabic: 'فَصَلِّ لِرَبِّكَ وَانْحَرْ', translation: 'So pray to your Lord and sacrifice.' },
@@ -135,6 +146,7 @@ export const SURAHS: Surah[] = [
     name: 'Al-Fil',
     arabicName: 'الفيل',
     meaning: 'The Elephant',
+    group: 'must',
     ayahs: [
       { arabic: 'أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ الْفِيلِ', translation: 'Have you not seen how your Lord dealt with the companions of the elephant?' },
       { arabic: 'أَلَمْ يَجْعَلْ كَيْدَهُمْ فِي تَضْلِيلٍ', translation: 'Did He not make their plan go astray?' },
@@ -216,6 +228,78 @@ export const SURAHS: Surah[] = [
       { arabic: 'سَيَصْلَىٰ نَارًا ذَاتَ لَهَبٍ', translation: 'He will burn in a Fire of blazing flame,' },
       { arabic: 'وَامْرَأَتُهُ حَمَّالَةَ الْحَطَبِ', translation: 'And his wife, the carrier of firewood,' },
       { arabic: 'فِي جِيدِهَا حَبْلٌ مِّن مَّسَدٍ', translation: 'Around her neck a rope of twisted fibre.' },
+    ],
+  },
+  {
+    slug: 'attahiyat',
+    folder: 'Attahiyat',
+    number: 900,
+    name: 'At-Tahiyyat (Tashahhud)',
+    arabicName: 'التحيات',
+    meaning: 'Recited sitting in every salah',
+    group: 'salah',
+    ayahs: [
+      {
+        arabic:
+          'التَّحِيَّاتُ لِلّٰهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ، السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللّٰهِ وَبَرَكَاتُهُ، السَّلَامُ عَلَيْنَا وَعَلَىٰ عِبَادِ اللّٰهِ الصَّالِحِينَ، أَشْهَدُ أَنْ لَّا إِلٰهَ إِلَّا اللّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ',
+        translation:
+          'At-tahiyyatu lillahi was-salawatu wat-tayyibat, as-salamu ‘alaika ayyuhan-nabiyyu wa rahmatullahi wa barakatuh, as-salamu ‘alaina wa ‘ala ‘ibadillahis-salihin, ash-hadu an la ilaha illallah, wa ash-hadu anna Muhammadan ‘abduhu wa rasuluh.',
+        noAudio: true,
+      },
+    ],
+  },
+  {
+    slug: 'durood-ibrahim',
+    folder: 'DuroodIbrahim',
+    number: 901,
+    name: 'Durood-e-Ibrahim',
+    arabicName: 'درود ابراہیم',
+    meaning: 'Sent in the last sitting of salah',
+    group: 'salah',
+    ayahs: [
+      {
+        arabic:
+          'اللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَىٰ إِبْرَاهِيمَ وَعَلَىٰ آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَّجِيدٌ، اللّٰهُمَّ بَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ آلِ مُحَمَّدٍ كَمَا بَارَكْتَ عَلَىٰ إِبْرَاهِيمَ وَعَلَىٰ آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَّجِيدٌ',
+        translation:
+          'Allahumma salli ‘ala Muhammadin wa ‘ala aali Muhammadin kama sallaita ‘ala Ibrahima wa ‘ala aali Ibrahima innaka Hamidum Majid. Allahumma barik ‘ala Muhammadin wa ‘ala aali Muhammadin kama barakta ‘ala Ibrahima wa ‘ala aali Ibrahima innaka Hamidum Majid.',
+        noAudio: true,
+      },
+    ],
+  },
+  {
+    slug: 'dua-masura',
+    folder: 'DuaMasura',
+    number: 902,
+    name: 'Dua-e-Masura',
+    arabicName: 'دعائے ماثورہ',
+    meaning: 'Read after Durood, before Salam',
+    group: 'salah',
+    ayahs: [
+      {
+        arabic:
+          'اللّٰهُمَّ إِنِّي ظَلَمْتُ نَفْسِي ظُلْمًا كَثِيرًا وَّلَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ فَاغْفِرْ لِي مَغْفِرَةً مِّنْ عِنْدِكَ وَارْحَمْنِي إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ',
+        translation:
+          'Allahumma inni zalamtu nafsi zulman kathira, wa la yaghfirudh-dhunuba illa anta, faghfir li maghfiratam min ‘indika warhamni, innaka antal-Ghafurur-Rahim.',
+        noAudio: true,
+      },
+    ],
+  },
+  {
+    slug: 'dua-qunut',
+    folder: 'DuaQunut',
+    number: 903,
+    name: 'Dua-e-Qunut (Witr)',
+    arabicName: 'دعائے قنوت',
+    meaning: 'Recited in the Witr prayer',
+    group: 'salah',
+    ayahs: [
+      {
+        arabic:
+          'اللّٰهُمَّ إِنَّا نَسْتَعِينُكَ وَنَسْتَغْفِرُكَ وَنُؤْمِنُ بِكَ وَنَتَوَكَّلُ عَلَيْكَ وَنُثْنِي عَلَيْكَ الْخَيْرَ وَنَشْكُرُكَ وَلَا نَكْفُرُكَ وَنَخْلَعُ وَنَتْرُكُ مَنْ يَّفْجُرُكَ، اللّٰهُمَّ إِيَّاكَ نَعْبُدُ وَلَكَ نُصَلِّي وَنَسْجُدُ وَإِلَيْكَ نَسْعَىٰ وَنَحْفِدُ نَرْجُو رَحْمَتَكَ وَنَخْشَىٰ عَذَابَكَ إِنَّ عَذَابَكَ بِالْكُفَّارِ مُلْحِقٌ',
+        translation:
+          'Allahumma inna nasta‘inuka wa nastaghfiruka wa nu’minu bika wa natawakkalu ‘alaika wa nuthni ‘alaikal-khair, wa nashkuruka wa la nakfuruka wa nakhla‘u wa natruku man yafjuruk. Allahumma iyyaka na‘budu wa laka nusalli wa nasjudu wa ilaika nas‘a wa nahfid, narju rahmataka wa nakhsha ‘adhabak, inna ‘adhabaka bil-kuffari mulhiq.',
+        noAudio: true,
+      },
     ],
   },
 ]

@@ -60,7 +60,11 @@ export function LessonPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-28">
-      <PageHeader title={lesson?.title ?? 'Lesson'} backTo="/maqtab" />
+      <PageHeader
+        title={lesson?.title ?? 'Lesson'}
+        backTo="/maqtab"
+        noTranslate={alreadyLocalized}
+      />
 
       <div className="px-4 pt-4">
         {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}

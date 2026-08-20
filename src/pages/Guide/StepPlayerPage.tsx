@@ -6,7 +6,7 @@ import { getTopic, itemsForGender } from '../../content/guide'
 import { useNarration } from '../../hooks/useNarration'
 import { useAppStore } from '../../store/appStore'
 import { supabase } from '../../lib/supabase'
-import { useTr, useTrList } from '../../i18n/useTr'
+import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { shortRef } from '../../components/RefChips'
 
 export function StepPlayerPage() {
@@ -17,6 +17,8 @@ export function StepPlayerPage() {
   const [index, setIndex] = useState(0)
   const [imgError, setImgError] = useState(false)
   const narration = useNarration()
+  // Roman Urdu TTS (via the ur-PK voice) reads the Latin text poorly — disable it.
+  const narrationOff = useLang() === 'ur-roman'
 
   useEffect(() => {
     setImgError(false) // reset when the step changes
@@ -44,13 +46,13 @@ export function StepPlayerPage() {
 
   // Narrate the current step (in the user's language) whenever it changes.
   useEffect(() => {
-    if (step && narration.enabled) {
+    if (step && narration.enabled && !narrationOff) {
       narration.speak(`${tTitle}. ${tDesc}`)
     } else {
       narration.cancel()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, narration.enabled, tTitle, tDesc])
+  }, [index, narration.enabled, tTitle, tDesc, narrationOff])
 
   if (!topic || steps.length === 0) {
     return (
@@ -77,9 +79,9 @@ export function StepPlayerPage() {
         backTo={`/guide/${slug}`}
       />
 
-      {/* Narration toggle */}
+      {/* Narration toggle (hidden for Roman Urdu — TTS reads it poorly) */}
       <div className="px-4 pt-3 flex flex-col items-end">
-        {narration.supported ? (
+        {narrationOff ? null : narration.supported ? (
           <>
             <button
               onClick={narration.toggle}

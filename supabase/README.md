@@ -21,6 +21,12 @@ supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
 # (Project Settings -> API -> service_role). Without it, RLS blocks all writes
 # (progress, profiles) and completions silently fail.
 supabase secrets set SERVICE_ROLE_KEY=eyJ...service_role...
+
+# Auto-localize (english-urdu via Gemini, free tier) — see "Auto-localize" below
+supabase secrets set GEMINI_API_KEY=AIza...        # from https://aistudio.google.com/apikey
+supabase secrets set LOCALIZE_SECRET=<any-long-random-string>
+# optional: override the model (default gemini-2.0-flash)
+# supabase secrets set GEMINI_MODEL=gemini-2.0-flash
 ```
 
 `SUPABASE_URL` / `SUPABASE_ANON_KEY` are injected automatically. Verify the service
@@ -74,3 +80,45 @@ Progress: `GET /maqtab/progress` · `POST /maqtab/complete`; `GET /hifz/progress
 `POST /hifz/status`; `GET /tasbih/progress` · `POST /tasbih/save`;
 `GET /analyzer/summary`; `POST /events`
 AI: `POST /masail`
+Auto-localize: `POST /localize/hook` (webhook target), `POST /localize/backfill` (admin)
+
+## Auto-localize (english → english-urdu via Gemini, free tier)
+
+When an **english** row in `maqtab_lessons` or `qa_volumes` is inserted/updated, Gemini
+(`gemini-2.0-flash`, free tier) converts its `title` + `content_md` to Roman-Urdu and upserts the matching `english-urdu`
+sibling (all other columns copied). On **insert** of a maqtab lesson it also generates a
+10-question quiz into `maqtab_quiz` (only if the lesson has none). Roman-Urdu is served by the
+existing per-language read logic; the quiz is served to Roman users via the english-sibling
+fallback already in `/maqtab/quiz/:lessonId`.
+
+Setup:
+
+```bash
+# 1. Secrets (see above)
+supabase secrets set GEMINI_API_KEY=AIza...
+supabase secrets set LOCALIZE_SECRET=<random>
+
+# 2. Unique indexes needed for the upsert conflict target
+#    (Supabase SQL editor, or: supabase db execute < supabase/localize_setup.sql)
+
+# 3. Deploy
+supabase functions deploy api --no-verify-jwt
+
+# 4. Create Database Webhooks (dashboard → Database → Webhooks), one per table:
+#    Table:  maqtab_lessons   Events: Insert, Update
+#    Table:  qa_volumes       Events: Insert, Update
+#    Type:   HTTP Request → POST
+#    URL:    https://wpdalidqkfsizgdvdbqi.supabase.co/functions/v1/api/localize/hook
+#    HTTP header:  x-localize-secret: <same LOCALIZE_SECRET>
+
+# 5. Backfill existing english rows (siblings + missing quizzes)
+curl -X POST https://wpdalidqkfsizgdvdbqi.supabase.co/functions/v1/api/localize/backfill \
+  -H "apikey: <anon>" -H "Authorization: Bearer <anon>" \
+  -H "x-localize-secret: <LOCALIZE_SECRET>"
+```
+
+Notes: the hook only acts on `language = 'english'` rows (recursion guard). Quiz is
+generated on INSERT only (never overwrites an existing/edited quiz). The quiz insert uses
+columns `lesson_id, question, options (jsonb array of 4), correct_idx, explanation, sort_order`
+(matches the `maqtab_quiz` schema). Gemini free tier has daily rate limits — the backfill
+paces calls; if you have a lot of content it may take a while or need re-running.

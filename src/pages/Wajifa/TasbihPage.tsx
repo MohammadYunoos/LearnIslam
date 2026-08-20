@@ -9,12 +9,21 @@ import { Capacitor } from '@capacitor/core'
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { useTr } from '../../i18n/useTr'
 
-// Short buzz on each count — native haptics on device, vibrate API on web.
+// Light buzz on each count — native haptics on device, vibrate API on web.
 function buzz() {
   if (Capacitor.isNativePlatform()) {
     Haptics.impact({ style: ImpactStyle.Light }).catch(() => {})
   } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    navigator.vibrate(25)
+    navigator.vibrate(12)
+  }
+}
+
+// Stronger buzz when a round (target) completes.
+function buzzDone() {
+  if (Capacitor.isNativePlatform()) {
+    Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
+  } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate([80, 40, 120])
   }
 }
 
@@ -45,10 +54,12 @@ export function TasbihPage() {
     if (slug) localStorage.setItem(key(slug), String(n))
   }
   const increment = () => {
-    buzz()
     setCount((c) => {
       const n = c + 1
       persist(n)
+      // Stronger buzz exactly when a round of `target` completes, else light tap.
+      if (target && n % target === 0) buzzDone()
+      else buzz()
       return n
     })
   }

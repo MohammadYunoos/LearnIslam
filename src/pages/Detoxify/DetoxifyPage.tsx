@@ -25,18 +25,18 @@ export function DetoxifyPage() {
 
         <div className="space-y-3">
           {HEART_TOPICS.map((t, idx) => (
-            <div key={t.slug} className="bg-white border border-border rounded-2xl p-4">
+            <div key={t.slug} className="glossy-sky rounded-2xl p-4 shadow-md">
               <div className="flex items-baseline justify-between gap-2 mb-1">
                 <p className="text-sm font-bold text-teal-900">{titles[idx]}</p>
-                {t.arabic && <span className="font-arabic text-base text-ink">{t.arabic}</span>}
+                {t.arabic && <span className="font-arabic text-base text-teal-900">{t.arabic}</span>}
               </div>
-              <p className="text-xs text-ink-muted mb-3 leading-relaxed">{descs[idx]}</p>
+              <p className="text-xs text-teal-900/80 mb-3 leading-relaxed">{descs[idx]}</p>
               <div className="flex flex-wrap gap-2">
                 {SCHOLARS.map((s) => (
                   <button
                     key={s}
                     onClick={() => openExternal(ytSearch(`${s} ${t.keyword}`))}
-                    className="text-[11px] font-semibold text-teal-900 bg-sand border border-border rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+                    className="text-[11px] font-semibold text-teal-900 bg-white/70 border border-white/60 rounded-full px-3 py-1.5 active:scale-95 transition-transform"
                   >
                     ▶ {s}
                   </button>

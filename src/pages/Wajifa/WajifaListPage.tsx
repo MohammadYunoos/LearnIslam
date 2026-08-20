@@ -48,8 +48,8 @@ export function WajifaListPage() {
         {tab === 'duas' && (
           <div className="space-y-3">
             {MASNOON_DUAS.map((d, idx) => (
-              <div key={d.slug} className="bg-white border border-border rounded-2xl p-4">
-                <p className="text-xs font-bold text-gold-dark uppercase tracking-wide mb-2">
+              <div key={d.slug} className="glossy-yellow rounded-2xl p-4 shadow">
+                <p className="text-xs font-bold text-teal-900 uppercase tracking-wide mb-2">
                   {duaTitles[idx]}
                 </p>
                 <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-2">
@@ -70,7 +70,7 @@ export function WajifaListPage() {
                 key={z.slug}
                 onClick={() => navigate(`/wajifa/${z.slug}`)}
                 style={{ animationDelay: `${idx * 90}ms` }}
-                className="tile-in glossy-gold w-full rounded-2xl p-4 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
+                className="tile-in glossy-yellow w-full rounded-2xl p-4 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
               >
                 <div className="w-11 h-11 rounded-xl bg-teal-900/10 flex items-center justify-center text-lg shrink-0">
                   📿

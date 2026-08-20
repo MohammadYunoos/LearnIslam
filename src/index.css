@@ -134,6 +134,26 @@ html[dir='rtl'] .qa-content .qa-a {
   color: #fff;
 }
 
+/* Glossy light-yellow surface — Masnoon Dua & Zikr sub-menus */
+.glossy-yellow {
+  position: relative;
+  background-image: linear-gradient(160deg, #fdf3c4 0%, #f7e58f 55%, #efd75f 100%);
+  color: #0e3b36;
+  isolation: isolate;
+}
+.glossy-yellow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+}
+.glossy-yellow:active {
+  background-image: linear-gradient(160deg, #2f8676 0%, #1f6a5c 100%);
+  color: #fff;
+}
+
 /* Qibla compass animations */
 @keyframes qiblaPulse {
   0% {

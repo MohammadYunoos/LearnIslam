@@ -8,20 +8,27 @@ export function useLang(): string {
   return useAppStore((s) => s.user?.language ?? 'en')
 }
 
-// Translate a single string (English until ready; unchanged for lang 'en').
+// Initial value for a non-English string: the cached translation if we have it,
+// otherwise '' so the English source is NEVER flashed to a translated-language
+// user (the element stays blank for a moment, then fills once MT resolves).
+function initialFor(text: string, lang: string): string {
+  if (!lang || lang === 'en') return text
+  return cachedTranslation(text, lang) ?? ''
+}
+
+// Translate a single string. English is shown as-is; other languages show the
+// cached value immediately, else blank until the translation arrives.
 export function useTr(text: string): string {
   const lang = useLang()
-  const [out, setOut] = useState(() => cachedTranslation(text, lang) ?? text)
+  const [out, setOut] = useState(() => initialFor(text, lang))
   useEffect(() => {
     let alive = true
     if (!lang || lang === 'en') {
       setOut(text)
       return
     }
-    // Paint the cached translation (or the source) immediately — never leave the
-    // previous string on screen while the new one is being fetched.
     const cached = cachedTranslation(text, lang)
-    setOut(cached ?? text)
+    setOut(cached ?? '') // blank, not English, while fetching
     if (cached == null) {
       translateOne(text, lang).then((v) => {
         if (alive) setOut(v)
@@ -38,16 +45,16 @@ export function useTr(text: string): string {
 export function useTrList(texts: string[]): string[] {
   const lang = useLang()
   const key = texts.join('')
-  const [out, setOut] = useState(() => texts.map((t) => cachedTranslation(t, lang) ?? t))
+  const [out, setOut] = useState(() => texts.map((t) => initialFor(t, lang)))
   useEffect(() => {
     let alive = true
     if (!lang || lang === 'en') {
       setOut(texts)
       return
     }
-    // Immediately show cached values / source, then fill any misses via MT.
+    // Show cached values immediately; blank (not English) for the rest until MT.
     const cached = texts.map((t) => cachedTranslation(t, lang))
-    setOut(cached.map((c, i) => c ?? texts[i]))
+    setOut(cached.map((c) => c ?? ''))
     if (cached.some((c) => c == null)) {
       translateMany(texts, lang).then((v) => {
         if (alive) setOut(v)

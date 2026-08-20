@@ -78,8 +78,13 @@ export function MaqtabPage() {
   const tMin = useTr('min')
   const tLoading = useTr('Loading lessons…')
   const tNone = useTr('No lessons found. Check your Supabase content.')
+  // When the DB serves already-localized rows (english-urdu), the `title` is
+  // curated Roman — render it verbatim; MT would only garble it.
+  const alreadyLocalized = contentDbLang(lang) !== 'english'
   const lessonTitles = useTrList(lessons.map((l) => l.title))
-  const titleMap = new Map(lessons.map((l, i) => [l.title, lessonTitles[i]]))
+  const titleMap = new Map(
+    lessons.map((l, i) => [l.title, alreadyLocalized ? l.title : lessonTitles[i]])
+  )
   const levelNames = useTrList(levels.map((l) => l.level))
   const levelMap = new Map(levels.map((l, i) => [l.level, levelNames[i]]))
   const chapLabels = levels.flatMap((lvl) =>

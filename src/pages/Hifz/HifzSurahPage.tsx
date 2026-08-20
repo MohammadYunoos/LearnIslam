@@ -166,6 +166,7 @@ export function HifzSurahPage() {
 
   const memoCount = memorised.length
   const total = surah.ayahs.length
+  const isSalah = surah.group === 'salah' // no audio — hide all play controls
 
   return (
     <div className="bg-cream min-h-screen pb-40">
@@ -255,27 +256,29 @@ export function HifzSurahPage() {
         </button>
       </div>
 
-      {/* Playback bar */}
-      <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 flex items-center gap-2">
-        <button
-          onClick={() => (isPlaying ? stop() : playIndex(0, 'all'))}
-          className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"
-        >
-          {isPlaying ? `⏹ ${L[6]}` : `▶ ${L[7]}`}
-        </button>
-        <button
-          onClick={() => {
-            const next = !loop
-            setLoop(next)
-            if (audioRef.current && modeRef.current === 'single') audioRef.current.loop = next
-          }}
-          className={`rounded-xl py-2.5 px-4 text-sm font-bold border ${
-            loop ? 'bg-gold text-teal-900 border-gold' : 'bg-white text-ink-muted border-border'
-          }`}
-        >
-          🔁 {L[8]}
-        </button>
-      </div>
+      {/* Playback bar — hidden for salah recitations (no audio) */}
+      {!isSalah && (
+        <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 flex items-center gap-2">
+          <button
+            onClick={() => (isPlaying ? stop() : playIndex(0, 'all'))}
+            className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"
+          >
+            {isPlaying ? `⏹ ${L[6]}` : `▶ ${L[7]}`}
+          </button>
+          <button
+            onClick={() => {
+              const next = !loop
+              setLoop(next)
+              if (audioRef.current && modeRef.current === 'single') audioRef.current.loop = next
+            }}
+            className={`rounded-xl py-2.5 px-4 text-sm font-bold border ${
+              loop ? 'bg-gold text-teal-900 border-gold' : 'bg-white text-ink-muted border-border'
+            }`}
+          >
+            🔁 {L[8]}
+          </button>
+        </div>
+      )}
 
       <BottomNav />
     </div>
