@@ -7,18 +7,22 @@ import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseSer
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { Logo } from '../../components/Logo'
 
+// `img` = filename under public/menu/. Drop a JPG/PNG there per tile; if it is
+// missing the tile falls back to the glossy teal background automatically.
 const MENU_ITEMS = [
-  { num: '01', title: 'Masail', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', path: '/guide' },
-  { num: '02', title: 'Adaab', sub: 'Daily etiquette', icon: '📋', path: '/adaab' },
-  { num: '03', title: 'Islamic Q & A', sub: 'Question & answer volumes', icon: '📚', path: '/taleem' },
-  { num: '04', title: 'Maqtab', sub: 'Learning journey', icon: '📖', path: '/maqtab' },
-  { num: '05', title: 'Hifz', sub: 'Surah memorisation', icon: '⭐', path: '/hifz' },
-  { num: '06', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', path: '/detoxify' },
-  { num: '07', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', path: '/wajifa' },
-  { num: '08', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', path: '/masail' },
-  { num: '09', title: 'Find Qibla', sub: 'Direction of the Ka‘bah', icon: '🧭', path: '/qibla' },
-  { num: '10', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', path: '/namaaz-timings' },
+  { num: '01', title: 'Maqtab', sub: 'Learning journey', icon: '📖', img: 'maqtab.jpg', path: '/maqtab' },
+  { num: '02', title: 'Islamic Q & A', sub: 'Question & answer volumes', icon: '📚', img: 'qa.jpg', path: '/taleem' },
+  { num: '03', title: 'Hifz', sub: 'Surah memorisation', icon: '⭐', img: 'hifz.jpg', path: '/hifz' },
+  { num: '04', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', img: 'masnoon.jpg', path: '/wajifa' },
+  { num: '05', title: 'Adaab', sub: 'Daily etiquette', icon: '📋', img: 'adaab.jpg', path: '/adaab' },
+  { num: '06', title: 'Masail', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', img: 'masail.jpg', path: '/guide' },
+  { num: '07', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', img: 'detoxify.jpg', path: '/detoxify' },
+  { num: '08', title: 'Find Qibla', sub: 'Direction of the Ka‘bah', icon: '🧭', img: 'qibla.jpg', path: '/qibla' },
+  { num: '09', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', img: 'namaaz.jpg', path: '/namaaz-timings' },
+  { num: '10', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', img: 'ulema.jpg', path: '/masail' },
 ]
+
+const menuImg = (name: string) => `${import.meta.env.BASE_URL}menu/${name}`
 
 interface Hadees {
   arabic_text?: string
@@ -111,20 +115,28 @@ export function HomePage() {
               key={item.path}
               onClick={() => navigate(item.path)}
               style={{ animationDelay: `${idx * 90}ms` }}
-              className="tile-in glossy group relative overflow-hidden rounded-2xl p-4 text-left shadow-md active:scale-95 transition-transform"
+              className="tile-in glossy relative overflow-hidden rounded-2xl text-left shadow-md active:scale-95 transition-transform min-h-[128px] flex"
             >
-              <span className="text-xs font-bold text-white/70 group-active:text-teal-900 block mb-1">
-                {item.num}
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-white/15 group-active:bg-teal-900/15 flex items-center justify-center text-lg mb-2">
-                {item.icon}
+              {/* Background photo (public/menu/<img>). Hidden if it fails to load
+                  → glossy teal shows through. */}
+              <img
+                src={menuImg(item.img)}
+                alt=""
+                loading="lazy"
+                onError={(e) => {
+                  ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Dark gradient so the text stays readable over any image. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15" />
+              <div className="relative z-10 p-4 flex flex-col justify-end w-full">
+                <span className="text-[11px] font-bold text-white/70 block mb-0.5">{item.num}</span>
+                <p className="text-sm font-bold leading-tight text-white drop-shadow">
+                  {titles[idx]}
+                </p>
+                <p className="text-xs text-white/85 mt-0.5 drop-shadow">{subs[idx]}</p>
               </div>
-              <p className="text-sm font-bold leading-tight group-active:text-teal-900">
-                {titles[idx]}
-              </p>
-              <p className="text-xs text-white/80 group-active:text-teal-900/80 mt-0.5">
-                {subs[idx]}
-              </p>
             </button>
           ))}
         </div>
