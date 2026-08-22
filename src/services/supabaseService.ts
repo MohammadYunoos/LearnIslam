@@ -33,6 +33,55 @@ export async function completeLesson(userId: string, lessonId: string, score: nu
   await api.post('/maqtab/complete', { userId, lessonId, score })
 }
 
+// ── BEGINNER EXAM ───────────────────────────────────────
+
+export interface ExamQuestion {
+  id: string
+  chapter_num: number
+  question: string
+  options: string[]
+}
+export interface ExamAttempt {
+  id: string
+  score: number
+  total: number
+  percent: number
+  passed: boolean
+  elapsed_seconds: number | null
+  created_at: string
+}
+
+export async function getExamQuestions(level = 'Beginner', lang = 'english') {
+  return api.get<{ questions: ExamQuestion[]; total: number; passPercent: number }>(
+    `/exam/questions?level=${encodeURIComponent(level)}&lang=${encodeURIComponent(lang)}`
+  )
+}
+
+export async function submitExam(payload: {
+  level?: string
+  answers: Record<string, number>
+  elapsedSeconds: number
+}) {
+  return api.post<{
+    score: number
+    total: number
+    percent: number
+    passed: boolean
+    passPercent: number
+    results: { id: string; correct_idx: number; chosen: number; ok: boolean }[]
+  }>('/exam/submit', { level: 'Beginner', ...payload })
+}
+
+export async function getExamAttempts(level = 'Beginner') {
+  return api.get<ExamAttempt[]>(`/exam/attempts?level=${encodeURIComponent(level)}`)
+}
+
+export async function getKnowledgeCheck(level = 'Beginner', count = 5, lang = 'english') {
+  return api.get<
+    { id: string; question: string; options: string[]; correct_idx: number; explanation?: string }[]
+  >(`/exam/knowledge-check?level=${encodeURIComponent(level)}&count=${count}&lang=${encodeURIComponent(lang)}`)
+}
+
 // ── APP VERSION + FEEDBACK ──────────────────────────────
 
 export async function getAppVersion() {

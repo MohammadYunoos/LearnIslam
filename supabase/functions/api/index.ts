@@ -729,4 +729,148 @@ RULES:
     return c.json(result)
   })
 
+  // ── BEGINNER EXAM (server-scored) ───────────────────────
+  // Pool = beginner_exam_questions; attempts stored in exam_attempts. The paper
+  // is up to 50 questions split evenly across chapters. Answers are NEVER sent
+  // to the client for the graded exam — scoring happens here.
+  const PASS_PERCENT = 75
+  const EXAM_SIZE = 50
+
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }
+
+  // Evenly sample up to `size` across chapters; top up from the leftover pool.
+  function pickBalanced(rows: any[], size: number): any[] {
+    const byChapter = new Map<number, any[]>()
+    for (const r of rows) {
+      const k = r.chapter_num ?? 0
+      if (!byChapter.has(k)) byChapter.set(k, [])
+      byChapter.get(k)!.push(r)
+    }
+    const chapters = [...byChapter.keys()]
+    if (!chapters.length) return []
+    const perChapter = Math.floor(size / chapters.length)
+    const picked: any[] = []
+    const leftover: any[] = []
+    for (const k of chapters) {
+      const shuffled = shuffle(byChapter.get(k)!)
+      picked.push(...shuffled.slice(0, perChapter))
+      leftover.push(...shuffled.slice(perChapter))
+    }
+    // Fill the remainder (and any shortfall from thin chapters) from leftovers.
+    for (const r of shuffle(leftover)) {
+      if (picked.length >= size) break
+      picked.push(r)
+    }
+    return shuffle(picked).slice(0, size)
+  }
+
+  // Graded exam paper — WITHOUT correct answers.
+  app.get('/exam/questions', async (c: any) => {
+    const level = c.req.query('level') || 'Beginner'
+    const lang = c.req.query('lang') || 'english'
+    let { data } = await supabase
+      .from('beginner_exam_questions')
+      .select('id, chapter_num, question, options')
+      .eq('level', level)
+      .eq('language', lang)
+    // Fall back to English if the requested language has no questions.
+    if ((!data || data.length === 0) && lang !== 'english') {
+      const r = await supabase
+        .from('beginner_exam_questions')
+        .select('id, chapter_num, question, options')
+        .eq('level', level)
+        .eq('language', 'english')
+      data = r.data ?? []
+    }
+    const paper = pickBalanced(data ?? [], EXAM_SIZE).map((q) => ({
+      id: q.id,
+      chapter_num: q.chapter_num,
+      question: q.question,
+      options: q.options,
+    }))
+    return c.json({ questions: paper, total: paper.length, passPercent: PASS_PERCENT })
+  })
+
+  // Score the submitted answers server-side and record the attempt.
+  app.post('/exam/submit', async (c: any) => {
+    const body = await c.req.json().catch(() => ({}))
+    const userId = uid(c, body.userId)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+    const level = body.level || 'Beginner'
+    const answers: Record<string, number> = body.answers || {}
+    const ids = Object.keys(answers)
+    if (!ids.length) return c.json({ error: 'no answers' }, 400)
+
+    const { data } = await supabase
+      .from('beginner_exam_questions')
+      .select('id, correct_idx, chapter_num')
+      .in('id', ids)
+    const rows = data ?? []
+    const total = rows.length
+    let score = 0
+    const results = rows.map((r: any) => {
+      const chosen = answers[r.id]
+      const ok = chosen === r.correct_idx
+      if (ok) score++
+      return { id: r.id, correct_idx: r.correct_idx, chosen, ok }
+    })
+    const percent = total ? Math.round((score / total) * 100) : 0
+    const passed = percent >= PASS_PERCENT
+
+    await supabase.from('exam_attempts').insert({
+      user_id: userId,
+      level,
+      score,
+      total,
+      percent,
+      passed,
+      elapsed_seconds: Number(body.elapsedSeconds) || null,
+    })
+    await logEvent(userId, 'exam_submitted', { level, percent, passed })
+    return c.json({ score, total, percent, passed, passPercent: PASS_PERCENT, results })
+  })
+
+  // This user's attempt history (newest first).
+  app.get('/exam/attempts', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json([])
+    const level = c.req.query('level') || 'Beginner'
+    const { data } = await supabase
+      .from('exam_attempts')
+      .select('id, score, total, percent, passed, elapsed_seconds, created_at')
+      .eq('user_id', userId)
+      .eq('level', level)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    return c.json(data ?? [])
+  })
+
+  // Informal pre-test — a small sample WITH answers (client-scored).
+  app.get('/exam/knowledge-check', async (c: any) => {
+    const level = c.req.query('level') || 'Beginner'
+    const lang = c.req.query('lang') || 'english'
+    const count = Math.max(1, Math.min(20, Number(c.req.query('count')) || 5))
+    let { data } = await supabase
+      .from('beginner_exam_questions')
+      .select('id, question, options, correct_idx, explanation')
+      .eq('level', level)
+      .eq('language', lang)
+    if ((!data || data.length === 0) && lang !== 'english') {
+      const r = await supabase
+        .from('beginner_exam_questions')
+        .select('id, question, options, correct_idx, explanation')
+        .eq('level', level)
+        .eq('language', 'english')
+      data = r.data ?? []
+    }
+    return c.json(shuffle(data ?? []).slice(0, count))
+  })
+
   Deno.serve(app.fetch)

@@ -72,7 +72,16 @@ export function MaqtabPage() {
     ch.lessons.push(l)
   }
 
+  // Beginner is "done" when every Beginner lesson has a completed (passed) quiz.
+  const beginnerLessons = lessons.filter((l) => (l.level || '') === 'Beginner')
+  const beginnerDone = beginnerLessons.length > 0 && beginnerLessons.every((l) => done.has(l.id))
+
   const tOverall = useTr('Overall progress')
+  const tKnowledge = useTr('Knowledge Check')
+  const tKnowledgeSub = useTr('Quick 5-question check — see where you stand')
+  const tExam = useTr('Beginner Exam')
+  const tExamReady = useTr('You finished Beginner — take the exam for your certificate!')
+  const tExamLocked = useTr('Finish all Beginner lessons to unlock the exam')
   const tChapter = useTr('Chapter')
   const tLesson = useTr('Lesson')
   const tMin = useTr('min')
@@ -102,6 +111,15 @@ export function MaqtabPage() {
       <PageHeader title="Maqtab" subtitle="Your learning journey" backTo="/home" />
 
       <div className="px-4 pt-4">
+        {/* Knowledge check (pre-test) — always available */}
+        <button
+          onClick={() => navigate('/maqtab/knowledge-check')}
+          className="glossy-sky w-full rounded-2xl p-4 text-left shadow mb-4 active:scale-[0.98] transition-transform"
+        >
+          <p className="text-sm font-bold text-teal-900">📝 {tKnowledge}</p>
+          <p className="text-xs text-teal-900/80 mt-0.5">{tKnowledgeSub}</p>
+        </button>
+
         {lessons.length > 0 && (
           <div className="bg-white border border-border rounded-2xl p-4 mb-4">
             <div className="flex justify-between items-center mb-2">
@@ -177,6 +195,26 @@ export function MaqtabPage() {
                 </div>
               </div>
             ))}
+
+            {/* Beginner exam entry — at the end of the Beginner section */}
+            {lvl.level === 'Beginner' && (
+              <button
+                onClick={() => beginnerDone && navigate('/maqtab/exam')}
+                disabled={!beginnerDone}
+                className={`w-full rounded-2xl p-4 text-left shadow mt-2 transition-transform ${
+                  beginnerDone
+                    ? 'glossy-gold active:scale-[0.98]'
+                    : 'bg-white border border-border opacity-70'
+                }`}
+              >
+                <p className={`text-sm font-bold ${beginnerDone ? 'text-teal-900' : 'text-ink-muted'}`}>
+                  {beginnerDone ? '🎓' : '🔒'} {tExam}
+                </p>
+                <p className={`text-xs mt-0.5 ${beginnerDone ? 'text-teal-900/80' : 'text-ink-muted'}`}>
+                  {beginnerDone ? tExamReady : tExamLocked}
+                </p>
+              </button>
+            )}
           </div>
         ))}
       </div>

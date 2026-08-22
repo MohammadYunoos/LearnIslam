@@ -19,6 +19,9 @@ import { TaleemPage } from './pages/Taleem/TaleemPage'
 import { MaqtabPage } from './pages/Maqtab/MaqtabPage'
 import { LessonPage } from './pages/Maqtab/LessonPage'
 import { QuizPage } from './pages/Maqtab/QuizPage'
+import { KnowledgeCheckPage } from './pages/Maqtab/KnowledgeCheckPage'
+import { ExamPage } from './pages/Maqtab/ExamPage'
+import { CertificatePage } from './pages/Maqtab/CertificatePage'
 import { HifzPage } from './pages/Hifz/HifzPage'
 import { HifzSurahPage } from './pages/Hifz/HifzSurahPage'
 import { WajifaListPage } from './pages/Wajifa/WajifaListPage'
@@ -147,6 +150,9 @@ export default function App() {
         <Route path="/adaab/:slug" element={<PrivateRoute element={<AdaabDetailPage />} />} />
         <Route path="/taleem" element={<PrivateRoute element={<TaleemPage />} />} />
         <Route path="/maqtab" element={<PrivateRoute element={<MaqtabPage />} />} />
+        <Route path="/maqtab/knowledge-check" element={<PrivateRoute element={<KnowledgeCheckPage />} />} />
+        <Route path="/maqtab/exam" element={<PrivateRoute element={<ExamPage />} />} />
+        <Route path="/maqtab/certificate" element={<PrivateRoute element={<CertificatePage />} />} />
         <Route path="/maqtab/:lessonId" element={<PrivateRoute element={<LessonPage />} />} />
         <Route
           path="/maqtab/:lessonId/quiz"

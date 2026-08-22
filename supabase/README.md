@@ -81,6 +81,25 @@ Progress: `GET /maqtab/progress` · `POST /maqtab/complete`; `GET /hifz/progress
 `GET /analyzer/summary`; `POST /events`
 AI: `POST /masail`
 Auto-localize: `POST /localize/hook` (webhook target), `POST /localize/backfill` (admin)
+Beginner exam: `GET /exam/questions`, `POST /exam/submit`, `GET /exam/attempts`, `GET /exam/knowledge-check`
+
+## Beginner exam + certificate
+
+Tables in `supabase/exam_setup.sql` (run once in the SQL editor):
+- `beginner_exam_questions` — the question pool (insert MANUALLY; `options` is a jsonb array of 4,
+  `correct_idx` 0-3, `chapter_num` matches the Beginner chapter). See the example inserts in the file.
+- `exam_attempts` — per-user attempt history (written by the server on submit).
+
+The exam is scored **server-side**: `/exam/questions` returns a chapter-balanced paper of up to 50
+questions **without** the answers; `/exam/submit` grades, applies the **75%** pass mark, and records
+the attempt. `/exam/knowledge-check` returns a small sample WITH answers for the informal pre-test.
+
+App deps for the shareable certificate (run once, then `npx cap sync android`):
+```bash
+npm i @capacitor/share @capacitor/filesystem
+npx cap sync android
+```
+(The Android `FileProvider` needed for sharing the PNG is already declared in AndroidManifest.xml.)
 
 ## Auto-localize (english → english-urdu via Gemini, free tier)
 
