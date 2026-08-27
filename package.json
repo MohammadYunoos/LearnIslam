@@ -22,10 +22,12 @@
     "@capacitor/share": "^8.0.1",
     "@supabase/supabase-js": "^2.111.0",
     "adhan": "^4.4.4",
+    "idb": "^8.0.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.1",
+    "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "zustand": "^5.0.14"
   },

@@ -41,6 +41,19 @@ import { QiblaPage } from './pages/Qibla/QiblaPage'
 import { NamaazPage } from './pages/Namaaz/NamaazPage'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReportButton } from './components/ReportButton'
+import { TranslationOverlay } from './components/TranslationOverlay'
+import { useLang } from './i18n/useTr'
+import { ensureLang } from './services/translate'
+
+// Prime the offline translation cache + background-sync whenever the language
+// changes (no-op for English).
+function LangSync() {
+  const lang = useLang()
+  useEffect(() => {
+    void ensureLang(lang)
+  }, [lang])
+  return null
+}
 
 function SplashScreen() {
   return (
@@ -137,6 +150,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <LangSync />
+      <TranslationOverlay />
       <UpdateBanner />
       <ReportButton />
       <Routes>

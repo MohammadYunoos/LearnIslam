@@ -409,3 +409,34 @@ button:active {
   color: #3a352b;
   line-height: 1.8;
 }
+/* Glossary — two-column term/meaning table */
+.qa-content .qa-table {
+  margin: 1.1em 0;
+  overflow-x: auto;
+}
+.qa-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: #fffdf7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.qa-content th,
+.qa-content td {
+  border: 1px solid #e3d9be;
+  padding: 0.5em 0.7em;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.6;
+}
+.qa-content th {
+  background: #0e3b36;
+  color: #e9c877;
+  font-family: Georgia, 'Amiri', serif;
+}
+.qa-content td:first-child {
+  font-weight: 700;
+  color: #9c7320;
+  white-space: nowrap;
+}

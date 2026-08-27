@@ -1,5 +1,5 @@
 // src/pages/Maqtab/QuizPage.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { useAppStore } from '../../store/appStore'
@@ -26,6 +26,46 @@ interface Question {
   options: string[]
   correctIndex: number
   explanation?: string
+}
+
+// Each attempt serves a random subset, biased to questions not yet seen for
+// this lesson, so repeated attempts feel fresh and don't repeat until the pool
+// cycles. Seen ids persist per lesson in localStorage.
+const ATTEMPT_SIZE = 10
+const seenKey = (id: string) => `quiz_seen_${id}`
+function readSeen(id: string): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(seenKey(id)) || '[]')
+  } catch {
+    return []
+  }
+}
+function writeSeen(id: string, ids: string[]) {
+  try {
+    localStorage.setItem(seenKey(id), JSON.stringify(ids))
+  } catch {
+    /* ignore */
+  }
+}
+function shuffle<T>(arr: T[]): T[] {
+  const r = [...arr]
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[r[i], r[j]] = [r[j], r[i]]
+  }
+  return r
+}
+function pickAttempt(lessonId: string, pool: Question[]): Question[] {
+  if (pool.length <= ATTEMPT_SIZE) return shuffle(pool)
+  let seen = new Set(readSeen(lessonId))
+  let unseen = pool.filter((q) => !seen.has(q.id))
+  if (unseen.length < ATTEMPT_SIZE) {
+    seen = new Set() // pool cycled — reset and start fresh
+    unseen = pool
+  }
+  const chosen = shuffle(unseen).slice(0, ATTEMPT_SIZE)
+  writeSeen(lessonId, [...seen, ...chosen.map((q) => q.id)])
+  return chosen
 }
 
 function normalise(row: RawQuiz): Question {
@@ -103,14 +143,25 @@ export function QuizPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [celebrate, setCelebrate] = useState(false)
+  const poolRef = useRef<Question[]>([])
 
   useEffect(() => {
     if (!lessonId) return
     getQuiz(lessonId).then((rows) => {
-      setQuestions((rows as RawQuiz[]).map(normalise))
+      const pool = (rows as RawQuiz[]).map(normalise)
+      poolRef.current = pool
+      setQuestions(pickAttempt(lessonId, pool))
       setLoading(false)
     })
   }, [lessonId])
+
+  // Fresh random set (used by "Try again").
+  const newAttempt = () => {
+    if (lessonId) setQuestions(pickAttempt(lessonId, poolRef.current))
+    setAnswers({})
+    setSubmitted(false)
+    setCelebrate(false)
+  }
 
   const score = questions.reduce(
     (acc, q) => acc + (answers[q.id] === q.correctIndex ? 1 : 0),
@@ -245,10 +296,7 @@ export function QuizPage() {
           ) : (
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setAnswers({})
-                  setSubmitted(false)
-                }}
+                onClick={newAttempt}
                 className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"
               >
                 {L[6]}

@@ -17,6 +17,11 @@ async function bearerToken(): Promise<string> {
   return data.session?.access_token ?? ANON
 }
 
+// Hard cap on any single request so a hung network/proxy can never freeze the
+// UI forever (e.g. a huge /translate batch that never returns would otherwise
+// leave the translating-overlay stuck and require an app restart).
+const REQUEST_TIMEOUT_MS = 25000
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -26,14 +31,21 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   const userId = currentUserId()
   if (userId) headers['x-user-id'] = userId
 
-  const res = await fetch(BASE + path, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
-  if (!res.ok) throw new Error(`API ${res.status} ${path}`)
-  const text = await res.text()
-  return (text ? JSON.parse(text) : null) as T
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    const res = await fetch(BASE + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal,
+    })
+    if (!res.ok) throw new Error(`API ${res.status} ${path}`)
+    const text = await res.text()
+    return (text ? JSON.parse(text) : null) as T
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export const api = {

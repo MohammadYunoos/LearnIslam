@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeSlug from 'rehype-slug'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { getQaVolumes, getQaVolume } from '../../services/supabaseService'
@@ -17,50 +18,110 @@ interface VolumeMeta {
   language?: string
 }
 
-type SegType = 'sec' | 'q' | 'a' | 'normal'
+type SegType = 'sec' | 'q' | 'a' | 'normal' | 'table'
 interface Segment {
   type: SegType
   text: string
 }
 
+const isQ = (p: string) =>
+  /^q\s*\d*\s*[.):\-]/i.test(p) ||
+  /^question\b/i.test(p) ||
+  /^s(a|u)wal\b/i.test(p) ||
+  /^sual\b/i.test(p)
+const isA = (p: string) => /^a\s*[.):\-]/i.test(p) || /^ans(wer)?\b/i.test(p) || /^jawaa?b\b/i.test(p)
+const isSection = (p: string) => /^(section|hissa|bab)\b/i.test(p)
+
+// An all-caps subtitle line like "WELL-WATER" or "GLOSSARY OF TERMS" — a short
+// heading with no lowercase letters. These must break out of the current answer
+// and render as a highlighted section header.
+function isCapsHead(b: string): boolean {
+  const t = b.replace(/[*_#>`]/g, '').trim()
+  if (t.length < 2 || t.length > 48 || t.includes('\n')) return false
+  const letters = t.replace(/[^A-Za-z]/g, '')
+  if (letters.length < 2 || letters !== letters.toUpperCase()) return false
+  return /^[A-Z0-9 ()\-&'’.,/]+$/.test(t)
+}
+
+// Parse "term — meaning" / "term: meaning" pairs (one per line or ;-separated).
+function glossaryRows(text: string): [string, string][] {
+  const rows: [string, string][] = []
+  for (const line of text.split(/\n|;/).map((s) => s.trim()).filter(Boolean)) {
+    const m = line.replace(/^[-*\d.]+\s*/, '').match(/^(.+?)\s*(?:[—–:=]|\s-\s)\s*(.+)$/)
+    if (m && m[1] && m[2]) rows.push([m[1].trim(), m[2].trim()])
+  }
+  return rows
+}
+function toTable(rows: [string, string][]): string {
+  const esc = (s: string) => s.replace(/\|/g, '\\|')
+  return [
+    '| Term | Meaning |',
+    '| --- | --- |',
+    ...rows.map(([t, m]) => `| ${esc(t)} | ${esc(m)} |`),
+  ].join('\n')
+}
+
 // Group markdown into styled segments; answers keep their styling across
-// multiple paragraphs (until the next question or section).
+// multiple paragraphs (until the next question / section / caps subtitle).
 function classifySegments(md: string): Segment[] {
   const blocks = md
     .replace(/\r\n/g, '\n')
     .split(/\n{2,}/)
     .map((b) => b.trim())
     .filter(Boolean)
-    // Drop markdown horizontal-rule separators (---, ***, ___) — they otherwise
-    // get pulled into the preceding answer and render as stray lines.
     .filter((b) => !/^(-{3,}|\*{3,}|_{3,})$/.test(b))
   const segs: Segment[] = []
   let answer: string[] | null = null
+  let glossary: string[] | null = null // accumulating glossary body
   const flush = () => {
     if (answer && answer.length) segs.push({ type: 'a', text: answer.join('\n\n') })
     answer = null
   }
+  const flushGlossary = () => {
+    if (glossary && glossary.length) {
+      const rows = glossaryRows(glossary.join('\n'))
+      segs.push(rows.length ? { type: 'table', text: toTable(rows) } : { type: 'normal', text: glossary.join('\n\n') })
+    }
+    glossary = null
+  }
   for (const b of blocks) {
     const plain = b.replace(/^[#>*_\s]+/, '').trim()
-    // Markers: English (Section / Q. / A.) + Roman-Urdu (Hissa / Bab / Sawal / Jawab).
-    if (/^(section|hissa|bab)\b/i.test(plain)) {
+    const caps = isCapsHead(b)
+
+    // A real markdown table (pipe rows) — render verbatim (e.g. a glossary).
+    if (/(^|\n)\s*\|.*\|/.test(b)) {
+      flush()
+      flushGlossary()
+      segs.push({ type: 'table', text: b })
+      continue
+    }
+
+    // While collecting a glossary, keep swallowing body blocks until a new
+    // heading/question ends it.
+    if (glossary) {
+      if (caps || isSection(plain) || isQ(plain)) flushGlossary()
+      else {
+        glossary.push(b)
+        continue
+      }
+    }
+
+    if (caps && /^glossary/i.test(plain)) {
       flush()
       segs.push({ type: 'sec', text: b })
-    } else if (
-      /^q\s*\d*\s*[.):\-]/i.test(plain) ||
-      /^question\b/i.test(plain) ||
-      /^s(a|u)wal\b/i.test(plain) ||
-      /^sual\b/i.test(plain)
-    ) {
+      glossary = []
+    } else if (isSection(plain)) {
+      flush()
+      segs.push({ type: 'sec', text: b })
+    } else if (isQ(plain)) {
       flush()
       segs.push({ type: 'q', text: b })
-    } else if (
-      /^a\s*[.):\-]/i.test(plain) ||
-      /^ans(wer)?\b/i.test(plain) ||
-      /^jawaa?b\b/i.test(plain)
-    ) {
+    } else if (isA(plain)) {
       flush()
       answer = [b]
+    } else if (caps) {
+      flush()
+      segs.push({ type: 'sec', text: b }) // all-caps subtitle → highlighted header
     } else if (answer) {
       answer.push(b)
     } else {
@@ -68,6 +129,7 @@ function classifySegments(md: string): Segment[] {
     }
   }
   flush()
+  flushGlossary()
   return segs
 }
 
@@ -76,6 +138,57 @@ const SEG_CLASS: Record<SegType, string> = {
   q: 'qa-q',
   a: 'qa-a',
   normal: '',
+  table: 'qa-table',
+}
+
+// Flatten a ReactMarkdown children tree to its text (for Q/A detection).
+function childText(children: any): string {
+  if (children == null) return ''
+  if (typeof children === 'string') return children
+  if (Array.isArray(children)) return children.map(childText).join('')
+  if (typeof children === 'object' && children.props) return childText(children.props.children)
+  return ''
+}
+
+// Custom renderers for the full-document markdown path: styled tables, in-doc
+// TOC links that smooth-scroll, and Q/A/section colouring (kept identical).
+const mdComponents = {
+  a({ href, children }: any) {
+    if (typeof href === 'string' && href.startsWith('#')) {
+      return (
+        <a
+          href={href}
+          onClick={(e: any) => {
+            e.preventDefault()
+            const el = document.getElementById(decodeURIComponent(href.slice(1)))
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+        >
+          {children}
+        </a>
+      )
+    }
+    return (
+      <a href={href} target="_blank" rel="noreferrer">
+        {children}
+      </a>
+    )
+  },
+  table({ children }: any) {
+    return (
+      <div className="qa-table">
+        <table>{children}</table>
+      </div>
+    )
+  },
+  p({ children }: any) {
+    // Only colour the Q and Answer paragraphs; everything else is default
+    // markdown (bold all-caps lines, ayah, notes, etc. render normally).
+    const t = childText(children).trim()
+    if (isQ(t)) return <div className="qa-q"><p>{children}</p></div>
+    if (isA(t)) return <div className="qa-a"><p>{children}</p></div>
+    return <p>{children}</p>
+  },
 }
 
 export function TaleemPage() {
@@ -130,11 +243,17 @@ export function TaleemPage() {
   }, [activeId])
 
   const segments = useMemo(() => classifySegments(content ?? ''), [content])
-  const segTexts = useTrList(segments.map((s) => s.text))
 
   // A volume already served in the chosen language must NOT be MT-translated again.
   const activeLang = volumes[active]?.language
   const alreadyLocalized = !!activeLang && activeLang !== 'english'
+  // Render the whole doc as one markdown tree (tables, TOC anchors, uniform)
+  // when no runtime translation is needed. Only ur/hi (which have a proper
+  // per-segment classifier) use the MT fallback; Roman-Urdu without a localized
+  // sibling renders the english body raw rather than firing a book-sized MT
+  // batch that hangs the app.
+  const useRawDoc = alreadyLocalized || lang === 'en' || lang === 'ur-roman'
+  const segTexts = useTrList(useRawDoc ? [] : segments.map((s) => s.text))
 
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
@@ -191,13 +310,23 @@ export function TaleemPage() {
                 {lang !== 'en' && !alreadyLocalized && (
                   <p className="text-[10px] text-ink-muted italic mb-3">Auto-translated</p>
                 )}
-                {segments.map((s, i) => (
-                  <div key={i} className={SEG_CLASS[s.type]}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {alreadyLocalized ? s.text : segTexts[i] ?? s.text}
-                    </ReactMarkdown>
-                  </div>
-                ))}
+                {useRawDoc ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeSlug]}
+                    components={mdComponents}
+                  >
+                    {content}
+                  </ReactMarkdown>
+                ) : (
+                  segments.map((s, i) => (
+                    <div key={i} className={SEG_CLASS[s.type]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {s.type === 'table' ? s.text : segTexts[i] ?? s.text}
+                      </ReactMarkdown>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>

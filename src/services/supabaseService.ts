@@ -9,6 +9,13 @@ export async function getHadeesOfTheDay() {
   return api.get<any>('/hadees/today')
 }
 
+// Bulk download of all translations for a language (offline cache seed).
+export async function getAllTranslations(target: string) {
+  return api.get<{ target: string; count: number; rows: { source_text: string; translated_text: string }[] }>(
+    `/translate/all?target=${encodeURIComponent(target)}`
+  )
+}
+
 // ── MAQTAB ──────────────────────────────────────────────
 
 export async function getMaqtabChapters(lang = 'english') {

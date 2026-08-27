@@ -16,12 +16,14 @@ export function StepPlayerPage() {
   const steps = itemsForGender(topic?.steps ?? [], gender)
   const [index, setIndex] = useState(0)
   const [imgError, setImgError] = useState(false)
+  const [useRemote, setUseRemote] = useState(false) // local image failed → try Supabase
   const narration = useNarration()
   // Roman Urdu TTS (via the ur-PK voice) reads the Latin text poorly — disable it.
   const narrationOff = useLang() === 'ur-roman'
 
   useEffect(() => {
     setImgError(false) // reset when the step changes
+    setUseRemote(false)
   }, [index])
 
   const step = steps[index]
@@ -65,11 +67,13 @@ export function StepPlayerPage() {
 
   const atStart = index === 0
   const atEnd = index === steps.length - 1
-  const imgUrl =
-    step.animationUrl ||
-    (step.image
-      ? supabase.storage.from('LearnIslam').getPublicUrl(step.image).data.publicUrl
-      : null)
+  // Serve step images from the bundled app first (fast, offline); fall back to
+  // the Supabase bucket if a local file is missing, then to the emoji.
+  const localSrc = step.image ? `${import.meta.env.BASE_URL}steps/${step.image}` : null
+  const remoteSrc = step.image
+    ? supabase.storage.from('LearnIslam').getPublicUrl(step.image).data.publicUrl
+    : null
+  const imgUrl = step.animationUrl || (useRemote ? remoteSrc : localSrc || remoteSrc)
 
   return (
     <div className="bg-cream min-h-screen flex flex-col">
@@ -120,8 +124,13 @@ export function StepPlayerPage() {
             <img
               src={imgUrl}
               alt={step.title}
+              loading="lazy"
               className="w-full h-full object-contain"
-              onError={() => setImgError(true)}
+              onError={() => {
+                // local failed → try remote; remote failed → emoji fallback
+                if (!useRemote && !step.animationUrl && remoteSrc) setUseRemote(true)
+                else setImgError(true)
+              }}
             />
           </div>
         ) : (

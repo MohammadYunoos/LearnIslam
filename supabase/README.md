@@ -82,6 +82,12 @@ Progress: `GET /maqtab/progress` · `POST /maqtab/complete`; `GET /hifz/progress
 AI: `POST /masail`
 Auto-localize: `POST /localize/hook` (webhook target), `POST /localize/backfill` (admin)
 Beginner exam: `GET /exam/questions`, `POST /exam/submit`, `GET /exam/attempts`, `GET /exam/knowledge-check`
+Bulk translations: `GET /translate/all?target=ur-roman` (offline cache seed)
+
+## Offline Roman-Urdu cache + local step images
+
+- `GET /translate/all?target=<lang>` returns every `translations` row for a language (paged, no 500 cap). The app downloads it once per `TR_CACHE_VERSION` into IndexedDB (`src/services/translationStore.ts`) and primes the in-memory map (`translate.ts` `ensureLang`), so Roman-Urdu reads are instant and work offline. A loading overlay (`TranslationOverlay`) blocks taps while the first sync runs.
+- Step-by-step images (Wudu/Namaaz) now load from the bundled app first. Put the PNGs under `public/steps/` matching the bucket paths — `public/steps/wudu/1.png … 10.png` and `public/steps/Namaaz/{takbeer,qiyam,qirat,ruku,qawmah,sajdah,jalsa,qadah,salaam}.png` (download from the `LearnIslam` Storage bucket). Missing files fall back to the remote URL, then the emoji.
 
 ## Beginner exam + certificate
 

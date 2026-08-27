@@ -2,10 +2,24 @@
 // Translation helpers driven by the user's chosen language.
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../store/appStore'
-import { translateMany, translateOne, cachedTranslation } from '../services/translate'
+import {
+  translateMany,
+  translateOne,
+  cachedTranslation,
+  isTranslating,
+  subscribeTranslating,
+} from '../services/translate'
 
 export function useLang(): string {
   return useAppStore((s) => s.user?.language ?? 'en')
+}
+
+// True while a bulk sync or a batch of translations is in flight — drives the
+// loading overlay so we can block taps until Roman-Urdu text is ready.
+export function useTranslating(): boolean {
+  const [on, setOn] = useState(isTranslating())
+  useEffect(() => subscribeTranslating(() => setOn(isTranslating())), [])
+  return on
 }
 
 // Initial value for a non-English string: the cached translation if we have it,

@@ -14,6 +14,7 @@ interface Q {
   question: string
   options: string[]
   correct_idx: number
+  explanation?: string
 }
 
 export function KnowledgeCheckPage() {
@@ -43,6 +44,12 @@ export function KnowledgeCheckPage() {
   const tStart = useTr('Start Beginner lessons')
   const tRetry = useTr('Try again')
   const tScored = useTr('You scored')
+  const tReview = useTr('Review — questions to revisit')
+  const tYourAns = useTr('Your answer')
+  const tCorrect = useTr('Correct answer')
+  const tAllRight = useTr('Mashallah, all correct!')
+
+  const wrong = questions.filter((q) => answers[q.id] !== q.correct_idx)
 
   const encourage =
     percent >= 70
@@ -108,15 +115,50 @@ export function KnowledgeCheckPage() {
         )}
 
         {submitted && (
-          <div className="bg-white border-t-4 border-gold rounded-2xl p-6 text-center">
-            <p className="text-4xl font-bold text-teal-900">{percent}%</p>
-            <p className="text-sm text-ink-muted mt-1">
-              {tScored} {score} / {total}
-            </p>
-            <p className="text-sm text-ink leading-relaxed mt-4">{encourage}</p>
+          <>
+            <div className="bg-white border-t-4 border-gold rounded-2xl p-6 text-center">
+              <p className="text-4xl font-bold text-teal-900">{percent}%</p>
+              <p className="text-sm text-ink-muted mt-1">
+                {tScored} {score} / {total}
+              </p>
+              <p className="text-sm text-ink leading-relaxed mt-4">{encourage}</p>
+            </div>
+
+            {/* Review incorrect answers with explanation */}
+            {wrong.length === 0 ? (
+              <p className="text-sm text-teal-900 font-semibold text-center">✓ {tAllRight}</p>
+            ) : (
+              <>
+                <p className="text-xs font-bold text-ink-muted uppercase tracking-wide">{tReview}</p>
+                {wrong.map((q, i) => {
+                  const chosen = answers[q.id]
+                  return (
+                    <div key={q.id} className="bg-white border border-red-200 rounded-2xl p-4">
+                      <p className="text-sm font-bold text-teal-900 mb-2">
+                        {i + 1}. {q.question}
+                      </p>
+                      {typeof chosen === 'number' && (
+                        <p className="text-xs text-red-600 mb-1">
+                          ✗ {tYourAns}: {q.options[chosen]}
+                        </p>
+                      )}
+                      <p className="text-xs text-teal-700 font-semibold mb-2">
+                        ✓ {tCorrect}: {q.options[q.correct_idx]}
+                      </p>
+                      {q.explanation && (
+                        <p className="text-xs text-ink-muted bg-sand rounded-xl px-3 py-2 leading-relaxed">
+                          💡 {q.explanation}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
             <button
               onClick={() => navigate('/maqtab')}
-              className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm mt-5"
+              className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm mt-1"
             >
               {tStart} →
             </button>
@@ -125,11 +167,11 @@ export function KnowledgeCheckPage() {
                 setAnswers({})
                 setSubmitted(false)
               }}
-              className="w-full text-ink-muted text-xs font-semibold mt-3"
+              className="w-full text-ink-muted text-xs font-semibold mt-1"
             >
               {tRetry}
             </button>
-          </div>
+          </>
         )}
       </div>
 

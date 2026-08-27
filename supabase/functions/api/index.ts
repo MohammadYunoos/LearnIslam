@@ -112,42 +112,35 @@
     return c.json(data)
   })
 
+  // Lesson quiz — drawn from `beginner_exam_questions` for the lesson's chapter,
+  // in the lesson's language (falls back to english). The client picks a random
+  // subset per attempt and scores locally (question rows include correct_idx).
   app.get('/maqtab/quiz/:lessonId', async (c) => {
     const lessonId = c.req.param('lessonId')
-    let { data } = await supabase
-      .from('maqtab_quiz')
-      .select('*')
-      .eq('lesson_id', lessonId)
-      .order('sort_order')
-    // Quizzes are seeded against the English lesson id. A localized sibling
-    // (e.g. english-urdu) has a different id, so fall back to the English lesson
-    // with the same level/chapter/lesson_num and serve its quiz.
-    if (!data || data.length === 0) {
-      const { data: lesson } = await supabase
-        .from('maqtab_lessons')
-        .select('level, chapter_num, lesson_num, language')
-        .eq('id', lessonId)
-        .single()
-      if (lesson && lesson.language !== 'english') {
-        const { data: eng } = await supabase
-          .from('maqtab_lessons')
-          .select('id')
-          .eq('level', lesson.level)
-          .eq('chapter_num', lesson.chapter_num)
-          .eq('lesson_num', lesson.lesson_num)
-          .eq('language', 'english')
-          .single()
-        if (eng) {
-          const r = await supabase
-            .from('maqtab_quiz')
-            .select('*')
-            .eq('lesson_id', eng.id)
-            .order('sort_order')
-          data = r.data ?? []
-        }
-      }
+    const { data: lesson } = await supabase
+      .from('maqtab_lessons')
+      .select('level, chapter_num, lesson_num, language')
+      .eq('id', lessonId)
+      .single()
+    if (!lesson) return c.json([])
+    const level = lesson.level || 'Beginner'
+    const lang = lesson.language || 'english'
+    const sel = 'id, question, options, correct_idx, explanation, sort_order, chapter_num, lesson_no'
+    const fetchFor = async (language: string) => {
+      const { data } = await supabase
+        .from('beginner_exam_questions')
+        .select(sel)
+        .eq('level', level)
+        .eq('language', language)
+        .eq('chapter_num', lesson.chapter_num)
+        .eq('lesson_no', lesson.lesson_num)
+        .order('sort_order')
+      return data ?? []
     }
-    return c.json(data ?? [])
+    let rows = await fetchFor(lang)
+    // Fall back to English (same chapter + lesson) if none in this language.
+    if (rows.length === 0 && lang !== 'english') rows = await fetchFor('english')
+    return c.json(rows)
   })
 
   app.get('/hifz/surahs', async (c) => {
@@ -303,6 +296,29 @@
     })
     if (error) return c.json({ error: error.message }, 500)
     return c.json({ ok: true })
+  })
+
+  // Bulk download of every curated/cached translation for a target language,
+  // for the client to store in IndexedDB (offline + instant reads). Paged past
+  // the 1000-row PostgREST cap.
+  app.get('/translate/all', async (c: any) => {
+    const target = c.req.query('target')
+    if (!target) return c.json({ error: 'target required' }, 400)
+    const out: { source_text: string; translated_text: string }[] = []
+    const PAGE = 1000
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from('translations')
+        .select('source_text, translated_text')
+        .eq('target_lang', target)
+        .order('source_text')
+        .range(from, from + PAGE - 1)
+      if (error) break
+      const rows = data ?? []
+      out.push(...rows)
+      if (rows.length < PAGE) break
+    }
+    return c.json({ target, count: out.length, rows: out })
   })
 
   app.get('/translate/list', async (c) => {
@@ -551,8 +567,8 @@
   // ── AUTO-LOCALIZE (Gemini → english-urdu) ───────────────
   // A Database Webhook on maqtab_lessons / qa_volumes (Insert+Update of english
   // rows) POSTs to /localize/hook. We Gemini-convert title + content_md to
-  // Roman-Urdu and upsert the english-urdu sibling. On INSERT of a maqtab lesson
-  // we also generate a 10-question quiz. /localize/backfill does existing rows.
+  // Roman-Urdu and upsert the english-urdu sibling. /localize/backfill does
+  // existing rows. (Lesson quizzes come from beginner_exam_questions, not here.)
 
   // Google Gemini (AI Studio, free tier) chat call. Returns text or null.
   async function llmChat(system: string, user: string, maxTokens: number): Promise<string | null> {
@@ -626,55 +642,9 @@ RULES:
     return error ? { ok: false, error: error.message } : { ok: true }
   }
 
-  const QUIZ_SYS = `You are an Islamic education quiz writer. From the lesson provided, write EXACTLY 10 multiple-choice questions in English that test understanding of its key points. Each question has exactly 4 options with exactly one correct answer. Output ONLY valid JSON (no markdown, no code fences, no extra text): an array of 10 objects, each {"question": string, "options": [4 strings], "correct_idx": integer 0-3, "explanation": short string}.`
-
-  // Generate quiz rows (maqtab_quiz shape) for a lesson. Empty array on failure.
-  async function generateQuiz(lesson: any): Promise<any[]> {
-    const src = `Title: ${lesson.title ?? ''}\n\n${lesson.content_md ?? lesson.content ?? ''}`
-    const raw = await llmChat(QUIZ_SYS, src, 3000)
-    if (!raw) return []
-    const txt = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
-    let arr: any
-    try {
-      arr = JSON.parse(txt)
-    } catch {
-      return []
-    }
-    if (!Array.isArray(arr)) return []
-    const rows: any[] = []
-    let sort = 1
-    for (const q of arr) {
-      const opts = Array.isArray(q?.options) ? q.options.filter((o: any) => typeof o === 'string') : []
-      const ci = Number(q?.correct_idx)
-      if (typeof q?.question !== 'string' || opts.length !== 4 || !(ci >= 0 && ci < 4)) continue
-      rows.push({
-        lesson_id: lesson.id,
-        question: q.question,
-        options: opts, // jsonb array of 4 strings
-        correct_idx: ci,
-        explanation: typeof q?.explanation === 'string' && q.explanation ? q.explanation : '—',
-        sort_order: sort++,
-      })
-    }
-    return rows
-  }
-
   function checkLocalizeSecret(c: any): boolean {
     const secret = Deno.env.get('LOCALIZE_SECRET') ?? ''
     return !!secret && c.req.header('x-localize-secret') === secret
-  }
-
-  // Insert a lesson's quiz only if it has none yet. Returns count inserted.
-  async function maybeGenerateQuiz(lesson: any): Promise<number> {
-    const { count } = await supabase
-      .from('maqtab_quiz')
-      .select('*', { count: 'exact', head: true })
-      .eq('lesson_id', lesson.id)
-    if (count) return 0
-    const rows = await generateQuiz(lesson)
-    if (!rows.length) return 0
-    const { error } = await supabase.from('maqtab_quiz').insert(rows)
-    return error ? 0 : rows.length
   }
 
   // Database Webhook target.
@@ -696,10 +666,6 @@ RULES:
     const work = (async () => {
       const loc = await localizeRow(table, record)
       if (!loc.ok) console.error('localizeRow failed', table, record?.id, loc.error)
-      if (type === 'INSERT' && table === 'maqtab_lessons') {
-        const n = await maybeGenerateQuiz(record)
-        console.log('quiz inserted', record?.id, n)
-      }
     })()
     // @ts-ignore — EdgeRuntime is provided by the Supabase Edge runtime.
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
@@ -722,7 +688,6 @@ RULES:
         const loc = await localizeRow(table, eng)
         if (loc.ok) result[table === 'maqtab_lessons' ? 'lessons' : 'volumes']++
         else result.failed++
-        if (table === 'maqtab_lessons') result.quizzes += await maybeGenerateQuiz(eng)
         await sleep(300)
       }
     }
@@ -871,6 +836,44 @@ RULES:
       data = r.data ?? []
     }
     return c.json(shuffle(data ?? []).slice(0, count))
+  })
+
+  // ── ADMIN: reformat run-on glossaries into markdown tables ──────────────
+  // Q&A content authored as prose ("GLOSSARY OF TERMS Term Meaning Allah The
+  // One True God ...") can't be tabulated reliably on the client. This uses
+  // Gemini to rewrite ONLY the glossary part of each english qa_volumes row
+  // into a GitHub markdown table. Updating the row fires the localize webhook,
+  // which regenerates the Roman sibling with the same table.
+  const GLOSSARY_SYS = `You are a markdown formatter. You are given the full content of an Islamic Q&A document. If it contains a glossary written as run-on prose (a heading like "GLOSSARY OF TERMS" followed by term/meaning pairs such as "Allah The One True God Salat Formal ritual prayer ..."), convert ONLY that glossary into a GitHub-flavoured markdown table with exactly this header:
+
+| Term | Meaning |
+| --- | --- |
+
+Put each term in the first column and its meaning in the second. Keep the "GLOSSARY OF TERMS" heading on its own line just before the table. Any sentence that comes AFTER the glossary (e.g. "This concludes Book One...") must be kept as a separate paragraph after the table. Leave ALL other text in the document exactly as it is — same words, same order. If there is no such glossary, return the document unchanged. Output ONLY the full document markdown, no code fences, no commentary.`
+
+  app.post('/qa/reformat-glossary', async (c: any) => {
+    if (!checkLocalizeSecret(c)) return c.json({ error: 'unauthorized' }, 401)
+    const { data } = await supabase
+      .from('qa_volumes')
+      .select('id, content_md')
+      .eq('language', 'english')
+    const rows = data ?? []
+    let changed = 0
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+    for (const row of rows) {
+      const md = String(row.content_md ?? '')
+      if (!/glossary/i.test(md) || md.includes('| Term | Meaning |')) continue
+      const out = await llmChat(GLOSSARY_SYS, md, 8000)
+      if (out && out.trim() && out.includes('| Term | Meaning |')) {
+        const { error } = await supabase
+          .from('qa_volumes')
+          .update({ content_md: out.trim() })
+          .eq('id', row.id)
+        if (!error) changed++
+      }
+      await sleep(300)
+    }
+    return c.json({ scanned: rows.length, changed })
   })
 
   Deno.serve(app.fetch)

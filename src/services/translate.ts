@@ -2,8 +2,31 @@
 // Runtime translation via the Edge Function (/translate → Google + DB cache).
 // Micro-batches per-string requests and caches results in memory + localStorage.
 import { api } from './apiClient'
+import { idbGetAll, idbBulkPut } from './translationStore'
 
 const mem = new Map<string, string>() // key `${lang}|${text}` -> translated
+
+// ── "translating" signal (drives the loading overlay) ───────────────────────
+let inflight = 0
+const listeners = new Set<() => void>()
+function notify() {
+  listeners.forEach((l) => l())
+}
+function inc() {
+  inflight++
+  notify()
+}
+function dec() {
+  inflight = Math.max(0, inflight - 1)
+  notify()
+}
+export function isTranslating(): boolean {
+  return inflight > 0
+}
+export function subscribeTranslating(cb: () => void): () => void {
+  listeners.add(cb)
+  return () => listeners.delete(cb)
+}
 
 // Manual overrides for app-specific terms that machine translation leaves in
 // English (proper nouns) or renders poorly. Keyed by language then source text.
@@ -78,6 +101,7 @@ async function flush(lang: string) {
   pendings.delete(lang)
   if (p.timer) clearTimeout(p.timer)
   const texts = [...p.texts]
+  inc()
   try {
     const res = await api.post<{ translations: string[] }>('/translate', { texts, target: lang })
     const arr = res?.translations ?? texts
@@ -90,7 +114,60 @@ async function flush(lang: string) {
     texts.forEach((t) => mem.set(`${lang}|${t}`, t))
   } finally {
     p.resolvers.forEach((r) => r())
+    dec()
   }
+}
+
+// ── Offline bulk cache (IndexedDB) ──────────────────────────────────────────
+const syncFlag = (lang: string) => `tr_sync_${TR_CACHE_VERSION}_${lang}`
+
+// Load every cached row for a language into the in-memory map so
+// cachedTranslation() resolves synchronously (instant, offline).
+export async function primeFromIdb(lang: string): Promise<void> {
+  if (!lang || lang === 'en') return
+  const rows = await idbGetAll(lang)
+  for (const [src, val] of rows) mem.set(`${lang}|${src}`, val)
+  if (rows.length) notify()
+}
+
+// One-time bulk download of all translations for a language → mem + IndexedDB.
+// Guarded per cache-version so it only refetches when the version bumps.
+export async function syncLang(lang: string): Promise<void> {
+  if (!lang || lang === 'en') return
+  try {
+    if (localStorage.getItem(syncFlag(lang))) return
+  } catch {
+    /* ignore */
+  }
+  inc()
+  try {
+    const res = await api.get<{ rows: { source_text: string; translated_text: string }[] }>(
+      `/translate/all?target=${encodeURIComponent(lang)}`
+    )
+    const rows = res?.rows ?? []
+    for (const r of rows) {
+      if (r?.source_text != null && r?.translated_text != null) {
+        mem.set(`${lang}|${r.source_text}`, r.translated_text)
+      }
+    }
+    await idbBulkPut(lang, rows)
+    try {
+      localStorage.setItem(syncFlag(lang), '1')
+    } catch {
+      /* ignore */
+    }
+    notify()
+  } catch {
+    /* offline / failed — reads fall back to per-string fetch */
+  } finally {
+    dec()
+  }
+}
+
+// Prime from IndexedDB (fast, offline) then background-sync from the server.
+export async function ensureLang(lang: string): Promise<void> {
+  await primeFromIdb(lang)
+  void syncLang(lang)
 }
 
 function queue(lang: string, text: string): Promise<void> {
