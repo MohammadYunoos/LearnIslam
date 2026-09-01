@@ -154,6 +154,27 @@ html[dir='rtl'] .qa-content .qa-a {
   color: #fff;
 }
 
+/* Glossy light-purple surface — Islamic Q&A book tiles */
+.glossy-purple {
+  position: relative;
+  background-image: linear-gradient(160deg, #e6dcfb 0%, #c9b8f2 55%, #b39ee9 100%);
+  color: #3b2a6b;
+  isolation: isolate;
+}
+.glossy-purple::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+.glossy-purple:active {
+  background-image: linear-gradient(160deg, #2f8676 0%, #1f6a5c 100%);
+  color: #fff;
+}
+
 /* Qibla compass animations */
 @keyframes qiblaPulse {
   0% {

@@ -1,7 +1,7 @@
 // src/pages/Taleem/TaleemPage.tsx
 // Islamic Q & A — volumes read from the `qa_volumes` table. Rendered as one
 // continuous scroll (like a Maqtab lesson), styled Q/A/section markdown.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
@@ -10,6 +10,13 @@ import { BottomNav } from '../../components/BottomNav'
 import { getQaVolumes, getQaVolume } from '../../services/supabaseService'
 import { useLang, useTrList } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
+// Lazy — pulls pdf.js only when the user opens "About the Book".
+const PdfViewer = lazy(() =>
+  import('../../components/PdfViewer').then((m) => ({ default: m.PdfViewer }))
+)
+
+// Bundled introduction PDF (drop the file at public/books/about.pdf).
+const ABOUT_PDF = `${import.meta.env.BASE_URL}books/about.pdf`
 
 interface VolumeMeta {
   id: string
@@ -193,7 +200,7 @@ const mdComponents = {
 
 export function TaleemPage() {
   const [volumes, setVolumes] = useState<VolumeMeta[]>([])
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState(-1) // -1 = book list landing
   const [content, setContent] = useState<string | null>(null)
   const [loadingList, setLoadingList] = useState(true)
   const [loadingDoc, setLoadingDoc] = useState(false)
@@ -206,6 +213,7 @@ export function TaleemPage() {
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
+  const [showAbout, setShowAbout] = useState(false)
   const toggleFullscreen = () => {
     try {
       if (document.fullscreenElement) document.exitFullscreen()
@@ -220,7 +228,7 @@ export function TaleemPage() {
     setLoadingList(true)
     getQaVolumes(contentDbLang(lang)).then((data) => {
       setVolumes((data ?? []) as VolumeMeta[])
-      setActive(0)
+      setActive(-1) // start on the book list
       setLoadingList(false)
     })
   }, [lang])
@@ -272,26 +280,47 @@ export function TaleemPage() {
           </p>
         )}
 
-        {/* Volume switcher */}
-        {volumes.length > 0 && (
-          <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+        {/* Landing: list every book one below the other, About the Book first. */}
+        {!loadingList && volumes.length > 0 && active < 0 && (
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowAbout(true)}
+              className="glossy-purple w-full text-left rounded-full px-5 py-4 shadow-md border-2 border-gold flex items-center gap-3 active:scale-[0.98] transition-transform"
+            >
+              <span className="text-2xl">📖</span>
+              <div>
+                <p className="font-bold text-teal-900">About the Book</p>
+                <p className="text-xs text-ink-muted">Read the introduction (PDF)</p>
+              </div>
+            </button>
+
             {volumes.map((v, i) => (
               <button
                 key={v.id}
                 onClick={() => setActive(i)}
-                className={`text-xs font-semibold px-3 py-2 rounded-xl whitespace-nowrap ${
-                  i === active
-                    ? 'bg-teal-900 text-white'
-                    : 'bg-white border border-border text-ink-muted'
-                }`}
+                className="glossy-purple w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
               >
-                Vol {v.volume_no}: {v.title}
+                <span className="text-2xl">📗</span>
+                <p className="font-bold text-teal-900">
+                  Book {v.volume_no}: {v.title}
+                </p>
               </button>
             ))}
           </div>
         )}
 
-        {volumes.length > 0 && (
+        {/* A single book's content. */}
+        {volumes.length > 0 && active >= 0 && (
+          <>
+            <button
+              onClick={() => setActive(-1)}
+              className="mb-3 text-sm font-bold text-teal-900"
+            >
+              ← All books
+            </button>
+            <p className="text-base font-bold text-teal-900 mb-2">
+              Book {volumes[active]?.volume_no}: {volumes[active]?.title}
+            </p>
           <div
             ref={cardRef}
             className="fs-card relative rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7]"
@@ -330,8 +359,25 @@ export function TaleemPage() {
               </div>
             )}
           </div>
+          </>
         )}
       </div>
+
+      {showAbout && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center text-white text-sm">
+              Loading PDF…
+            </div>
+          }
+        >
+          <PdfViewer
+            url={new URL(ABOUT_PDF, window.location.href).href}
+            title="About the Book"
+            onClose={() => setShowAbout(false)}
+          />
+        </Suspense>
+      )}
 
       <BottomNav />
     </div>

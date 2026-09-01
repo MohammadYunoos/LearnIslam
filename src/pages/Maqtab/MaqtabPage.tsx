@@ -18,17 +18,6 @@ interface Lesson {
   lesson_num: number
 }
 
-// Chapter titles (no column in the DB). Keyed by "level-chapter".
-const CHAPTER_TITLES: Record<string, string> = {
-  'Beginner-1': 'Foundations of Iman',
-  'Beginner-2': 'Taharah — Purification',
-  'Beginner-3': 'Salah — Prayer',
-}
-
-function chapterTitle(level: string, chapter: number): string {
-  return CHAPTER_TITLES[`${level}-${chapter}`] ?? ''
-}
-
 export function MaqtabPage() {
   const navigate = useNavigate()
   const user = useAppStore((s) => s.user)
@@ -96,14 +85,11 @@ export function MaqtabPage() {
   )
   const levelNames = useTrList(levels.map((l) => l.level))
   const levelMap = new Map(levels.map((l, i) => [l.level, levelNames[i]]))
-  const chapLabels = levels.flatMap((lvl) =>
-    lvl.chapters.map((ch) => chapterTitle(lvl.level, ch.chapter)).filter(Boolean)
-  )
-  const trChap = useTrList(chapLabels)
-  const chapMap = new Map(chapLabels.map((t, i) => [t, trChap[i]]))
-  const chapLabel = (level: string, chapter: number) => {
-    const en = chapterTitle(level, chapter)
-    return en ? chapMap.get(en) ?? en : ''
+  // Chapter title = the chapter's lesson title (from maqtab_lessons.title),
+  // translated via the same titleMap.
+  const chapLabel = (ch: { lessons: Lesson[] }) => {
+    const t = ch.lessons[0]?.title
+    return t ? titleMap.get(t) ?? t : ''
   }
 
   return (
@@ -161,7 +147,7 @@ export function MaqtabPage() {
                 {/* Chapter */}
                 <p className="text-sm font-bold text-gold-dark mb-2 pl-1">
                   {tChapter} {ch.chapter}
-                  {chapLabel(lvl.level, ch.chapter) ? ` · ${chapLabel(lvl.level, ch.chapter)}` : ''}
+                  {chapLabel(ch) ? ` · ${chapLabel(ch)}` : ''}
                 </p>
                 <div className="space-y-2">
                   {ch.lessons.map((lesson) => {
