@@ -1,0 +1,72 @@
+name: Build Android App Bundle (.aab)
+
+# Builds a SIGNED release .aab for Play Store (Internal testing / production).
+# Run from GitHub → Actions → "Build Android App Bundle (.aab)" → Run workflow.
+# Manual only — a release should be deliberate.
+#
+# Requires these repo secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of your upload-keystore.jks
+#   ANDROID_KEYSTORE_PASSWORD store password
+#   ANDROID_KEY_ALIAS         key alias (e.g. upload)
+#   ANDROID_KEY_PASSWORD      key password
+# See README-release notes below the workflow file for how to create them.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Setup Java (JDK 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Decode keystore + write key.properties
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build release AAB
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: islam-seekho-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
