@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { useAppStore } from './store/appStore'
 import { supabase } from './lib/supabase'
 import { getLocalUser, getSessionUser } from './services/authService'
@@ -128,10 +129,30 @@ export default function App() {
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (url && url.startsWith('com.mymaqtab.app://auth')) {
+          // Pull the PKCE code out of the deep-link. exchangeCodeForSession
+          // wants the raw code, NOT the whole URL (passing the URL throws and
+          // leaves the browser stuck on "Please wait…").
+          let code: string | null = null
           try {
-            await supabase.auth.exchangeCodeForSession(url)
+            code = new URL(url).searchParams.get('code')
           } catch {
-            /* ignore */
+            const m = url.match(/[?&]code=([^&]+)/)
+            code = m ? decodeURIComponent(m[1]) : null
+          }
+          try {
+            if (code) {
+              await supabase.auth.exchangeCodeForSession(code)
+              await loadSession()
+            }
+          } catch (e) {
+            console.error('OAuth exchange failed', e)
+          } finally {
+            // Always dismiss the system browser so the app comes back to front.
+            try {
+              await Browser.close()
+            } catch {
+              /* no-op on web */
+            }
           }
         }
       }).then((h) => {
