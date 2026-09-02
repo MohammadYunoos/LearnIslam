@@ -185,10 +185,7 @@ export function LoginPage() {
               className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3"
             >
               <option value="hanafi">Hanafi</option>
-              <option value="shafi">Shafi&apos;i</option>
-              <option value="maliki">Maliki</option>
-              <option value="hanbali">Hanbali</option>
-              <option value="salafi">Salafi</option>
+              <option value="salafi">Salafi(Under development)</option>
             </select>
 
             <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
