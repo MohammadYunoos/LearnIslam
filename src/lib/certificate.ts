@@ -39,7 +39,7 @@ export function drawCertificate(canvas: HTMLCanvasElement, d: CertData): HTMLCan
   // Crest.
   ctx.fillStyle = '#0E3B36'
   ctx.font = 'bold 44px Georgia, serif'
-  ctx.fillText('Islam Seekho', center, 120)
+  ctx.fillText('Islam Seeko', center, 120)
   ctx.fillStyle = '#C8962C'
   ctx.font = '20px Georgia, serif'
   ctx.fillText('☪  Learn Islam  ☪', center, 150)
@@ -96,7 +96,7 @@ const FILENAME = 'islam-seekho-certificate.png'
 // Download the certificate (web) or save + reveal via share sheet (native).
 export async function saveCertificate(canvas: HTMLCanvasElement): Promise<void> {
   if (Capacitor.isNativePlatform()) {
-    await shareCertificate(canvas, 'My Islam Seekho — Beginner certificate.')
+    await shareCertificate(canvas, 'My Islam Seeko — Beginner certificate.')
     return
   }
   const blob = await canvasToBlob(canvas)
@@ -127,7 +127,7 @@ export async function shareCertificate(canvas: HTMLCanvasElement, text: string):
       directory: Directory.Cache,
     })
     await Share.share({
-      title: 'Islam Seekho Certificate',
+      title: 'Islam Seeko Certificate',
       text,
       url: res.uri,
       dialogTitle: 'Share your certificate',
@@ -141,7 +141,7 @@ export async function shareCertificate(canvas: HTMLCanvasElement, text: string):
     const file = new File([blob], FILENAME, { type: 'image/png' })
     const nav = navigator as Navigator & { canShare?: (d: any) => boolean }
     if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
-      await nav.share({ files: [file], text, title: 'Islam Seekho Certificate' })
+      await nav.share({ files: [file], text, title: 'Islam Seeko Certificate' })
       return
     }
   } catch {

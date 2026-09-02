@@ -1,4 +1,4 @@
-package com.learnislam.app;
+package com.mymaqtab.app;
 
 import com.getcapacitor.BridgeActivity;
 

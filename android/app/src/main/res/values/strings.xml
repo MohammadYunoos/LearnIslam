@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Islam Seekho</string>
-    <string name="title_activity_main">Islam Seekho</string>
-    <string name="package_name">com.learnislam.app</string>
-    <string name="custom_url_scheme">com.learnislam.app</string>
+    <string name="app_name">Islam Seeko</string>
+    <string name="title_activity_main">Islam Seeko</string>
+    <string name="package_name">com.mymaqtab.app</string>
+    <string name="custom_url_scheme">com.mymaqtab.app</string>
 </resources>

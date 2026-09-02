@@ -78,7 +78,7 @@ export function HomePage() {
         <div className="flex items-center gap-2">
           <Logo size={34} ring={false} />
           <div>
-            <p className="font-arabic text-white text-xl font-bold leading-tight">Islam Seekho</p>
+            <p className="font-arabic text-white text-xl font-bold leading-tight">Islam Seeko</p>
             <p className="text-sand text-xs">{tGreet}, {user?.name}</p>
           </div>
         </div>

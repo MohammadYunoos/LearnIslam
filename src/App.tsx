@@ -60,7 +60,7 @@ function SplashScreen() {
     <div className="flex items-center justify-center h-screen bg-teal-900">
       <div className="text-center">
         <Logo size={72} className="mx-auto mb-4" />
-        <p className="font-arabic text-4xl text-gold font-bold">Islam Seekho</p>
+        <p className="font-arabic text-4xl text-gold font-bold">Islam Seeko</p>
         <p className="text-sand text-xs mt-1 tracking-widest uppercase">Learn Islam</p>
         <p className="text-sand text-sm mt-3">Loading...</p>
       </div>
@@ -127,7 +127,7 @@ export default function App() {
     let removeListener: (() => void) | undefined
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-        if (url && url.startsWith('com.learnislam.app://auth')) {
+        if (url && url.startsWith('com.mymaqtab.app://auth')) {
           try {
             await supabase.auth.exchangeCodeForSession(url)
           } catch {

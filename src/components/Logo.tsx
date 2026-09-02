@@ -1,5 +1,5 @@
 // src/components/Logo.tsx
-// Islam Seekho logo — an open book rising into a mihrab arch, crescent + star above.
+// Islam Seeko logo — an open book rising into a mihrab arch, crescent + star above.
 interface Props {
   size?: number
   color?: string

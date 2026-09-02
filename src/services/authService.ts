@@ -9,7 +9,7 @@ const USER_ID_KEY = 'mymaqtab_user_id'
 const USER_NAME_KEY = 'mymaqtab_user_name'
 const USER_DATA_KEY = 'mymaqtab_user_data'
 
-const REDIRECT_NATIVE = 'com.learnislam.app://auth'
+const REDIRECT_NATIVE = 'com.mymaqtab.app://auth'
 
 export type Gender = 'male' | 'female'
 

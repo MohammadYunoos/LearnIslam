@@ -89,7 +89,7 @@ export function CertificatePage() {
     }
   }, [user])
 
-  const shareText = `Alhamdulillah! I completed the Beginner section on Islam Seekho and earned my certificate. Learn with me — download the app: ${APP_LINK}`
+  const shareText = `Alhamdulillah! I completed the Beginner section on Islam Seeko and earned my certificate. Learn with me — download the app: ${APP_LINK}`
 
   return (
     <div className="bg-cream min-h-screen pb-24">

@@ -84,7 +84,7 @@ export function LoginPage() {
       {/* Hero header */}
       <div className="bg-teal-900 px-6 pt-12 pb-16 text-center">
         <Logo size={56} className="mx-auto mb-3" />
-        <h1 className="font-arabic text-3xl font-bold text-white">Islam Seekho</h1>
+        <h1 className="font-arabic text-3xl font-bold text-white">Islam Seeko</h1>
         <p className="text-sand text-xs mt-1 tracking-widest uppercase">
           Learn Islam · Begin your journey
         </p>
