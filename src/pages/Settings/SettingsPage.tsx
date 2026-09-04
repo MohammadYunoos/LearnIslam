@@ -8,6 +8,9 @@ import { logout as clearDevice } from '../../services/authService'
 import { useTr, useTrList } from '../../i18n/useTr'
 import { isAdmin } from '../../lib/admin'
 import { APP_VERSION_NAME } from '../../version'
+import { openExternal } from '../../lib/external'
+
+const PRIVACY_URL = 'https://www.termsfeed.com/live/d0b04343-7a7a-4a59-8ff0-a0c223f09a3d'
 
 const MADHAB_LABEL: Record<string, string> = {
   hanafi: 'Hanafi',
@@ -110,7 +113,13 @@ export function SettingsPage() {
           {L[6]}
         </button>
 
-        <p className="text-center text-xs text-ink-muted mt-6">
+        <button
+          onClick={() => openExternal(PRIVACY_URL)}
+          className="block mx-auto text-xs text-teal-700 underline mt-6"
+        >
+          Privacy Policy
+        </button>
+        <p className="text-center text-xs text-ink-muted mt-2">
           Alpha testing build · v{APP_VERSION_NAME}
         </p>
       </div>

@@ -4,6 +4,9 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { signInWithGoogle, continueAsGuest, saveProfile } from '../../services/authService'
 import { useAppStore } from '../../store/appStore'
 import { Logo } from '../../components/Logo'
+import { openExternal } from '../../lib/external'
+
+const PRIVACY_URL = 'https://www.termsfeed.com/live/d0b04343-7a7a-4a59-8ff0-a0c223f09a3d'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -143,6 +146,16 @@ export function LoginPage() {
             </p>
 
             <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+              Name
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3"
+            />
+
+            <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
               Age
             </label>
             <input
@@ -185,7 +198,10 @@ export function LoginPage() {
               className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3"
             >
               <option value="hanafi">Hanafi</option>
-              <option value="salafi">Salafi(Under development)</option>
+              <option value="shafi" disabled>Shafi'i (under development)</option>
+              <option value="maliki" disabled>Maliki (under development)</option>
+              <option value="hanbali" disabled>Hanbali (under development)</option>
+              <option value="salafi" disabled>Salafi (under development)</option>
             </select>
 
             <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
@@ -197,12 +213,7 @@ export function LoginPage() {
               className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-4"
             >
               <option value="en">English</option>
-              <option value="ur">اردو Urdu</option>
               <option value="ur-roman">Roman Urdu (English letters)</option>
-              <option value="hi">हिन्दी Hindi</option>
-              <option value="ms">Bahasa Melayu</option>
-              <option value="bn">বাংলা Bengali</option>
-              <option value="id">Bahasa Indonesia</option>
             </select>
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
@@ -228,6 +239,12 @@ export function LoginPage() {
       <p className="text-center text-xs text-ink-muted mt-6 px-8">
         Alpha testing build · No personal data shared externally
       </p>
+      <button
+        onClick={() => openExternal(PRIVACY_URL)}
+        className="block mx-auto text-xs text-teal-700 underline mt-2 mb-6"
+      >
+        Privacy Policy
+      </button>
     </div>
   )
 }
