@@ -6,6 +6,7 @@ import { BottomNav } from '../../components/BottomNav'
 import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseService'
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { Logo } from '../../components/Logo'
+import { APP_VERSION_NAME } from '../../version'
 
 // `img` = filename under public/menu/. Drop a JPG/PNG there per tile; if it is
 // missing the tile falls back to the glossy teal background automatically.
@@ -78,7 +79,9 @@ export function HomePage() {
         <div className="flex items-center gap-2">
           <Logo size={34} ring={false} />
           <div>
-            <p className="font-arabic text-white text-xl font-bold leading-tight">Islam Seeko</p>
+            <p className="font-arabic text-white text-xl font-bold leading-tight">
+              Islam Seeko <span className="font-sans text-[10px] font-semibold text-sand/80 align-middle">v{APP_VERSION_NAME}</span>
+            </p>
             <p className="text-sand text-xs">{tGreet}, {user?.name}</p>
           </div>
         </div>
