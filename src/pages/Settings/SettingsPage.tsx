@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
-import { logout as clearDevice } from '../../services/authService'
+import { logout as clearDevice, saveProfile } from '../../services/authService'
 import { useTr, useTrList } from '../../i18n/useTr'
 import { isAdmin } from '../../lib/admin'
 import { APP_VERSION_NAME } from '../../version'
@@ -32,12 +32,46 @@ function Row({ label, value }: { label: string; value: string }) {
 export function SettingsPage() {
   const navigate = useNavigate()
   const user = useAppStore((s) => s.user)
+  const setUser = useAppStore((s) => s.setUser)
   const storeLogout = useAppStore((s) => s.logout)
 
   const [admin, setAdmin] = useState(false)
   useEffect(() => {
     isAdmin().then(setAdmin)
   }, [])
+
+  // ── Edit profile (name, age, language) ──────────────────
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState('')
+  const [age, setAge] = useState('')
+  const [lang, setLang] = useState('en')
+  const [saving, setSaving] = useState(false)
+
+  const startEdit = () => {
+    if (!user) return
+    setName(user.name ?? '')
+    setAge(user.age ? String(user.age) : '')
+    setLang(user.language || 'en')
+    setEditing(true)
+  }
+  const handleSave = async () => {
+    if (!user || !name.trim()) return
+    setSaving(true)
+    try {
+      const u = await saveProfile(
+        user.id,
+        name,
+        parseInt(age) || user.age || 20,
+        user.gender,
+        user.madhab || 'hanafi',
+        lang
+      )
+      setUser(u)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleLogout = () => {
     clearDevice()
@@ -57,6 +91,11 @@ export function SettingsPage() {
     'Female',
     'Premium',
     'Free',
+    'Edit profile', // 11
+    'Name', // 12
+    'Save', // 13
+    'Saving…', // 14
+    'Cancel', // 15
   ])
   const tMadhabVal = useTr(user ? MADHAB_LABEL[user.madhab] ?? user.madhab : '')
 
@@ -75,12 +114,76 @@ export function SettingsPage() {
           </p>
         </div>
 
-        <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
-          <Row label={L[1]} value={user?.age ? String(user.age) : '—'} />
-          <Row label={L[2]} value={user?.gender === 'female' ? L[8] : user?.gender === 'male' ? L[7] : '—'} />
-          <Row label={L[3]} value={user ? tMadhabVal : '—'} />
-          <Row label={L[4]} value={user?.language?.toUpperCase() ?? '—'} />
-        </div>
+        {!editing ? (
+          <>
+            <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-3">
+              <Row label={L[1]} value={user?.age ? String(user.age) : '—'} />
+              <Row label={L[2]} value={user?.gender === 'female' ? L[8] : user?.gender === 'male' ? L[7] : '—'} />
+              <Row label={L[3]} value={user ? tMadhabVal : '—'} />
+              <Row label={L[4]} value={user?.language?.toUpperCase() ?? '—'} />
+            </div>
+            <button
+              onClick={startEdit}
+              className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-4"
+            >
+              {L[11]}
+            </button>
+          </>
+        ) : (
+          <div className="bg-white border border-border rounded-2xl p-4 mb-4 space-y-3">
+            <div>
+              <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+                {L[12]}
+              </label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+                {L[1]}
+              </label>
+              <input
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                type="number"
+                placeholder="e.g. 24"
+                className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+                {L[4]}
+              </label>
+              <select
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700"
+              >
+                <option value="en">English</option>
+                <option value="ur-roman">Roman Urdu (English letters)</option>
+              </select>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-3 text-sm disabled:opacity-60"
+              >
+                {saving ? L[14] : L[13]}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="flex-1 bg-white border border-border text-ink-muted font-bold rounded-xl py-3 text-sm"
+              >
+                {L[15]}
+              </button>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={() => navigate('/plans')}

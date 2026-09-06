@@ -8,6 +8,15 @@ import { openExternal } from '../../lib/external'
 
 const PRIVACY_URL = 'https://www.termsfeed.com/live/d0b04343-7a7a-4a59-8ff0-a0c223f09a3d'
 
+// Rotating status shown while the Google OAuth round-trip + profile fetch run,
+// so the user sees progress instead of a frozen "Please wait…".
+const LOADING_MSGS = [
+  'Signing in…',
+  'Creating your profile…',
+  'Initializing…',
+  'Almost there…',
+]
+
 export function LoginPage() {
   const navigate = useNavigate()
   const user = useAppStore((s) => s.user)
@@ -25,7 +34,18 @@ export function LoginPage() {
   const [madhab, setMadhab] = useState('hanafi')
   const [lang, setLang] = useState('en')
   const [loading, setLoading] = useState(false)
+  const [msgIdx, setMsgIdx] = useState(0)
   const [error, setError] = useState('')
+
+  // Cycle the status message while loading.
+  useEffect(() => {
+    if (!loading) {
+      setMsgIdx(0)
+      return
+    }
+    const t = setInterval(() => setMsgIdx((i) => (i + 1) % LOADING_MSGS.length), 1500)
+    return () => clearInterval(t)
+  }, [loading])
 
   // Already fully signed in → render a redirect (no login flash).
   const alreadyIn = !!(user && !needsProfile)
@@ -35,6 +55,7 @@ export function LoginPage() {
     if (isGoogle) {
       setStep('profile')
       setName((n) => n || user!.name)
+      setLoading(false) // OAuth done — re-enable the profile form
     }
   }, [isGoogle, user])
 
@@ -105,7 +126,7 @@ export function LoginPage() {
               <span className="bg-white text-teal-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                 G
               </span>
-              {loading ? 'Please wait…' : 'Continue with Google'}
+              {loading ? LOADING_MSGS[msgIdx] : 'Continue with Google'}
             </button>
 
             <div className="flex items-center gap-2 my-4">
@@ -222,7 +243,7 @@ export function LoginPage() {
               disabled={loading}
               className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm disabled:opacity-60"
             >
-              {loading ? 'Please wait...' : 'Enter My Maqtab →'}
+              {loading ? 'Saving…' : 'Enter My Maqtab →'}
             </button>
           </>
         )}
