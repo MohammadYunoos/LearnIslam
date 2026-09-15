@@ -7,10 +7,12 @@ import { useAppStore } from '../../store/appStore'
 import { getMaqtabChapters, getMaqtabProgress } from '../../services/supabaseService'
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
+import { openPdf } from '../../lib/openPdfNative'
 
 interface Lesson {
   id: string
   chapter_num: number
+  chapter_title?: string
   title: string
   duration_min: number
   sort_order: number
@@ -25,6 +27,7 @@ export function MaqtabPage() {
   const [done, setDone] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const lang = useLang()
+  const [visibleLevels, setVisibleLevels] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function load() {
@@ -38,6 +41,29 @@ export function MaqtabPage() {
     }
     load()
   }, [user, lang])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const levelKey = entry.target.getAttribute('data-level')
+            if (levelKey) {
+              setVisibleLevels((prev) => new Set([...prev, levelKey]))
+            }
+          }
+        })
+      },
+      { threshold: 0.1 }
+    )
+
+    const elements = document.querySelectorAll('[data-level]')
+    elements.forEach((el) => observer.observe(el))
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el))
+    }
+  }, [lessons.length])
 
   const completedCount = lessons.filter((l) => done.has(l.id)).length
 
@@ -61,16 +87,19 @@ export function MaqtabPage() {
     ch.lessons.push(l)
   }
 
-  // Beginner is "done" when every Beginner lesson has a completed (passed) quiz.
-  const beginnerLessons = lessons.filter((l) => (l.level || '') === 'Beginner')
-  const beginnerDone = beginnerLessons.length > 0 && beginnerLessons.every((l) => done.has(l.id))
+  // Level completion: every lesson in level is done
+  const levelCompletion = (level: string) => {
+    const levelLessons = lessons.filter((l) => (l.level || '') === level)
+    return levelLessons.length > 0 && levelLessons.every((l) => done.has(l.id))
+  }
 
   const tOverall = useTr('Overall progress')
   const tKnowledge = useTr('Knowledge Check')
   const tKnowledgeSub = useTr('Quick 5-question check — see where you stand')
-  const tExam = useTr('Beginner Exam')
-  const tExamReady = useTr('You finished Beginner — take the exam for your certificate!')
-  const tExamLocked = useTr('Finish all Beginner lessons to unlock the exam')
+  const tAbout = useTr('About')
+  const tExam = useTr('Take Exam')
+  const tExamReady = useTr('You finished this level — take the exam for your certificate!')
+  const tExamLocked = useTr('Finish all lessons to unlock the exam')
   const tChapter = useTr('Chapter')
   const tLesson = useTr('Lesson')
   const tMin = useTr('min')
@@ -90,6 +119,24 @@ export function MaqtabPage() {
   const chapLabel = (ch: { lessons: Lesson[] }) => {
     const t = ch.lessons[0]?.title
     return t ? titleMap.get(t) ?? t : ''
+  }
+
+  const getLevelStyle = (level: string) => {
+    switch (level) {
+      case 'Beginner':
+        return { glossy: 'glossy-sky', accent: 'bg-blue-500', text: 'text-blue-900', border: 'border-blue-200' }
+      case 'Intermediate':
+        return { glossy: 'glossy', accent: 'bg-green-500', text: 'text-green-900', border: 'border-green-200' }
+      case 'Advanced':
+        return { glossy: 'glossy-purple', accent: 'bg-purple-500', text: 'text-purple-900', border: 'border-purple-200' }
+      default:
+        return { glossy: 'glossy-gold', accent: 'bg-gray-500', text: 'text-gray-900', border: 'border-gray-200' }
+    }
+  }
+
+  const getPdfPath = (level: string) => {
+    const levelName = level.toLowerCase()
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/LearnIslam/About_Us/${levelName}.pdf`
   }
 
   return (
@@ -132,77 +179,98 @@ export function MaqtabPage() {
           <p className="text-ink-muted text-sm text-center py-8">{tNone}</p>
         )}
 
-        {levels.map((lvl) => (
-          <div key={lvl.level} className="mb-6">
-            {/* Level */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1 uppercase tracking-wide">
+        {levels.map((lvl, idx) => {
+          const style = getLevelStyle(lvl.level)
+          const levelDone = levelCompletion(lvl.level)
+
+          return (
+            <div
+              key={lvl.level}
+              data-level={lvl.level}
+              className={`mb-6 rounded-2xl p-4 ${style.glossy} shadow-md ${visibleLevels.has(lvl.level) ? 'section-fill' : 'opacity-0'}`}
+            >
+              {/* Level heading */}
+              <span className={`text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1 uppercase tracking-wide inline-block mb-3`}>
                 {levelMap.get(lvl.level) ?? lvl.level}
               </span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
 
-            {lvl.chapters.map((ch) => (
-              <div key={ch.chapter} className="mb-4">
-                {/* Chapter */}
-                <p className="text-sm font-bold text-gold-dark mb-2 pl-1">
-                  {tChapter} {ch.chapter}
-                  {chapLabel(ch) ? ` · ${chapLabel(ch)}` : ''}
-                </p>
-                <div className="space-y-2">
-                  {ch.lessons.map((lesson) => {
-                    const isDone = done.has(lesson.id)
-                    return (
-                      <button
-                        key={lesson.id}
-                        onClick={() => navigate(`/maqtab/${lesson.id}`)}
-                        className="tile-in glossy-gold w-full rounded-2xl p-3.5 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform"
-                      >
-                        <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                            isDone ? 'bg-teal-900 text-white' : 'bg-teal-900/10 text-teal-900'
-                          }`}
-                        >
-                          {isDone ? '✓' : lesson.lesson_num}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-teal-900 truncate">
-                            {titleMap.get(lesson.title) ?? lesson.title}
-                          </p>
-                          <p className="text-xs text-teal-900/70">
-                            {tLesson} {lesson.lesson_num}
-                            {lesson.duration_min ? ` · ${lesson.duration_min} ${tMin}` : ''}
-                          </p>
-                        </div>
-                        <span className="text-teal-900/70 text-lg">›</span>
-                      </button>
-                    )
-                  })}
-                </div>
+              {/* About section with PDF */}
+              <div className="mb-4 mt-3">
+                <button
+                  onClick={() => openPdf(getPdfPath(lvl.level), `${lvl.level.toLowerCase()}.pdf`)}
+                  className="w-full rounded-xl p-3 glossy-gold text-teal-900 text-center text-sm font-semibold active:scale-[0.98] transition-transform shadow"
+                >
+                  📖 {tAbout} {lvl.level}
+                </button>
               </div>
-            ))}
 
-            {/* Beginner exam entry — at the end of the Beginner section */}
-            {lvl.level === 'Beginner' && (
+              {/* Separator */}
+              <div className="h-px bg-border my-3" />
+
+              {/* Chapters and lessons */}
+              {lvl.chapters.map((ch) => (
+                <div key={ch.chapter} className="mb-4">
+                  {/* Chapter title */}
+                  <p className={`text-sm font-bold mb-2 pl-1 ${lvl.level === 'Intermediate' ? 'text-white' : 'text-teal-900'}`}>
+                    {tChapter} {ch.chapter}
+                    {ch.lessons[0]?.chapter_title ? ` · ${ch.lessons[0].chapter_title}` : chapLabel(ch) ? ` · ${chapLabel(ch)}` : ''}
+                  </p>
+                  <div className="space-y-2">
+                    {ch.lessons.map((lesson) => {
+                      const isDone = done.has(lesson.id)
+                      return (
+                        <button
+                          key={lesson.id}
+                          onClick={() => navigate(`/maqtab/${lesson.id}`)}
+                          className="tile-in w-full rounded-2xl p-3.5 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform bg-white border border-border"
+                        >
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                              isDone ? 'bg-teal-900 text-white' : 'bg-teal-900/10 text-teal-900'
+                            }`}
+                          >
+                            {isDone ? '✓' : lesson.lesson_num}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-ink truncate">
+                              {titleMap.get(lesson.title) ?? lesson.title}
+                            </p>
+                            <p className="text-xs text-ink-muted">
+                              {tLesson} {lesson.lesson_num}
+                              {lesson.duration_min ? ` · ${lesson.duration_min} ${tMin}` : ''}
+                            </p>
+                          </div>
+                          <span className="text-ink-muted text-lg">›</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Exam button for each level */}
               <button
-                onClick={() => beginnerDone && navigate('/maqtab/exam')}
-                disabled={!beginnerDone}
-                className={`w-full rounded-2xl p-4 text-left shadow mt-2 transition-transform ${
-                  beginnerDone
-                    ? 'glossy-gold active:scale-[0.98]'
+                onClick={() => levelDone && navigate(`/maqtab/exam?level=${lvl.level}`)}
+                disabled={!levelDone}
+                className={`w-full rounded-2xl p-4 text-center transition-transform ${
+                  levelDone
+                    ? 'glossy-gold text-teal-900 shadow-xl border-b-4 border-gold active:translate-y-1 active:shadow-lg active:border-b-2'
                     : 'bg-white border border-border opacity-70'
                 }`}
               >
-                <p className={`text-sm font-bold ${beginnerDone ? 'text-teal-900' : 'text-ink-muted'}`}>
-                  {beginnerDone ? '🎓' : '🔒'} {tExam}
+                <p className={`text-sm font-bold ${levelDone ? 'text-teal-900' : 'text-ink-muted'}`}>
+                  {levelDone ? '🎓' : '🔒'} {tExam}
                 </p>
-                <p className={`text-xs mt-0.5 ${beginnerDone ? 'text-teal-900/80' : 'text-ink-muted'}`}>
-                  {beginnerDone ? tExamReady : tExamLocked}
+                <p className={`text-xs mt-0.5 ${levelDone ? 'text-teal-900/70' : 'text-ink-muted'}`}>
+                  {levelDone ? tExamReady : tExamLocked}
                 </p>
               </button>
-            )}
-          </div>
-        ))}
+
+              {/* Separator between levels */}
+              {idx < levels.length - 1 && <div className="h-1 bg-border my-4" />}
+            </div>
+          )
+        })}
       </div>
 
       <BottomNav />

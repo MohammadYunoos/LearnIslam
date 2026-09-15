@@ -1,7 +1,7 @@
 // src/pages/Taleem/TaleemPage.tsx
 // Islamic Q & A — volumes read from the `qa_volumes` table. Rendered as one
 // continuous scroll (like a Maqtab lesson), styled Q/A/section markdown.
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
@@ -10,13 +10,10 @@ import { BottomNav } from '../../components/BottomNav'
 import { getQaVolumes, getQaVolume } from '../../services/supabaseService'
 import { useLang, useTrList } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
-// Lazy — pulls pdf.js only when the user opens "About the Book".
-const PdfViewer = lazy(() =>
-  import('../../components/PdfViewer').then((m) => ({ default: m.PdfViewer }))
-)
+import { openPdf } from '../../lib/openPdfNative'
 
-// Bundled introduction PDF (drop the file at public/books/about.pdf).
-const ABOUT_PDF = `${import.meta.env.BASE_URL}books/about.pdf`
+// Supabase storage PDF (LearnIslam/About_Us/about.pdf)
+const ABOUT_PDF = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/LearnIslam/About_Us/about.pdf`
 
 interface VolumeMeta {
   id: string
@@ -213,7 +210,6 @@ export function TaleemPage() {
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [])
-  const [showAbout, setShowAbout] = useState(false)
   const toggleFullscreen = () => {
     try {
       if (document.fullscreenElement) document.exitFullscreen()
@@ -284,7 +280,7 @@ export function TaleemPage() {
         {!loadingList && volumes.length > 0 && active < 0 && (
           <div className="space-y-3">
             <button
-              onClick={() => setShowAbout(true)}
+              onClick={() => openPdf(ABOUT_PDF, 'about.pdf')}
               className="glossy-purple w-full text-left rounded-full px-5 py-4 shadow-md border-2 border-gold flex items-center gap-3 active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">📖</span>
@@ -362,22 +358,6 @@ export function TaleemPage() {
           </>
         )}
       </div>
-
-      {showAbout && (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center text-white text-sm">
-              Loading PDF…
-            </div>
-          }
-        >
-          <PdfViewer
-            url={new URL(ABOUT_PDF, window.location.href).href}
-            title="About the Book"
-            onClose={() => setShowAbout(false)}
-          />
-        </Suspense>
-      )}
 
       <BottomNav />
     </div>

@@ -91,7 +91,7 @@
     const lang = c.req.query('lang') || 'english'
     const { data } = await supabase
       .from('maqtab_lessons')
-      .select('id, chapter_num, title, duration_min, sort_order, level, lesson_num, language')
+      .select('id, chapter_num, chapter_title, title, duration_min, sort_order, level, lesson_num, language')
       .order('sort_order')
     const rows = data ?? []
     const key = (r: any) => `${r.level}-${r.chapter_num}-${r.lesson_num}`

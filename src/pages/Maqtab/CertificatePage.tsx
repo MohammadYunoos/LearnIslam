@@ -3,7 +3,7 @@
 // fanfare, and lets the user download / share it. Guarded by a real passing
 // attempt on the server (not just navigation).
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
@@ -21,23 +21,26 @@ const APP_LINK = 'https://islamseekho.app' // dummy download link (placeholder)
 
 export function CertificatePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const user = useAppStore((s) => s.user)
+  const level = searchParams.get('level') || 'Beginner'
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [ready, setReady] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [drawn, setDrawn] = useState(false)
 
   const tCongrats = useTr('Mubarak ho! 🎉')
-  const tBody = useTr('You have successfully completed the Beginner section and earned your certificate.')
+  const tBody = useTr(`You have successfully completed the ${level} section and earned your certificate.`)
   const tDownload = useTr('Download')
   const tShare = useTr('Share')
   const tChecking = useTr('Loading…')
-  const tLocked = useTr('Pass the Beginner exam first to unlock your certificate.')
+  const tLocked = useTr(`Pass the ${level} exam first to unlock your certificate.`)
   const tGoExam = useTr('Go to exam')
 
   // Verify a passing attempt on the server; take the best % for the cert.
   useEffect(() => {
     let alive = true
-    getExamAttempts('Beginner')
+    getExamAttempts(level)
       .then((attempts) => {
         if (!alive) return
         const passed = (attempts ?? []).filter((a) => a.passed)
@@ -52,9 +55,10 @@ export function CertificatePage() {
           name: user?.name ?? 'Student',
           percent: bestPercent,
           date: new Date().toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }),
+          level,
         }
         try {
-          const raw = localStorage.getItem('exam_pass_beginner')
+          const raw = localStorage.getItem(`exam_pass_${level.toLowerCase()}`)
           if (raw) {
             const s = JSON.parse(raw)
             data = {
@@ -65,6 +69,7 @@ export function CertificatePage() {
                 month: 'short',
                 year: 'numeric',
               }),
+              level,
             }
           }
         } catch {
@@ -74,7 +79,10 @@ export function CertificatePage() {
         setChecking(false)
         // Draw after the canvas mounts.
         requestAnimationFrame(() => {
-          if (canvasRef.current) drawCertificate(canvasRef.current, data)
+          if (canvasRef.current) {
+            drawCertificate(canvasRef.current, data)
+            setDrawn(true)
+          }
         })
         playFanfare()
       })
@@ -87,13 +95,13 @@ export function CertificatePage() {
     return () => {
       alive = false
     }
-  }, [user])
+  }, [user, level])
 
-  const shareText = `Alhamdulillah! I completed the Beginner section on Islam Seeko and earned my certificate. Learn with me — download the app: ${APP_LINK}`
+  const shareText = `Alhamdulillah! I completed the ${level} section on Islam Seeko and earned my certificate. Learn with me — download the app: ${APP_LINK}`
 
   return (
     <div className="bg-cream min-h-screen pb-24">
-      <PageHeader title="Certificate" subtitle="Beginner completed" backTo="/maqtab" />
+      <PageHeader title="Certificate" subtitle={`${level} completed`} backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">
         {checking && <p className="text-ink-muted text-sm text-center py-8">{tChecking}</p>}
@@ -118,12 +126,16 @@ export function CertificatePage() {
             </div>
 
             <div className="bg-white border border-border rounded-2xl p-3 shadow-md overflow-hidden">
-              <canvas ref={canvasRef} className="w-full h-auto rounded-lg" />
+              {drawn ? (
+                <canvas ref={canvasRef} className="w-full h-auto rounded-lg" />
+              ) : (
+                <div className="w-full aspect-video bg-sand animate-pulse rounded-lg" />
+              )}
             </div>
 
             <div className="flex gap-3">
               <button
-                onClick={() => canvasRef.current && saveCertificate(canvasRef.current)}
+                onClick={() => canvasRef.current && saveCertificate(canvasRef.current, level)}
                 className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"
               >
                 ⬇ {tDownload}

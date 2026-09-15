@@ -232,6 +232,21 @@ html[dir='rtl'] .qa-content .qa-a {
   animation: tileIn 0.7s ease-out both;
 }
 
+/* Section fill animation — background gradient fills from left */
+@keyframes sectionFill {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scaleX(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleX(1);
+  }
+}
+.section-fill {
+  animation: sectionFill 0.8s ease-out both;
+}
+
 /* Page fade-in on route change */
 @keyframes pageFade {
   from {

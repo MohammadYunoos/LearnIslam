@@ -9,6 +9,7 @@ export interface CertData {
   name: string
   percent: number
   date: string // e.g. '21 Aug 2026'
+  level: string // e.g. 'Beginner', 'Intermediate', 'Advanced'
 }
 
 const W = 1000
@@ -66,8 +67,8 @@ export function drawCertificate(canvas: HTMLCanvasElement, d: CertData): HTMLCan
   // Body.
   ctx.fillStyle = '#3a352c'
   ctx.font = '22px Georgia, serif'
-  ctx.fillText('for successfully completing the Beginner section of', center, 424)
-  ctx.fillText('Maqtab and demonstrating basic Islamic knowledge.', center, 456)
+  ctx.fillText(`for successfully completing the ${d.level} section of`, center, 424)
+  ctx.fillText('Maqtab and demonstrating Islamic knowledge.', center, 456)
 
   // Score.
   ctx.fillStyle = '#C8962C'
@@ -94,9 +95,9 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 const FILENAME = 'islam-seekho-certificate.png'
 
 // Download the certificate (web) or save + reveal via share sheet (native).
-export async function saveCertificate(canvas: HTMLCanvasElement): Promise<void> {
+export async function saveCertificate(canvas: HTMLCanvasElement, level?: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
-    await shareCertificate(canvas, 'My Islam Seeko — Beginner certificate.')
+    await shareCertificate(canvas, `My Islam Seeko — ${level || 'Beginner'} certificate.`)
     return
   }
   const blob = await canvasToBlob(canvas)

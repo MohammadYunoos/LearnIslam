@@ -1,7 +1,7 @@
 // src/pages/Maqtab/ExamPage.tsx
-// Beginner exam: disclaimer + past attempts → timed paper → server-scored result.
+// Level exam: disclaimer + past attempts → timed paper → server-scored result.
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
@@ -33,8 +33,10 @@ function fmtDate(iso: string): string {
 
 export function ExamPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const user = useAppStore((s) => s.user)
   const lang = useLang()
+  const level = searchParams.get('level') || 'Beginner'
   const [phase, setPhase] = useState<Phase>('intro')
   const [questions, setQuestions] = useState<ExamQuestion[]>([])
   const [answers, setAnswers] = useState<Record<string, number>>({})
@@ -46,11 +48,11 @@ export function ExamPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    getExamAttempts('Beginner')
+    getExamAttempts(level)
       .then((a) => setAttempts(a ?? []))
       .catch(() => setAttempts([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [level])
 
   // Count-up timer while the exam is running.
   useEffect(() => {
@@ -62,7 +64,7 @@ export function ExamPage() {
     }
   }, [phase])
 
-  const tTitle = useTr('Beginner Exam')
+  const tTitle = useTr(`${level} Exam`)
   const tDisc = useTr(
     'Before you begin: Allah is always watching (Muraqabah). Please answer honestly, from your own knowledge, without any help or searching. There is barakah in honesty — and this certificate only benefits you if it is truly earned.'
   )
@@ -84,7 +86,7 @@ export function ExamPage() {
   async function begin() {
     setLoading(true)
     try {
-      const res = await getExamQuestions('Beginner', contentDbLang(lang))
+      const res = await getExamQuestions(level, contentDbLang(lang))
       setQuestions(res?.questions ?? [])
       setAnswers({})
       setElapsed(0)
@@ -99,17 +101,17 @@ export function ExamPage() {
     if (timerRef.current) clearInterval(timerRef.current)
     setSubmitting(true)
     try {
-      const res = await submitExam({ answers, elapsedSeconds: elapsed })
+      const res = await submitExam({ level, answers, elapsedSeconds: elapsed })
       setResult({ score: res.score, total: res.total, percent: res.percent, passed: res.passed })
       if (res.passed) {
         localStorage.setItem(
-          'exam_pass_beginner',
+          `exam_pass_${level.toLowerCase()}`,
           JSON.stringify({ name: user?.name ?? 'Student', percent: res.percent, date: new Date().toISOString() })
         )
       }
       setPhase('result')
       // refresh history
-      getExamAttempts('Beginner').then((a) => setAttempts(a ?? []))
+      getExamAttempts(level).then((a) => setAttempts(a ?? []))
     } finally {
       setSubmitting(false)
     }
@@ -120,7 +122,7 @@ export function ExamPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-28">
-      <PageHeader title="Beginner Exam" subtitle="Maqtab · certificate exam" backTo="/maqtab" />
+      <PageHeader title={`${level} Exam`} subtitle="Maqtab · certificate exam" backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">
         {loading && phase === 'intro' && (
@@ -244,7 +246,7 @@ export function ExamPage() {
 
             {result.passed ? (
               <button
-                onClick={() => navigate('/maqtab/certificate')}
+                onClick={() => navigate(`/maqtab/certificate?level=${level}`)}
                 className="w-full bg-gold text-teal-900 font-bold rounded-xl py-3 text-sm mt-5"
               >
                 {tViewCert}

@@ -76,7 +76,7 @@ export async function submitExam(payload: {
     passed: boolean
     passPercent: number
     results: { id: string; correct_idx: number; chosen: number; ok: boolean }[]
-  }>('/exam/submit', { level: 'Beginner', ...payload })
+  }>('/exam/submit', { ...payload, level: payload.level || 'Beginner' })
 }
 
 export async function getExamAttempts(level = 'Beginner') {
