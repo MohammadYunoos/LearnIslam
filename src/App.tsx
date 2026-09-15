@@ -36,6 +36,11 @@ import { MessagesPage } from './pages/Messages/MessagesPage'
 import { ThreadPage } from './pages/Messages/ThreadPage'
 import { PlansPage } from './pages/Plans/PlansPage'
 import { SettingsPage } from './pages/Settings/SettingsPage'
+import { AboutPage } from './pages/Settings/AboutPage'
+import { TermsPage } from './pages/Settings/TermsPage'
+import { DisclaimerPage } from './pages/Settings/DisclaimerPage'
+import { ContactPage } from './pages/Settings/ContactPage'
+import { DeleteAccountPage } from './pages/Settings/DeleteAccountPage'
 import { FeedbackPage } from './pages/Admin/FeedbackPage'
 import { TranslationsPage } from './pages/Admin/TranslationsPage'
 import { QiblaPage } from './pages/Qibla/QiblaPage'
@@ -212,6 +217,11 @@ export default function App() {
         />
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
         <Route path="/settings" element={<PrivateRoute element={<SettingsPage />} />} />
+        <Route path="/settings/about" element={<PrivateRoute element={<AboutPage />} />} />
+        <Route path="/settings/terms" element={<PrivateRoute element={<TermsPage />} />} />
+        <Route path="/settings/disclaimer" element={<PrivateRoute element={<DisclaimerPage />} />} />
+        <Route path="/settings/contact" element={<PrivateRoute element={<ContactPage />} />} />
+        <Route path="/settings/delete-account" element={<PrivateRoute element={<DeleteAccountPage />} />} />
         <Route path="/admin/feedback" element={<PrivateRoute element={<FeedbackPage />} />} />
         <Route path="/admin/translations" element={<PrivateRoute element={<TranslationsPage />} />} />
         <Route path="*" element={<RootRedirect />} />

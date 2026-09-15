@@ -28,6 +28,9 @@ interface Segment {
   text: string
 }
 
+const toTitleCase = (str: string) =>
+  str.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\b[a-z]/g, (c) => c.toLowerCase())
+
 const isQ = (p: string) =>
   /^q\s*\d*\s*[.):\-]/i.test(p) ||
   /^question\b/i.test(p) ||
@@ -281,7 +284,7 @@ export function TaleemPage() {
           <div className="space-y-3">
             <button
               onClick={() => openPdf(ABOUT_PDF, 'about.pdf')}
-              className="glossy-purple w-full text-left rounded-full px-5 py-4 shadow-md border-2 border-gold flex items-center gap-3 active:scale-[0.98] transition-transform"
+              className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md border-2 border-gold flex items-center gap-3 active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">📖</span>
               <div>
@@ -294,11 +297,11 @@ export function TaleemPage() {
               <button
                 key={v.id}
                 onClick={() => setActive(i)}
-                className="glossy-purple w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
+                className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
               >
                 <span className="text-2xl">📗</span>
                 <p className="font-bold text-teal-900">
-                  Book {v.volume_no}: {v.title}
+                  Book {v.volume_no}: {toTitleCase(v.title)}
                 </p>
               </button>
             ))}
@@ -315,7 +318,7 @@ export function TaleemPage() {
               ← All books
             </button>
             <p className="text-base font-bold text-teal-900 mb-2">
-              Book {volumes[active]?.volume_no}: {volumes[active]?.title}
+              BOOK {volumes[active]?.volume_no}: {toTitleCase(volumes[active]?.title ?? '')}
             </p>
           <div
             ref={cardRef}

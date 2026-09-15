@@ -211,17 +211,51 @@ export function SettingsPage() {
 
         <button
           onClick={handleLogout}
-          className="w-full bg-white border border-red-300 text-red-500 font-bold rounded-xl py-3 text-sm"
+          className="w-full bg-white border border-red-300 text-red-500 font-bold rounded-xl py-3 text-sm mb-4"
         >
           {L[6]}
         </button>
 
-        <button
-          onClick={() => openExternal(PRIVACY_URL)}
-          className="block mx-auto text-xs text-teal-700 underline mt-6"
-        >
-          Privacy Policy
-        </button>
+        {/* Settings Menu */}
+        <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
+          <button
+            onClick={() => navigate('/settings/about')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            About Islam Seeko
+          </button>
+          <button
+            onClick={() => openExternal(PRIVACY_URL)}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            Privacy Policy
+          </button>
+          <button
+            onClick={() => navigate('/settings/terms')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            Terms & Conditions
+          </button>
+          <button
+            onClick={() => navigate('/settings/disclaimer')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            Disclaimer
+          </button>
+          <button
+            onClick={() => navigate('/settings/contact')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            Contact Us
+          </button>
+          <button
+            onClick={() => navigate('/settings/delete-account')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-red-500 active:bg-sand transition-colors"
+          >
+            Delete Account
+          </button>
+        </div>
+
         <p className="text-center text-xs text-ink-muted mt-2">
           Alpha testing build · v{APP_VERSION_NAME}
         </p>
