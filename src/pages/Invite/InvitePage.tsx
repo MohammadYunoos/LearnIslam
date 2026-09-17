@@ -25,18 +25,21 @@ export function InvitePage() {
   }
 
   async function handleShare() {
-    const message = `Join me on Learn Islam (Islam Seekho)! Use my invite code: ${code}`
+    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.mymaqtab.app'
+    const message = code
+      ? `Join me on Islam Seekho!\n\nDownload: ${playStoreUrl}\nInvite code: ${code}`
+      : `Join me on Islam Seekho!\n\n${playStoreUrl}`
     try {
       if (Capacitor.isNativePlatform()) {
         await Share.share({
           title: 'Invite to Learn Islam',
           text: message,
-          dialogTitle: 'Share my invite code',
+          url: playStoreUrl,
+          dialogTitle: 'Share invite',
         })
       } else {
-        // Web fallback: copy to clipboard
         await navigator.clipboard.writeText(message)
-        alert('Invite code copied to clipboard!')
+        alert('Invite link copied to clipboard!')
       }
     } catch (e) {
       console.error('Share failed:', e)
