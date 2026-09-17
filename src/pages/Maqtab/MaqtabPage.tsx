@@ -87,6 +87,9 @@ export function MaqtabPage() {
     ch.lessons.push(l)
   }
 
+  const levelOrder: Record<string, number> = { Beginner: 0, Intermediate: 1, Advanced: 2 }
+  levels.sort((a, b) => (levelOrder[a.level] ?? 999) - (levelOrder[b.level] ?? 999))
+
   // Level completion: every lesson in level is done
   const levelCompletion = (level: string) => {
     const levelLessons = lessons.filter((l) => (l.level || '') === level)
