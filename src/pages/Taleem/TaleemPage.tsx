@@ -7,7 +7,9 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
-import { getQaVolumes, getQaVolume } from '../../services/supabaseService'
+import { useAppStore } from '../../store/appStore'
+import { getQaVolumes, getQaVolume, confirmReview } from '../../services/supabaseService'
+import { Browser } from '@capacitor/browser'
 import { useLang, useTrList } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
 import { openPdf } from '../../lib/openPdfNative'
@@ -199,11 +201,13 @@ const mdComponents = {
 }
 
 export function TaleemPage() {
+  const user = useAppStore((s) => s.user)
   const [volumes, setVolumes] = useState<VolumeMeta[]>([])
   const [active, setActive] = useState(-1) // -1 = book list landing
   const [content, setContent] = useState<string | null>(null)
   const [loadingList, setLoadingList] = useState(true)
   const [loadingDoc, setLoadingDoc] = useState(false)
+  const [reviewConfirming, setReviewConfirming] = useState(false)
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [isFs, setIsFs] = useState(false)
   const lang = useLang()
@@ -219,6 +223,28 @@ export function TaleemPage() {
       else cardRef.current?.requestFullscreen?.()
     } catch {
       /* WebView may not support fullscreen */
+    }
+  }
+
+  async function handleReviewUnlock() {
+    setReviewConfirming(true)
+    try {
+      await Browser.open({
+        url: 'https://play.google.com/store/apps/details?id=com.mymaqtab.app',
+      })
+    } catch (e) {
+      console.error('Failed to open Play Store:', e)
+    }
+  }
+
+  async function confirmReviewDone() {
+    try {
+      await confirmReview()
+      setVolumes(volumes) // refresh to sync state
+    } catch (e) {
+      console.error('Failed to confirm review:', e)
+    } finally {
+      setReviewConfirming(false)
     }
   }
 
@@ -293,18 +319,58 @@ export function TaleemPage() {
               </div>
             </button>
 
-            {volumes.map((v, i) => (
-              <button
-                key={v.id}
-                onClick={() => setActive(i)}
-                className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
-              >
-                <span className="text-2xl">📗</span>
-                <p className="font-bold text-teal-900">
-                  Book {v.volume_no}: {toTitleCase(v.title)}
+            {!user?.qaUnlocked && volumes.some((v) => v.volume_no >= 2) && (
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl px-5 py-4 text-center">
+                <p className="text-sm font-semibold text-amber-900 mb-2">📱 Unlock Books 2-4</p>
+                <p className="text-xs text-amber-800 mb-3">
+                  Leave us a 5-star review on the Play Store to unlock advanced Islamic Q&A volumes.
                 </p>
-              </button>
-            ))}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleReviewUnlock}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-lg transition text-sm"
+                  >
+                    Open Play Store
+                  </button>
+                  <button
+                    onClick={confirmReviewDone}
+                    disabled={reviewConfirming}
+                    className="flex-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold py-2 rounded-lg transition text-sm disabled:opacity-50"
+                  >
+                    {reviewConfirming ? 'Confirming…' : 'Done'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {volumes.map((v, i) => {
+              const isLocked = v.volume_no >= 2 && !user?.qaUnlocked
+              return (
+                <div key={v.id}>
+                  {isLocked ? (
+                    <div className="bg-gray-100 border-2 border-gray-300 w-full rounded-full px-5 py-4 shadow-md flex items-center gap-3 opacity-75">
+                      <span className="text-2xl">🔒</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-600">
+                          Book {v.volume_no}: {toTitleCase(v.title)}
+                        </p>
+                        <p className="text-xs text-gray-500">Leave a 5-star review to unlock</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setActive(i)}
+                      className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
+                    >
+                      <span className="text-2xl">📗</span>
+                      <p className="font-bold text-teal-900">
+                        Book {v.volume_no}: {toTitleCase(v.title)}
+                      </p>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
 

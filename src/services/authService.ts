@@ -21,6 +21,9 @@ export interface AppUser {
   madhab: string
   language: string
   tier: 'free' | 'premium'
+  inviteCode: string
+  maqtabUnlocked: boolean
+  qaUnlocked: boolean
 }
 
 // ── Google (Supabase OAuth) ─────────────────────────────
@@ -74,6 +77,9 @@ export async function getSessionUser(): Promise<{ user: AppUser; hasProfile: boo
       madhab: profile.madhab ?? 'hanafi',
       language: profile.language ?? 'en',
       tier: (profile.tier as 'free' | 'premium') ?? 'free',
+      inviteCode: profile.invite_code ?? '',
+      maqtabUnlocked: profile.maqtab_unlocked ?? false,
+      qaUnlocked: profile.qa_unlocked ?? false,
     }
     localStorage.setItem(USER_DATA_KEY, JSON.stringify(user))
     return { hasProfile: true, user }
@@ -82,7 +88,7 @@ export async function getSessionUser(): Promise<{ user: AppUser; hasProfile: boo
   // No cache and no profile row → genuinely new; needs the profile step.
   return {
     hasProfile: false,
-    user: { id, name: fallbackName, age: 0, gender: 'male', madhab: '', language: '', tier: 'free' },
+    user: { id, name: fallbackName, age: 0, gender: 'male', madhab: '', language: '', tier: 'free', inviteCode: '', maqtabUnlocked: false, qaUnlocked: false },
   }
 }
 
@@ -93,9 +99,10 @@ export async function saveProfile(
   age: number,
   gender: Gender,
   madhab: string,
-  language: string
+  language: string,
+  inviteCode?: string
 ): Promise<AppUser> {
-  const user: AppUser = { id, name: name.trim(), age, gender, madhab, language, tier: 'free' }
+  const user: AppUser = { id, name: name.trim(), age, gender, madhab, language, tier: 'free', inviteCode: inviteCode ?? '', maqtabUnlocked: false, qaUnlocked: false }
   await api.put('/profile', user)
   // Cache so reopen keeps the user on Home without a network round-trip.
   localStorage.setItem(USER_DATA_KEY, JSON.stringify(user))
@@ -125,7 +132,7 @@ export async function continueAsGuest(
     userId = generateUUID()
     localStorage.setItem(USER_ID_KEY, userId)
   }
-  const userData: AppUser = { id: userId, name: name.trim(), age, gender, madhab, language, tier: 'free' }
+  const userData: AppUser = { id: userId, name: name.trim(), age, gender, madhab, language, tier: 'free', inviteCode: '', maqtabUnlocked: false, qaUnlocked: false }
   try {
     await api.put('/profile', userData)
   } catch (e) {

@@ -876,4 +876,99 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
     return c.json({ scanned: rows.length, changed })
   })
 
+  // ── INVITE / REVIEW UNLOCK ──────────────────────────────
+
+  function generateInviteCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let code = ''
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    return code
+  }
+
+  app.get('/invite/status', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+
+    let { data: profile } = await supabase
+      .from('profiles')
+      .select('invite_code')
+      .eq('id', userId)
+      .single()
+
+    if (!profile) return c.json({ error: 'profile not found' }, 404)
+
+    let code = profile.invite_code
+    if (!code) {
+      code = generateInviteCode()
+      await supabase.from('profiles').update({ invite_code: code }).eq('id', userId)
+    }
+
+    const { count } = await supabase
+      .from('invite_redemptions')
+      .select('*', { count: 'exact', head: true })
+      .eq('inviter_user_id', userId)
+
+    return c.json({
+      code,
+      redeemedCount: count ?? 0,
+      maqtabUnlocked: (count ?? 0) >= 2,
+    })
+  })
+
+  app.post('/invite/redeem', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+
+    const body = await c.req.json()
+    const code = body.code as string
+    if (!code) return c.json({ error: 'code required' }, 400)
+
+    const { data: inviter } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('invite_code', code)
+      .single()
+
+    if (!inviter) return c.json({ ok: false, error: 'invalid code' }, 400)
+    if (inviter.id === userId) return c.json({ ok: false, error: 'cannot redeem own code' }, 400)
+
+    const { error: redeemError } = await supabase
+      .from('invite_redemptions')
+      .insert({ inviter_user_id: inviter.id, invitee_user_id: userId })
+
+    if (redeemError) {
+      if (redeemError.message.includes('duplicate')) {
+        return c.json({ ok: false, error: 'you already redeemed a code' }, 400)
+      }
+      return c.json({ ok: false, error: redeemError.message }, 500)
+    }
+
+    const { count } = await supabase
+      .from('invite_redemptions')
+      .select('*', { count: 'exact', head: true })
+      .eq('inviter_user_id', inviter.id)
+
+    if ((count ?? 0) >= 2) {
+      await supabase.from('profiles').update({ maqtab_unlocked: true }).eq('id', inviter.id)
+    }
+
+    await logEvent(userId, 'invite_redeemed', { code })
+    return c.json({ ok: true })
+  })
+
+  app.post('/review/confirm', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ qa_unlocked: true })
+      .eq('id', userId)
+
+    if (error) return c.json({ ok: false }, 500)
+
+    await logEvent(userId, 'review_unlocked', {})
+    return c.json({ ok: true })
+  })
+
   Deno.serve(app.fetch)

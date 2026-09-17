@@ -207,8 +207,25 @@ export function MaqtabPage() {
               {/* Separator */}
               <div className="h-px bg-border my-3" />
 
+              {/* Lock UI for Intermediate/Advanced if not unlocked */}
+              {lvl.level !== 'Beginner' && !user?.maqtabUnlocked && (
+                <div className="text-center py-8">
+                  <p className="text-4xl mb-3">🔒</p>
+                  <p className="text-lg font-semibold text-ink mb-2">Section Locked</p>
+                  <p className="text-sm text-ink-muted mb-4">Invite 2 friends to unlock this section</p>
+                  <button
+                    onClick={() => navigate('/invite')}
+                    className="bg-teal-900 hover:bg-teal-800 text-white font-semibold py-2 px-6 rounded-lg transition"
+                  >
+                    View Invite
+                  </button>
+                </div>
+              )}
+
               {/* Chapters and lessons */}
-              {lvl.chapters.map((ch) => (
+              {(lvl.level === 'Beginner' || user?.maqtabUnlocked) && (
+                <>
+                  {lvl.chapters.map((ch) => (
                 <div key={ch.chapter} className="mb-4">
                   {/* Chapter title */}
                   <p className={`text-sm font-bold mb-2 pl-1 ${lvl.level === 'Intermediate' ? 'text-white' : 'text-teal-900'}`}>
@@ -248,23 +265,25 @@ export function MaqtabPage() {
                 </div>
               ))}
 
-              {/* Exam button for each level */}
-              <button
-                onClick={() => levelDone && navigate(`/maqtab/exam?level=${lvl.level}`)}
-                disabled={!levelDone}
-                className={`w-full rounded-2xl p-4 text-center transition-transform ${
-                  levelDone
-                    ? 'glossy-gold text-teal-900 shadow-xl border-b-4 border-gold active:translate-y-1 active:shadow-lg active:border-b-2'
-                    : 'bg-white border border-border opacity-70'
-                }`}
-              >
-                <p className={`text-sm font-bold ${levelDone ? 'text-teal-900' : 'text-ink-muted'}`}>
-                  {levelDone ? '🎓' : '🔒'} {tExam}
-                </p>
-                <p className={`text-xs mt-0.5 ${levelDone ? 'text-teal-900/70' : 'text-ink-muted'}`}>
-                  {levelDone ? tExamReady : tExamLocked}
-                </p>
-              </button>
+                  {/* Exam button for each level */}
+                  <button
+                    onClick={() => levelDone && navigate(`/maqtab/exam?level=${lvl.level}`)}
+                    disabled={!levelDone}
+                    className={`w-full rounded-2xl p-4 text-center transition-transform ${
+                      levelDone
+                        ? 'glossy-gold text-teal-900 shadow-xl border-b-4 border-gold active:translate-y-1 active:shadow-lg active:border-b-2'
+                        : 'bg-white border border-border opacity-70'
+                    }`}
+                  >
+                    <p className={`text-sm font-bold ${levelDone ? 'text-teal-900' : 'text-ink-muted'}`}>
+                      {levelDone ? '🎓' : '🔒'} {tExam}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${levelDone ? 'text-teal-900/70' : 'text-ink-muted'}`}>
+                      {levelDone ? tExamReady : tExamLocked}
+                    </p>
+                  </button>
+                </>
+              )}
 
               {/* Separator between levels */}
               {idx < levels.length - 1 && <div className="h-1 bg-border my-4" />}

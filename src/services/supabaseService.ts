@@ -181,6 +181,20 @@ export async function askMasail(question: string, madhab: string): Promise<strin
   return res?.answer ?? 'Unable to answer right now. Please consult your local Alim.'
 }
 
+// ── INVITE / REVIEW UNLOCK ──────────────────────────────
+
+export async function getInviteStatus() {
+  return api.get<{ code: string; redeemedCount: number; maqtabUnlocked: boolean }>('/invite/status')
+}
+
+export async function redeemInviteCode(code: string) {
+  return api.post<{ ok: boolean; error?: string }>('/invite/redeem', { code })
+}
+
+export async function confirmReview() {
+  return api.post<{ ok: boolean }>('/review/confirm', {})
+}
+
 // ── HELPERS ─────────────────────────────────────────────
 
 export async function logEvent(
