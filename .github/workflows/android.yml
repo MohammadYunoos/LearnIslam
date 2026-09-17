@@ -2,16 +2,29 @@ name: Build Android APK
 
 # Build an installable debug APK in the cloud — no local Android tooling needed.
 # Run it from GitHub → Actions → "Build Android APK" → Run workflow,
-# or it runs automatically on every push to main.
+# or it runs automatically on every push to any branch.
+#
+# Branch-based environment routing:
+#   main branch     → 'production' environment (prod Supabase project)
+#   all other       → 'development' environment (dev Supabase project)
+#
+# REQUIRED: Create two GitHub Environments in repo Settings → Environments:
+#   'development' with secrets:
+#     VITE_SUPABASE_URL = https://uwlhnvlwfvwwaodfryda.supabase.co
+#     VITE_SUPABASE_ANON_KEY = <dev Supabase anon key>
+#   'production' with secrets:
+#     VITE_SUPABASE_URL = https://wpdalidqkfsizgdvdbqi.supabase.co
+#     VITE_SUPABASE_ANON_KEY = <prod Supabase anon key>
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   workflow_dispatch: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +35,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Write env file
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> .env.local
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env.local
 
       - name: Build web app
         run: npm run build
