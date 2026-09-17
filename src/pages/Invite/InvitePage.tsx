@@ -38,6 +38,12 @@ export function InvitePage() {
           url: playStoreUrl,
           dialogTitle: 'Share invite',
         })
+      } else if (navigator.share) {
+        await navigator.share({
+          title: 'Invite to Learn Islam',
+          text: message,
+          url: playStoreUrl,
+        })
       } else {
         await navigator.clipboard.writeText(message)
         alert('Invite link copied to clipboard!')
