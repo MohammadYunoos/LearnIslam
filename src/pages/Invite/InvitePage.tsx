@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getInviteStatus } from '../../services/supabaseService'
-import { Share } from '@capacitor/share'
 import { Capacitor } from '@capacitor/core'
 
 export function InvitePage() {
@@ -31,6 +30,8 @@ export function InvitePage() {
       : `Join me on Islam Seekho!\n\n${playStoreUrl}`
     try {
       if (Capacitor.isNativePlatform()) {
+        // @ts-ignore — lazy-load native plugin
+        const { Share } = await import('@capacitor/share')
         await Share.share({
           title: 'Invite to Learn Islam',
           text: message,
