@@ -96,9 +96,12 @@ export function DonationsPage() {
       <div className="px-4 pt-4">
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
           <p className="text-xs text-blue-900 leading-relaxed mb-3">
-            Islam Seeko is provided free of charge. Your voluntary donations help support app development, content creation, hosting, and maintenance.
+            In Islam, giving (Hadiya) is a virtue encouraged by Allah. Islam Seeko is provided free of charge, and your voluntary donations support app development, content creation, hosting, and maintenance. As mentioned in the Quran (2:195): <span className="italic">"And spend in the way of Allah and do not throw [yourselves] into destruction."</span>
           </p>
-          <p className="text-xs text-blue-900 leading-relaxed">
+          <p className="text-xs text-blue-900 leading-relaxed mb-2">
+            The Prophet Muhammad (ﷺ) said: <span className="italic">"The best of you are those who are best to their families, and I am the best among you to my family."</span> Supporting beneficial knowledge and education is an act of Sadaqah Jariyah (ongoing charity).
+          </p>
+          <p className="text-xs text-blue-900 leading-relaxed font-semibold">
             Donations are optional and do not provide any additional features, content, or benefits.
           </p>
         </div>
