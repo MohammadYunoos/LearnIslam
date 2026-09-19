@@ -49,7 +49,7 @@ export function TopicPage() {
           {sections.map((section, si) => {
             const isOpen = open === section.key
             return (
-              <div key={section.key} className="bg-white border border-border rounded-2xl overflow-hidden">
+              <div key={section.key} className="glossy-gold rounded-2xl overflow-hidden">
                 <button
                   onClick={() => setOpen(isOpen ? null : section.key)}
                   className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -60,13 +60,13 @@ export function TopicPage() {
                   </span>
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-3">
+                  <div className="px-4 pb-3 space-y-2.5">
                     {section.items.length === 0 ? (
                       <p className="text-xs text-ink-muted italic">{tComing}</p>
                     ) : (
-                      <ol className="space-y-2.5">
+                      <ol className="space-y-0">
                         {section.items.map((item, i) => (
-                          <li key={i} className="flex gap-2.5">
+                          <li key={i} className="rounded-lg p-3 flex gap-2.5">
                             <span className="text-xs font-bold text-gold-dark mt-0.5">{i + 1}.</span>
                             <div className="flex-1">
                               <p className="text-sm text-ink leading-relaxed">

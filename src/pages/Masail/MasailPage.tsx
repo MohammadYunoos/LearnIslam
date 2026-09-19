@@ -16,7 +16,7 @@ export function MasailPage() {
       <PageHeader title="Ask Ulema" subtitle="Send your masail to scholars" backTo="/home" />
 
       <div className="px-4 pt-4">
-        <div className="bg-white border border-border rounded-2xl p-6 text-center">
+        <div className="glossy-gold rounded-2xl p-6 text-center">
           <p className="text-5xl mb-3">🕌</p>
           <span className="inline-block text-xs font-bold text-gold-dark bg-gold/15 border border-gold rounded-full px-3 py-1 mb-4">
             {tProg}

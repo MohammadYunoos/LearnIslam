@@ -9,18 +9,19 @@ import { Logo } from '../../components/Logo'
 import { APP_VERSION_NAME } from '../../version'
 
 // `img` = filename under public/menu/. Drop a JPG/PNG there per tile; if it is
-// missing the tile falls back to the glossy teal background automatically.
+// missing the tile falls back to the glossy background automatically. `glossyClass` sets
+// the fallback background color when the image fails to load.
 const MENU_ITEMS = [
-  { num: '01', title: 'Maqtab', sub: 'Learning journey', icon: '📖', img: 'maqtab.jpg', path: '/maqtab' },
-  { num: '02', title: 'Islamic Q & A', sub: 'Question & answer volumes', icon: '📚', img: 'qa.jpg', path: '/taleem' },
-  { num: '03', title: 'Hifz', sub: 'Surah memorisation', icon: '⭐', img: 'hifz.jpg', path: '/hifz' },
-  { num: '04', title: 'Masnoon Dua & Zikr', sub: 'Duas · Kalimas · Tasbih', icon: '🤲', img: 'masnoon.jpg', path: '/wajifa' },
-  { num: '05', title: 'Adaab', sub: 'Daily etiquette', icon: '📋', img: 'adaab.jpg', path: '/adaab' },
-  { num: '06', title: 'Masail', sub: 'Gusl · Wudu · Tayammum · Namaaz · more', icon: '💧', img: 'masail.jpg', path: '/guide' },
-  { num: '07', title: 'Detoxify', sub: 'Heart and Akhlaq', icon: '🌿', img: 'detoxify.jpg', path: '/detoxify' },
-  { num: '08', title: 'Find Qibla', sub: 'Direction of the Ka‘bah', icon: '🧭', img: 'qibla.jpg', path: '/qibla' },
-  { num: '09', title: 'Ehtimam-e-Namaaz', sub: 'Prayer & Roza timings', icon: '🕰️', img: 'namaaz.jpg', path: '/namaaz-timings' },
-  { num: '10', title: 'Ask Ulema', sub: 'Send your masail to scholars', icon: '🕌', img: 'ulema.jpg', path: '/masail' },
+  { num: "01", title: "Maqtab", sub: "Learning journey", icon: "📖", img: "maqtab.jpg", path: "/maqtab", glossyClass: "glossy" },
+  { num: "02", title: "Islamic Q & A", sub: "Question & answer volumes", icon: "📚", img: "qa.jpg", path: "/taleem", glossyClass: "glossy-purple" },
+  { num: "03", title: "Hifz", sub: "Surah memorisation", icon: "⭐", img: "hifz.jpg", path: "/hifz", glossyClass: "glossy-gold" },
+  { num: "04", title: "Masnoon Dua & Zikr", sub: "Duas · Kalimas · Tasbih", icon: "🤲", img: "masnoon.jpg", path: "/wajifa", glossyClass: "glossy-yellow" },
+  { num: "05", title: "Adaab", sub: "Daily etiquette", icon: "📋", img: "adaab.jpg", path: "/adaab", glossyClass: "glossy-yellow" },
+  { num: "06", title: "Masail", sub: "Gusl · Wudu · Tayammum · Namaaz · more", icon: "💧", img: "masail.jpg", path: "/guide", glossyClass: "glossy-yellow" },
+  { num: "07", title: "Detoxify", sub: "Heart and Akhlaq", icon: "🌿", img: "detoxify.jpg", path: "/detoxify", glossyClass: "glossy" },
+  { num: "08", title: "Find Qibla", sub: "Direction of the Ka’bah", icon: "🧭", img: "qibla.jpg", path: "/qibla", glossyClass: "glossy-gold" },
+  { num: "09", title: "Ehtimam-e-Namaaz", sub: "Prayer & Roza timings", icon: "🕰️", img: "namaaz.jpg", path: "/namaaz-timings", glossyClass: "glossy-sky" },
+  { num: "10", title: "Ask Ulema", sub: "Send your masail to scholars", icon: "🕌", img: "ulema.jpg", path: "/masail", glossyClass: "glossy" },
 ]
 
 const menuImg = (name: string) => `${import.meta.env.BASE_URL}menu/${name}`
@@ -118,7 +119,7 @@ export function HomePage() {
               key={item.path}
               onClick={() => navigate(item.path)}
               style={{ animationDelay: `${idx * 90}ms` }}
-              className="tile-in glossy relative overflow-hidden rounded-2xl text-left shadow-md active:scale-95 transition-transform min-h-[128px] flex"
+              className={`tile-in ${item.glossyClass} relative overflow-hidden rounded-2xl text-left shadow-md active:scale-95 transition-transform min-h-[128px] flex`}
             >
               {/* Background photo (public/menu/<img>). Hidden if it fails to load
                   → glossy teal shows through. */}

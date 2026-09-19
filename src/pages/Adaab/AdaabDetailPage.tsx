@@ -39,10 +39,10 @@ export function AdaabDetailPage() {
 
         {topic.intro && <p className="text-sm text-ink-muted mb-3">{tIntro}</p>}
 
-        <div className="bg-white border border-border rounded-2xl p-4">
+        <div className="glossy-gold rounded-2xl p-4">
           <ol className="space-y-3">
             {items.map((item, i) => (
-              <li key={i} className="flex gap-2.5">
+              <li key={i} className="rounded-lg p-3 flex gap-2.5">
                 <span className="text-xs font-bold text-gold-dark mt-0.5">{i + 1}.</span>
                 <div className="flex-1">
                   <p className="text-sm text-ink leading-relaxed">

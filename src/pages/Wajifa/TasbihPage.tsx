@@ -76,7 +76,7 @@ export function TasbihPage() {
 
       <div className="px-4 pt-4">
         {/* Zikr text */}
-        <div className="bg-white border border-border rounded-2xl p-4 mb-4 text-center">
+        <div className="glossy-gold rounded-2xl p-4 mb-4 text-center">
           <p className="font-arabic text-2xl text-teal-900 leading-loose mb-2">{zikr.arabic}</p>
           <p className="text-sm italic text-gold-dark mb-1">{zikr.translit}</p>
           <p className="text-sm text-ink">{tMeaning}</p>

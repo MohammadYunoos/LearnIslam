@@ -1,3 +1,5 @@
+// src/pages/Donations/DonationsPage.tsx
+// Donations page: Buy Me a Coffee + UPI options. Order based on user location.
 import { useEffect, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
@@ -5,228 +7,259 @@ import { useTr, useTrList } from '../../i18n/useTr'
 import { openExternal } from '../../lib/external'
 import { getDonationConfig } from '../../services/supabaseService'
 
-export function DonationsPage() {
-  const tTitle = useTr('Support Islam Seeko')
-  const [config, setConfig] = useState<{ paypal_link: string; upi_vpa: string } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [paypalAmount, setPaypalAmount] = useState(5)
-  const [paypalCustom, setPaypalCustom] = useState('')
-  const [upiAmount, setUpiAmount] = useState(50)
-  const [upiCustom, setUpiCustom] = useState('')
-  const [copiedUpi, setCopiedUpi] = useState(false)
+interface DonationConfig {
+  buymeacoffee_link: string
+  upi_vpa: string
+}
 
+const isIndianLocation = (lat: number, lng: number): boolean => {
+  // Rough bounds for India: lat 8-35, lng 68-97
+  return lat >= 8 && lat <= 35 && lng >= 68 && lng <= 97
+}
+
+export function DonationsPage() {
+  const [config, setConfig] = useState<DonationConfig | null>(null)
+  const [isIndia, setIsIndia] = useState(false)
+  const [upiAmount, setUpiAmount] = useState<number | ''>('')
+  const [selectedUpiPreset, setSelectedUpiPreset] = useState<number | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const tTitle = useTr('Support Islam Seeko')
   const L = useTrList([
-    'International Donations',
-    'India Donations',
-    'UPI ID copied to clipboard',
+    'Islam Seeko is provided free of charge. Your voluntary donations help support app development, content creation, hosting, and maintenance.',
+    'Donations are optional and do not provide any additional features, content, or benefits.',
+    'Buy Me a Coffee',
+    'Support via Buy Me a Coffee',
+    'Donate with UPI',
     'Copy UPI ID',
-    'Donate via PayPal',
-    'Custom amount',
-    'Donate via UPI',
-    'Other amount',
+    'Donate',
+    'UPI ID copied to clipboard',
   ])
 
+  // Load config + detect location
   useEffect(() => {
-    fetchConfig()
+    const init = async () => {
+      try {
+        const data = await getDonationConfig()
+        setConfig(data)
+      } catch {
+        /* config unavailable */
+      }
+
+      // Try to detect location
+      try {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            setIsIndia(isIndianLocation(pos.coords.latitude, pos.coords.longitude))
+          })
+        }
+      } catch {
+        /* geolocation failed */
+      }
+    }
+    init()
   }, [])
 
-  async function fetchConfig() {
-    try {
-      const data = await getDonationConfig()
-      setConfig(data)
-    } catch (e) {
-      console.error('Failed to fetch donation config:', e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const paypalPresets = [1, 5, 10, 25]
-  const upiPresets = [25, 50, 100, 500, 1000]
-
-  const handlePaypalCustomChange = (val: string) => {
-    setPaypalCustom(val)
-    setPaypalAmount(0)
-  }
-
-  const handlePaypalPresetClick = (amount: number) => {
-    setPaypalAmount(amount)
-    setPaypalCustom('')
-  }
-
-  const handlePaypalDonate = async () => {
-    if (!config) return
-    const amount = paypalCustom ? parseFloat(paypalCustom) : paypalAmount
-    if (amount > 0) {
-      const url = `${config.paypal_link}/${amount}`
-      await openExternal(url)
-    }
-  }
-
-  const handleUpiCustomChange = (val: string) => {
-    setUpiCustom(val)
-    setUpiAmount(0)
-  }
-
-  const handleUpiPresetClick = (amount: number) => {
+  const handleUpiPreset = (amount: number) => {
     setUpiAmount(amount)
-    setUpiCustom('')
+    setSelectedUpiPreset(amount)
+  }
+
+  const handleUpiCustom = (value: string) => {
+    const num = value ? parseInt(value, 10) : ''
+    setUpiAmount(num)
+    setSelectedUpiPreset(null)
   }
 
   const handleUpiDonate = () => {
-    if (!config) return
-    const amount = upiCustom ? parseInt(upiCustom) : upiAmount
-    if (amount > 0) {
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(config.upi_vpa)}&pn=Islam%20Seeko&am=${amount}&cu=INR&tn=Donation`
-      window.location.href = upiUrl
-    }
+    if (!config || !upiAmount) return
+    const upiUrl = `upi://pay?pa=${encodeURIComponent(config.upi_vpa)}&pn=Islam%20Seeko&am=${upiAmount}&cu=INR&tn=Donation`
+    window.location.href = upiUrl
   }
 
   const handleCopyUpi = () => {
     if (!config) return
     navigator.clipboard.writeText(config.upi_vpa)
-    setCopiedUpi(true)
-    setTimeout(() => setCopiedUpi(false), 2000)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
+
+  const UPI_PRESETS = [25, 50, 100, 500, 1000]
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title={tTitle} />
+      <PageHeader title={tTitle} subtitle="Your support helps us grow" backTo="/home" />
 
       <div className="px-4 pt-4">
+        {/* Info card */}
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
-          <p className="text-xs text-blue-900 leading-relaxed mb-3">
-            In Islam, giving (Hadiya) is a virtue encouraged by Allah. Islam Seeko is provided free of charge, and your voluntary donations support app development, content creation, hosting, and maintenance. As mentioned in the Quran (2:195): <span className="italic">"And spend in the way of Allah and do not throw [yourselves] into destruction."</span>
-          </p>
-          <p className="text-xs text-blue-900 leading-relaxed mb-2">
-            The Prophet Muhammad (ﷺ) said: <span className="italic">"The best of you are those who are best to their families, and I am the best among you to my family."</span> Supporting beneficial knowledge and education is an act of Sadaqah Jariyah (ongoing charity).
-          </p>
-          <p className="text-xs text-blue-900 leading-relaxed font-semibold">
-            Donations are optional and do not provide any additional features, content, or benefits.
-          </p>
+          <p className="text-xs text-blue-900 leading-relaxed mb-3">{L[0]}</p>
+          <p className="text-xs text-blue-900 leading-relaxed">{L[1]}</p>
         </div>
 
-        {!loading && config ? (
+        {/* Donation options in location-based order */}
+        {isIndia ? (
           <>
-            {/* PayPal Card */}
-            <div className="bg-white border border-border rounded-2xl p-5 mb-4">
-              <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-                {L[0]}
-              </label>
-
-              <div className="mb-4">
-                <p className="text-xs text-ink-muted mb-2">Quick amounts (USD)</p>
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                  {paypalPresets.map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() => handlePaypalPresetClick(amount)}
-                      className={`py-2 rounded-lg text-xs font-semibold transition-all ${
-                        paypalAmount === amount && !paypalCustom
-                          ? 'bg-teal-900 text-white'
-                          : 'bg-gray-100 text-ink border border-gray-300 active:scale-[0.95]'
-                      }`}
-                    >
-                      ${amount}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-teal-700 mb-1 block uppercase tracking-wide">
-                  {L[5]}
+            {/* UPI first for Indian users */}
+            {config && (
+              <div className="bg-white border border-border rounded-2xl p-5 mb-4">
+                <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+                  {L[4]}
                 </label>
-                <input
-                  type="number"
-                  placeholder="Enter amount in USD"
-                  value={paypalCustom}
-                  onChange={(e) => handlePaypalCustomChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-              </div>
 
-              <button
-                onClick={handlePaypalDonate}
-                disabled={!config || (paypalAmount === 0 && !paypalCustom)}
-                className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                💳 {L[4]}
-              </button>
-            </div>
-
-            {/* UPI Card */}
-            <div className="bg-white border border-border rounded-2xl p-5 mb-4">
-              <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-                {L[1]}
-              </label>
-
-              <div className="mb-4">
-                <p className="text-xs text-ink-muted mb-2">Quick amounts (INR)</p>
+                {/* Presets */}
                 <div className="grid grid-cols-5 gap-2 mb-3">
-                  {upiPresets.map((amount) => (
+                  {UPI_PRESETS.map((preset) => (
                     <button
-                      key={amount}
-                      onClick={() => handleUpiPresetClick(amount)}
-                      className={`py-2 rounded-lg text-xs font-semibold transition-all ${
-                        upiAmount === amount && !upiCustom
+                      key={preset}
+                      onClick={() => handleUpiPreset(preset)}
+                      className={`text-xs font-bold rounded-lg py-2 transition-colors ${
+                        selectedUpiPreset === preset
                           ? 'bg-teal-900 text-white'
-                          : 'bg-gray-100 text-ink border border-gray-300 active:scale-[0.95]'
+                          : 'bg-sand text-teal-900 border border-border'
                       }`}
                     >
-                      ₹{amount}
+                      ₹{preset}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-teal-700 mb-1 block uppercase tracking-wide">
-                  {L[7]}
-                </label>
+                {/* Custom amount */}
                 <input
                   type="number"
-                  placeholder="Enter amount in INR"
-                  value={upiCustom}
-                  onChange={(e) => handleUpiCustomChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  value={upiAmount}
+                  onChange={(e) => handleUpiCustom(e.target.value)}
+                  placeholder="Custom amount"
+                  min="1"
+                  className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-3 bg-white text-ink"
                 />
-              </div>
 
-              <button
-                onClick={handleUpiDonate}
-                disabled={!config || (upiAmount === 0 && !upiCustom)}
-                className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed mb-3"
-              >
-                📱 {L[6]}
-              </button>
+                {/* Donate button */}
+                <button
+                  onClick={handleUpiDonate}
+                  disabled={!upiAmount}
+                  className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm mb-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+                >
+                  {L[6]} · ₹{upiAmount || '0'}
+                </button>
 
-              <div className="border-t border-gray-200 pt-3">
-                <p className="text-xs text-ink-muted mb-2 text-center">Or manually enter this UPI ID:</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={config.upi_vpa}
-                    readOnly
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs bg-gray-50"
-                  />
-                  <button
-                    onClick={handleCopyUpi}
-                    className="bg-gold text-teal-900 font-bold rounded-xl px-3 py-2 text-xs active:scale-[0.98] transition-transform"
-                  >
-                    {copiedUpi ? '✓' : L[3]}
-                  </button>
+                {/* UPI ID section */}
+                <div className="pt-3 border-t border-border">
+                  <p className="text-xs text-ink-muted mb-2">UPI ID:</p>
+                  <div className="flex gap-2">
+                    <p className="flex-1 bg-sand rounded-lg px-3 py-2 text-sm font-mono text-teal-900 break-all">
+                      {config.upi_vpa}
+                    </p>
+                    <button
+                      onClick={handleCopyUpi}
+                      className="bg-gold text-teal-900 font-bold rounded-lg px-4 py-2 text-xs active:scale-[0.98] transition-transform whitespace-nowrap"
+                    >
+                      {copied ? '✓' : L[5]}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Buy Me a Coffee second for Indian users */}
+            {config && (
+              <div className="bg-white border border-border rounded-2xl p-5">
+                <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+                  {L[2]} (International)
+                </label>
+                <button
+                  onClick={() => openExternal(config.buymeacoffee_link)}
+                  className="w-full bg-yellow-400 text-yellow-900 font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform"
+                >
+                  ☕ {L[3]}
+                </button>
+              </div>
+            )}
           </>
-        ) : loading ? (
-          <div className="text-center py-8 text-ink-muted">Loading donation options...</div>
         ) : (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-            <p className="text-xs text-red-900">
-              Unable to load donation options at this time. Please try again later.
-            </p>
+          <>
+            {/* Buy Me a Coffee first for international users */}
+            {config && (
+              <div className="bg-white border border-border rounded-2xl p-5 mb-4">
+                <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+                  {L[2]}
+                </label>
+                <button
+                  onClick={() => openExternal(config.buymeacoffee_link)}
+                  className="w-full bg-yellow-400 text-yellow-900 font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform"
+                >
+                  ☕ {L[3]}
+                </button>
+              </div>
+            )}
+
+            {/* UPI second for international users */}
+            {config && (
+              <div className="bg-white border border-border rounded-2xl p-5">
+                <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+                  {L[4]} (India)
+                </label>
+
+                {/* Presets */}
+                <div className="grid grid-cols-5 gap-2 mb-3">
+                  {UPI_PRESETS.map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => handleUpiPreset(preset)}
+                      className={`text-xs font-bold rounded-lg py-2 transition-colors ${
+                        selectedUpiPreset === preset
+                          ? 'bg-teal-900 text-white'
+                          : 'bg-sand text-teal-900 border border-border'
+                      }`}
+                    >
+                      ₹{preset}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom amount */}
+                <input
+                  type="number"
+                  value={upiAmount}
+                  onChange={(e) => handleUpiCustom(e.target.value)}
+                  placeholder="Custom amount"
+                  min="1"
+                  className="w-full border border-border rounded-xl px-3 py-2.5 text-sm mb-3 bg-white text-ink"
+                />
+
+                {/* Donate button */}
+                <button
+                  onClick={handleUpiDonate}
+                  disabled={!upiAmount}
+                  className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm mb-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+                >
+                  {L[6]} · ₹{upiAmount || '0'}
+                </button>
+
+                {/* UPI ID section */}
+                <div className="pt-3 border-t border-border">
+                  <p className="text-xs text-ink-muted mb-2">UPI ID:</p>
+                  <div className="flex gap-2">
+                    <p className="flex-1 bg-sand rounded-lg px-3 py-2 text-sm font-mono text-teal-900 break-all">
+                      {config.upi_vpa}
+                    </p>
+                    <button
+                      onClick={handleCopyUpi}
+                      className="bg-gold text-teal-900 font-bold rounded-lg px-4 py-2 text-xs active:scale-[0.98] transition-transform whitespace-nowrap"
+                    >
+                      {copied ? '✓' : L[5]}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Fallback if config not loaded */}
+        {!config && (
+          <div className="bg-white border border-border rounded-2xl p-4 text-center">
+            <p className="text-sm text-ink-muted">Donation options unavailable. Please try again later.</p>
           </div>
         )}
       </div>

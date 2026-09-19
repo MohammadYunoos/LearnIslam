@@ -202,8 +202,8 @@ export function HifzSurahPage() {
             return (
               <div
                 key={i}
-                className={`bg-white border rounded-2xl p-4 ${
-                  isActive ? 'border-teal-700 ring-1 ring-teal-500/30' : 'border-border'
+                className={`glossy-gold rounded-2xl p-4 ${
+                  isActive ? 'border-teal-700 ring-1 ring-teal-500/30' : ''
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">

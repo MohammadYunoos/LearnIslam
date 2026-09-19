@@ -96,7 +96,17 @@ export async function getAppVersion() {
 }
 
 export async function getDonationConfig() {
-  return api.get<{ paypal_link: string; upi_vpa: string }>('/donation/config')
+  return api.get<{ buymeacoffee_link: string; upi_vpa: string }>('/donation/config')
+}
+
+export async function logDonationTransaction(payload: {
+  amount: number
+  currency: string
+  method: 'bmac' | 'upi'
+  status: 'initiated' | 'success' | 'failed'
+  error_message?: string
+}) {
+  return api.post('/donation/log', payload)
 }
 
 export async function sendFeedback(payload: {

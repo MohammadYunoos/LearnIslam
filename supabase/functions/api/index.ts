@@ -345,6 +345,26 @@
     return c.json(data ?? null)
   })
 
+  // ── DONATION LOGGING ──────────────────────────────────────
+  app.post('/donation/log', async (c) => {
+    const body = await c.req.json()
+    const userId = uid(c, body.userId)
+    const { error } = await supabase.from('donation_transactions').insert({
+      user_id: userId,
+      amount: body.amount,
+      currency: body.currency,
+      method: body.method,
+      status: body.status,
+      error_message: body.error_message ?? null,
+      user_agent: c.req.header('user-agent'),
+    })
+    if (error) {
+      console.error('Donation log error:', error)
+      return c.json({ error: error.message }, 500)
+    }
+    return c.json({ ok: true })
+  })
+
   // ── FEEDBACK (Ulema / tester review) ────────────────────
   app.post('/feedback', async (c) => {
     const body = await c.req.json()
