@@ -95,6 +95,10 @@ export async function getAppVersion() {
   return api.get<any>('/app/version')
 }
 
+export async function getDonationConfig() {
+  return api.get<{ paypal_link: string; upi_vpa: string }>('/donation/config')
+}
+
 export async function sendFeedback(payload: {
   userId?: string
   userName?: string

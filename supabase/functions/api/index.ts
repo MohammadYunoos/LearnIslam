@@ -339,6 +339,12 @@
     return c.json(data ?? null)
   })
 
+  // ── DONATION CONFIG ──────────────────────────────────────
+  app.get('/donation/config', async (c) => {
+    const { data } = await supabase.from('donation_config').select('*').limit(1).single()
+    return c.json(data ?? null)
+  })
+
   // ── FEEDBACK (Ulema / tester review) ────────────────────
   app.post('/feedback', async (c) => {
     const body = await c.req.json()

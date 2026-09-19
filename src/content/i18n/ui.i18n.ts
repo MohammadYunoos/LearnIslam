@@ -8,8 +8,8 @@ export const UI_I18N: Tr[] = [
   { en: 'Home', ur: 'ہوم', roman: 'Home' },
   { en: 'Maqtab', ur: 'مکتب', roman: 'Maqtab' },
   { en: 'Hifz', ur: 'حفظ', roman: 'Hifz' },
-  { en: 'Ulema', ur: 'علماء', roman: 'Ulema' },
-  { en: 'Messages', ur: 'پیغامات', roman: 'paighaam' },
+  { en: 'Donate', ur: 'عطیہ دیں', roman: 'Atiha dein' },
+  { en: 'Invite', ur: 'دعوت', roman: 'Dawat' },
   { en: 'Muhasaba', ur: 'محاسبہ', roman: 'Muhasaba' },
 
   // ── Home ──────────────────────────────────────────────

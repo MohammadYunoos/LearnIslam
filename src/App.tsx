@@ -35,6 +35,7 @@ import { UlemaProfilePage } from './pages/Ulema/UlemaProfilePage'
 import { MessagesPage } from './pages/Messages/MessagesPage'
 import { ThreadPage } from './pages/Messages/ThreadPage'
 import { InvitePage } from './pages/Invite/InvitePage'
+import { DonationsPage } from './pages/Donations/DonationsPage'
 import { PlansPage } from './pages/Plans/PlansPage'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { AboutPage } from './pages/Settings/AboutPage'
@@ -218,6 +219,7 @@ export default function App() {
         />
         <Route path="/invite" element={<PrivateRoute element={<InvitePage />} />} />
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
+        <Route path="/donate" element={<DonationsPage />} />
         <Route path="/settings" element={<PrivateRoute element={<SettingsPage />} />} />
         <Route path="/settings/about" element={<PrivateRoute element={<AboutPage />} />} />
         <Route path="/settings/terms" element={<PrivateRoute element={<TermsPage />} />} />

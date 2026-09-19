@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { label: 'Home', icon: '🏠', path: '/home' },
   { label: 'Maqtab', icon: '📖', path: '/maqtab' },
   { label: 'Hifz', icon: '⭐', path: '/hifz' },
-  { label: 'Ulema', icon: '🕌', path: '/ulema' },
+  { label: 'Donate', icon: '💗', path: '/donate' },
   { label: 'Invite', icon: '🎁', path: '/invite' },
   { label: 'Muhasaba', icon: '📊', path: '/analyzer' },
 ]
