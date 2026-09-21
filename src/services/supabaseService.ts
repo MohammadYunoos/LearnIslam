@@ -109,6 +109,12 @@ export async function logDonationTransaction(payload: {
   return api.post('/donation/log', payload)
 }
 
+export async function getDonationTransactions(userId: string) {
+  return api.get<Array<{ id: string; created_at: string; status: string }>>(
+    `/donation/transactions?userId=${encodeURIComponent(userId)}`
+  )
+}
+
 export async function sendFeedback(payload: {
   userId?: string
   userName?: string

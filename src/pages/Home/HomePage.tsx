@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../../store/appStore'
 import { BottomNav } from '../../components/BottomNav'
-import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseService'
+import { getHadeesOfTheDay, getMaqtabProgress, getDonationTransactions } from '../../services/supabaseService'
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
+import { sendLocalNotification } from '../../lib/notificationService'
 import { Logo } from '../../components/Logo'
 import { APP_VERSION_NAME } from '../../version'
 
@@ -39,6 +40,7 @@ export function HomePage() {
   const user = useAppStore((s) => s.user)
   const showPopup = useAppStore((s) => s.showHadeesPopup)
   const setPopup = useAppStore((s) => s.setShowHadeesPopup)
+  const { setShowDonationNotification, setDonationNotificationType } = useAppStore()
   const [hadees, setHadees] = useState<Hadees | null>(null)
   const [progress, setProgress] = useState<{ lesson_id: string; quiz_score: number }[]>([])
 
@@ -53,6 +55,84 @@ export function HomePage() {
     const shown = localStorage.getItem('mymaqtab_hadees_date')
     setPopup(shown !== today)
   }, [setPopup])
+
+  // Check for donation reminder: 7-day if has donated, every session if not
+  useEffect(() => {
+    if (!user) return
+
+    async function checkDonationReminder() {
+      if (!user) return
+      try {
+        const transactions = await getDonationTransactions(user.id)
+        const hasSuccessfulDonation = transactions.some((t: any) => t.status === 'success')
+
+        if (hasSuccessfulDonation) {
+          // Has donated: remind every 7 days
+          const lastDonationTime = localStorage.getItem('mymaqtab_donation_time')
+          if (lastDonationTime) {
+            const daysSinceLastDonation = (Date.now() - parseInt(lastDonationTime)) / (1000 * 60 * 60 * 24)
+            if (daysSinceLastDonation >= 7) {
+              setTimeout(() => {
+                setDonationNotificationType('reminder')
+                setShowDonationNotification(true)
+              }, 1000)
+            }
+          }
+        } else {
+          // No donation yet: remind every session
+          setTimeout(() => {
+            setDonationNotificationType('reminder')
+            setShowDonationNotification(true)
+          }, 1000)
+        }
+      } catch (error) {
+        console.error('Failed to check donation transactions:', error)
+      }
+    }
+
+    checkDonationReminder()
+  }, [user, setShowDonationNotification, setDonationNotificationType])
+
+  // Check for Maqtab progress notifications (incomplete/start)
+  useEffect(() => {
+    if (!user || !progress) return
+
+    const notificationKey = `mymaqtab_progress_notif_shown_${user.id}`
+    const alreadyShown = localStorage.getItem(notificationKey)
+    console.log('Maqtab notification check:', { userId: user.id, progressLength: progress.length, alreadyShown })
+    if (alreadyShown) return
+
+    // Mark as shown to prevent repeating
+    localStorage.setItem(notificationKey, 'true')
+
+    // If no progress, suggest starting
+    if (progress.length === 0) {
+      sendLocalNotification({
+        title: 'Start Your Journey',
+        body: 'Begin Islamic learning with Maqtab today!',
+        actionTypeId: 'maqtab-progress',
+        data: { type: 'start' },
+      })
+      setTimeout(() => {
+        const { setShowMaqtabNotification, setMaqtabNotificationType } = useAppStore.getState()
+        setMaqtabNotificationType('start')
+        setShowMaqtabNotification(true)
+      }, 2000)
+    } else if (progress.length < 9) {
+      // If incomplete chapters, suggest continuing
+      sendLocalNotification({
+        title: 'Continue Learning',
+        body: 'Complete your Maqtab journey!',
+        actionTypeId: 'maqtab-progress',
+        data: { type: 'incomplete' },
+      })
+      setTimeout(() => {
+        const { setShowMaqtabNotification, setMaqtabNotificationType } = useAppStore.getState()
+        setMaqtabNotificationType('incomplete')
+        setShowMaqtabNotification(true)
+      }, 2500)
+    }
+  }, [user, progress])
 
   const dismissHadees = () => {
     localStorage.setItem('mymaqtab_hadees_date', new Date().toDateString())

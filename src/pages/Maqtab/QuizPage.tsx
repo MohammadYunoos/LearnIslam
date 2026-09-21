@@ -200,6 +200,12 @@ export function QuizPage() {
         setSaving(true)
         await completeLesson(user.id, lessonId, percent)
         setSaving(false)
+        // Show donation notification after lesson completion
+        setTimeout(() => {
+          const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()
+          setDonationNotificationType('post-lesson')
+          setShowDonationNotification(true)
+        }, 2000)
       }
     }
   }

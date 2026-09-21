@@ -214,8 +214,8 @@ export function MaqtabPage() {
               {lvl.level !== 'Beginner' && !user?.maqtabUnlocked && (
                 <div className="text-center py-8">
                   <p className="text-4xl mb-3">🔒</p>
-                  <p className="text-lg font-semibold text-ink mb-2">Section Locked</p>
-                  <p className="text-sm text-ink-muted mb-4">Invite 2 friends to unlock this section</p>
+                  <p className="text-lg font-semibold text-white mb-2">Section Locked</p>
+                  <p className="text-sm text-white mb-4">Invite 2 friends to unlock this section</p>
                   <button
                     onClick={() => navigate('/invite')}
                     className="bg-teal-900 hover:bg-teal-800 text-white font-semibold py-2 px-6 rounded-lg transition"

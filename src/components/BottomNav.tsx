@@ -1,5 +1,7 @@
 // src/components/BottomNav.tsx
+import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAppStore } from '../store/appStore'
 import { useTrList } from '../i18n/useTr'
 
 const NAV_ITEMS = [
@@ -15,6 +17,28 @@ export function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
   const labels = useTrList(NAV_ITEMS.map((i) => i.label))
+  const { setShowDonationNotification, setDonationNotificationType } = useAppStore()
+
+  // Show donation notification randomly when navigating (once per session only)
+  useEffect(() => {
+    const currentPath = location.pathname
+    const isValidPath = !['/donate', '/login'].includes(currentPath)
+    const sessionId = sessionStorage.getItem('mymaqtab_session_id') || String(Date.now())
+    if (!sessionStorage.getItem('mymaqtab_session_id')) {
+      sessionStorage.setItem('mymaqtab_session_id', sessionId)
+    }
+
+    const notificationShownKey = `mymaqtab_donation_shown_${sessionId}`
+    const alreadyShown = sessionStorage.getItem(notificationShownKey)
+
+    if (isValidPath && !alreadyShown && Math.random() < 0.1) {
+      sessionStorage.setItem(notificationShownKey, 'true')
+      setTimeout(() => {
+        setDonationNotificationType('session')
+        setShowDonationNotification(true)
+      }, 500)
+    }
+  }, [location.pathname, setShowDonationNotification, setDonationNotificationType])
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex z-40 max-w-lg mx-auto safe-bottom">

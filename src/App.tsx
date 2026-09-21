@@ -50,8 +50,11 @@ import { NamaazPage } from './pages/Namaaz/NamaazPage'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReportButton } from './components/ReportButton'
 import { TranslationOverlay } from './components/TranslationOverlay'
+import { DonationNotification } from './components/DonationNotification'
+import { MaqtabProgressNotification } from './components/MaqtabProgressNotification'
 import { useLang } from './i18n/useTr'
 import { ensureLang } from './services/translate'
+import { LocalNotifications } from '@capacitor/local-notifications'
 
 // Prime the offline translation cache + background-sync whenever the language
 // changes (no-op for English).
@@ -61,6 +64,30 @@ function LangSync() {
     void ensureLang(lang)
   }, [lang])
   return null
+}
+
+function DonationNotificationContainer() {
+  const { showDonationNotification, setShowDonationNotification, donationNotificationType } =
+    useAppStore()
+  return (
+    <DonationNotification
+      isOpen={showDonationNotification}
+      type={donationNotificationType}
+      onClose={() => setShowDonationNotification(false)}
+    />
+  )
+}
+
+function MaqtabProgressNotificationContainer() {
+  const { showMaqtabNotification, setShowMaqtabNotification, maqtabNotificationType } =
+    useAppStore()
+  return (
+    <MaqtabProgressNotification
+      isOpen={showMaqtabNotification}
+      type={maqtabNotificationType}
+      onClose={() => setShowMaqtabNotification(false)}
+    />
+  )
 }
 
 function SplashScreen() {
@@ -133,6 +160,7 @@ export default function App() {
 
     // Native: handle the OAuth deep-link return and complete the PKCE exchange.
     let removeListener: (() => void) | undefined
+    let removeNotificationListener: (() => void) | undefined
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (url && url.startsWith('com.mymaqtab.app://auth')) {
@@ -165,12 +193,34 @@ export default function App() {
       }).then((h) => {
         removeListener = () => h.remove()
       })
+
+      // Listen for local notification taps
+      LocalNotifications.addListener(
+        'localNotificationActionPerformed',
+        async (notification: any) => {
+          const actionTypeId = notification.notification.actionTypeId
+          if (actionTypeId === 'maqtab-progress') {
+            // App is already running, just navigate via store
+            const { setShowMaqtabNotification, setMaqtabNotificationType } =
+              useAppStore.getState()
+            setMaqtabNotificationType(
+              notification.notification.extra?.type === 'incomplete'
+                ? 'incomplete'
+                : 'start'
+            )
+            setShowMaqtabNotification(true)
+          }
+        }
+      ).then((h: any) => {
+        removeNotificationListener = () => h.remove()
+      })
     }
 
     return () => {
       active = false
       sub.subscription.unsubscribe()
       removeListener?.()
+      removeNotificationListener?.()
     }
   }, [setUser, setNeedsProfile])
 
@@ -182,6 +232,8 @@ export default function App() {
       <TranslationOverlay />
       <UpdateBanner />
       <ReportButton />
+      <DonationNotificationContainer />
+      <MaqtabProgressNotificationContainer />
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />

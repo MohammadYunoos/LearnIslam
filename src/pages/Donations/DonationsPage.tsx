@@ -17,26 +17,48 @@ const isIndianLocation = (lat: number, lng: number): boolean => {
   return lat >= 8 && lat <= 35 && lng >= 68 && lng <= 97
 }
 
+const HADITH_QUOTES = [
+  {
+    text: 'Charity extinguishes the anger of the Lord.',
+    source: 'Tirmidhi',
+  },
+  {
+    text: 'The best of you are those who are best to their families, and I am the best among you to my family.',
+    source: 'Tirmidhi',
+  },
+  {
+    text: 'Wealth and children are adornments of life, but the everlasting good deeds are better.',
+    source: 'Quran 18:46',
+  },
+  {
+    text: 'Every act of charity is a sadaqah, even meeting your brother with a cheerful face.',
+    source: 'Islamic Teaching',
+  },
+]
+
 export function DonationsPage() {
   const [config, setConfig] = useState<DonationConfig | null>(null)
   const [isIndia, setIsIndia] = useState(false)
-  const [upiAmount, setUpiAmount] = useState<number | ''>('')
-  const [selectedUpiPreset, setSelectedUpiPreset] = useState<number | null>(null)
+  const [upiAmount, setUpiAmount] = useState<number | ''>(50) // Default to 50
+  const [selectedUpiPreset, setSelectedUpiPreset] = useState<number | null>(50) // Default to 50
   const [copied, setCopied] = useState(false)
+  const [randomHadith] = useState(() =>
+    HADITH_QUOTES[Math.floor(Math.random() * HADITH_QUOTES.length)]
+  )
 
   const tTitle = useTr('Support Islam Seeko')
   const L = useTrList([
     'Islam Seeko is provided free of charge. Your voluntary donations help support app development, content creation, hosting, and maintenance.',
     'Donations are optional and do not provide any additional features, content, or benefits.',
-    'Buy Me a Coffee',
-    'Support via Buy Me a Coffee',
-    'Donate with UPI',
+    'Credit/Debit Card Donate', // was 'Buy Me a Coffee'
+    'Support via Debit/Credit Card', // was 'Support via Buy Me a Coffee'
+    'UPI Donate (INDIANS)', // was 'Donate with UPI'
     'Copy UPI ID',
     'Donate',
     'UPI ID copied to clipboard',
   ])
 
-  // Load config + detect location
+  // Load config + detect location + record donation timestamp
   useEffect(() => {
     const init = async () => {
       try {
@@ -56,6 +78,9 @@ export function DonationsPage() {
       } catch {
         /* geolocation failed */
       }
+
+      // Record donation timestamp for 7-day reminder
+      localStorage.setItem('mymaqtab_donation_time', Date.now().toString())
     }
     init()
   }, [])
@@ -88,13 +113,22 @@ export function DonationsPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title={tTitle} subtitle="Your support helps us grow" backTo="/home" />
+      <PageHeader title={tTitle} subtitle="💚 Your support helps us grow 💚" backTo="/home" />
 
       <div className="px-4 pt-4">
-        {/* Info card */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4">
-          <p className="text-xs text-blue-900 leading-relaxed mb-3">{L[0]}</p>
-          <p className="text-xs text-blue-900 leading-relaxed">{L[1]}</p>
+        {/* Hadith Quote with Islamic styling */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-gold rounded-2xl p-4 mb-4">
+          <p className="text-center text-xs text-teal-900 italic leading-relaxed mb-2">
+            🌸 {randomHadith.text} 🌸
+          </p>
+          <p className="text-xs text-right text-ink-muted">— {randomHadith.source}</p>
+        </div>
+
+        {/* Info card with hearts and flowers */}
+        <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-gold rounded-2xl p-4 mb-4">
+          <div className="text-center text-lg mb-2">❤️ 🌸 ❤️</div>
+          <p className="text-xs text-teal-900 leading-relaxed mb-3">{L[0]}</p>
+          <p className="text-xs text-teal-900 leading-relaxed">{L[1]}</p>
         </div>
 
         {/* Donation options in location-based order */}
