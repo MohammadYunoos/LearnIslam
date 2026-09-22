@@ -215,6 +215,12 @@ export async function confirmReview() {
   return api.post<{ ok: boolean }>('/review/confirm', {})
 }
 
+// ── COUPON GENERATION ───────────────────────────────────
+
+export async function generateUserCoupon() {
+  return api.get<{ ok: boolean; code?: string; error?: string }>('/coupon/generate')
+}
+
 // ── COUPON REDEMPTION ───────────────────────────────────
 
 export async function redeemCoupon(code: string) {

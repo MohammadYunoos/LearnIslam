@@ -997,6 +997,57 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
     return c.json({ ok: true })
   })
 
+  // ── COUPON GENERATION ───────────────────────────────────
+  function generateCouponCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let code = ''
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    return code
+  }
+
+  app.get('/coupon/generate', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+
+    try {
+      let couponCode: string | null = null
+
+      const { data: existingCoupon } = await supabase
+        .from('coupons')
+        .select('code')
+        .eq('id', userId)
+        .single()
+
+      if (existingCoupon) {
+        couponCode = existingCoupon.code
+      } else {
+        couponCode = generateCouponCode()
+        const validUntil = new Date()
+        validUntil.setDate(validUntil.getDate() + 365)
+
+        const { error } = await supabase.from('coupons').insert({
+          id: userId,
+          code: couponCode,
+          unlock_level: 'intermediate',
+          valid_until: validUntil.toISOString(),
+          max_uses: 2,
+          is_active: true,
+          description: `Referral coupon for user ${userId}`,
+        })
+
+        if (error) {
+          console.error('Coupon generation error:', error)
+          return c.json({ ok: false, error: error.message }, 500)
+        }
+      }
+
+      return c.json({ ok: true, code: couponCode })
+    } catch (e) {
+      console.error('Coupon generation error:', e)
+      return c.json({ ok: false, error: 'Failed to generate coupon' }, 500)
+    }
+  })
+
   // ── COUPON REDEMPTION ───────────────────────────────────
 
   app.post('/coupon/redeem', async (c: any) => {
