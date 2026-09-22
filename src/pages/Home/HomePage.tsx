@@ -93,17 +93,17 @@ export function HomePage() {
     checkDonationReminder()
   }, [user, setShowDonationNotification, setDonationNotificationType])
 
-  // Check for Maqtab progress notifications (incomplete/start)
+  // Check for Maqtab progress notifications (incomplete/start) — per session
   useEffect(() => {
     if (!user || !progress) return
 
     const notificationKey = `mymaqtab_progress_notif_shown_${user.id}`
-    const alreadyShown = localStorage.getItem(notificationKey)
+    const alreadyShown = sessionStorage.getItem(notificationKey)
     console.log('Maqtab notification check:', { userId: user.id, progressLength: progress.length, alreadyShown })
     if (alreadyShown) return
 
-    // Mark as shown to prevent repeating
-    localStorage.setItem(notificationKey, 'true')
+    // Mark as shown this session (sessionStorage clears on tab close)
+    sessionStorage.setItem(notificationKey, 'true')
 
     // If no progress, suggest starting
     if (progress.length === 0) {
