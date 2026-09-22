@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { logout as clearDevice, saveProfile } from '../../services/authService'
+import { redeemCoupon } from '../../services/supabaseService'
 import { useTr, useTrList } from '../../i18n/useTr'
 import { isAdmin } from '../../lib/admin'
 import { APP_VERSION_NAME } from '../../version'
@@ -47,6 +48,13 @@ export function SettingsPage() {
   const [lang, setLang] = useState('en')
   const [saving, setSaving] = useState(false)
 
+  // ── Coupon redemption ──────────────────────────────────
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponMessage, setCouponMessage] = useState('')
+  const [couponError, setCouponError] = useState('')
+
   const startEdit = () => {
     if (!user) return
     setName(user.name ?? '')
@@ -79,6 +87,34 @@ export function SettingsPage() {
     navigate('/login', { replace: true })
   }
 
+  const handleRedeemCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code')
+      return
+    }
+    setCouponLoading(true)
+    setCouponError('')
+    setCouponMessage('')
+    try {
+      const result = await redeemCoupon(couponCode.trim())
+      if (result.ok) {
+        setCouponMessage(`✅ Coupon redeemed! ${result.level === 'intermediate' ? 'Intermediate' : 'Advanced'} section unlocked!`)
+        setCouponCode('')
+        setTimeout(() => {
+          setShowCouponModal(false)
+          window.location.reload()
+        }, 2000)
+      } else {
+        setCouponError(result.error || 'Failed to redeem coupon')
+      }
+    } catch (e) {
+      setCouponError('Error redeeming coupon. Please try again.')
+      console.error('Coupon redemption error:', e)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
   const L = useTrList([
     'member',
     'Age',
@@ -96,6 +132,10 @@ export function SettingsPage() {
     'Save', // 13
     'Saving…', // 14
     'Cancel', // 15
+    'Redeem Coupon', // 16
+    'Coupon Code', // 17
+    'Redeem', // 18
+    'Redeeming…', // 19
   ])
   const tMadhabVal = useTr(user ? MADHAB_LABEL[user.madhab] ?? user.madhab : '')
 
@@ -192,6 +232,13 @@ export function SettingsPage() {
           {L[5]}
         </button>
 
+        <button
+          onClick={() => setShowCouponModal(true)}
+          className="w-full bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-3 text-sm mb-3"
+        >
+          🎟️ {L[16]}
+        </button>
+
         {admin && (
           <>
             <button
@@ -260,6 +307,63 @@ export function SettingsPage() {
           Alpha testing build · v{APP_VERSION_NAME}
         </p>
       </div>
+
+      {/* Coupon Modal */}
+      {showCouponModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h2 className="text-lg font-bold text-teal-900 mb-4">{L[16]}</h2>
+
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-teal-700 mb-2 uppercase tracking-wide">
+                {L[17]}
+              </label>
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Enter code"
+                disabled={couponLoading}
+                className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 uppercase disabled:opacity-60"
+              />
+            </div>
+
+            {couponError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                {couponError}
+              </div>
+            )}
+
+            {couponMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-600">
+                {couponMessage}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleRedeemCoupon}
+                disabled={couponLoading || !couponCode.trim()}
+                className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-3 text-sm disabled:opacity-60"
+              >
+                {couponLoading ? L[19] : L[18]}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCouponModal(false)
+                  setCouponCode('')
+                  setCouponError('')
+                  setCouponMessage('')
+                }}
+                disabled={couponLoading}
+                className="flex-1 bg-white border border-border text-ink-muted font-bold rounded-xl py-3 text-sm disabled:opacity-60"
+              >
+                {L[15]}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

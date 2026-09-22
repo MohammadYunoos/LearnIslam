@@ -997,4 +997,70 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
     return c.json({ ok: true })
   })
 
+  // ── COUPON REDEMPTION ───────────────────────────────────
+
+  app.post('/coupon/redeem', async (c: any) => {
+    const userId = uid(c)
+    if (!userId) return c.json({ error: 'no user id' }, 400)
+
+    const body = await c.req.json()
+    const code = body.code as string
+    if (!code) return c.json({ error: 'code required' }, 400)
+
+    // Find the coupon
+    const { data: coupon } = await supabase
+      .from('coupons')
+      .select('id, unlock_level, is_active, valid_until, current_uses, max_uses')
+      .eq('code', code.toUpperCase())
+      .single()
+
+    if (!coupon) return c.json({ ok: false, error: 'invalid coupon code' }, 400)
+
+    // Validate coupon
+    if (!coupon.is_active) return c.json({ ok: false, error: 'coupon has been deactivated' }, 400)
+    if (new Date(coupon.valid_until) < new Date()) return c.json({ ok: false, error: 'coupon has expired' }, 400)
+    if (coupon.current_uses >= coupon.max_uses) return c.json({ ok: false, error: 'coupon limit reached' }, 400)
+
+    // Check if user already redeemed this coupon
+    const { data: existing } = await supabase
+      .from('coupon_redemptions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('coupon_id', coupon.id)
+      .single()
+
+    if (existing) return c.json({ ok: false, error: 'you already redeemed this coupon' }, 400)
+
+    // Create redemption record
+    const { error: redeemError } = await supabase
+      .from('coupon_redemptions')
+      .insert({ user_id: userId, coupon_id: coupon.id })
+
+    if (redeemError) {
+      return c.json({ ok: false, error: redeemError.message }, 500)
+    }
+
+    // Increment current_uses
+    await supabase
+      .from('coupons')
+      .update({ current_uses: coupon.current_uses + 1 })
+      .eq('id', coupon.id)
+
+      // Auto-disable when limit reached
+if (coupon.current_uses + 1 >= coupon.max_uses) {
+  await supabase.from('coupons').update({ is_active: false }).eq('id', coupon.id)
+}
+
+
+    // Update profile with unlock field
+    const unlockField = coupon.unlock_level === 'intermediate' ? 'maqtab_intermediate_unlocked' : 'maqtab_advanced_unlocked'
+    await supabase
+      .from('profiles')
+      .update({ [unlockField]: true })
+      .eq('id', userId)
+
+    await logEvent(userId, 'coupon_redeemed', { code, level: coupon.unlock_level })
+    return c.json({ ok: true, level: coupon.unlock_level })
+  })
+
   Deno.serve(app.fetch)

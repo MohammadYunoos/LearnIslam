@@ -186,6 +186,13 @@ export function MaqtabPage() {
           const style = getLevelStyle(lvl.level)
           const levelDone = levelCompletion(lvl.level)
 
+          const isLevelUnlocked = () => {
+            if (lvl.level === 'Beginner') return true
+            if (lvl.level === 'Intermediate') return user?.maqtabUnlocked || user?.maqtabIntermediateUnlocked
+            if (lvl.level === 'Advanced') return user?.maqtabUnlocked || user?.maqtabAdvancedUnlocked
+            return false
+          }
+
           return (
             <div
               key={lvl.level}
@@ -211,22 +218,30 @@ export function MaqtabPage() {
               <div className="h-px bg-border my-3" />
 
               {/* Lock UI for Intermediate/Advanced if not unlocked */}
-              {lvl.level !== 'Beginner' && !user?.maqtabUnlocked && (
+              {!isLevelUnlocked() && (
                 <div className="text-center py-8">
                   <p className="text-4xl mb-3">🔒</p>
                   <p className="text-lg font-semibold text-white mb-2">Section Locked</p>
-                  <p className="text-sm text-white mb-4">Invite 2 friends to unlock this section</p>
-                  <button
-                    onClick={() => navigate('/invite')}
-                    className="bg-teal-900 hover:bg-teal-800 text-white font-semibold py-2 px-6 rounded-lg transition"
-                  >
-                    View Invite
-                  </button>
+                  <p className="text-sm text-white mb-4">Invite 2 friends or redeem a coupon to unlock</p>
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      onClick={() => navigate('/invite')}
+                      className="bg-teal-900 hover:bg-teal-800 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+                    >
+                      Invite Friends
+                    </button>
+                    <button
+                      onClick={() => navigate('/settings')}
+                      className="bg-gold hover:bg-gold/80 text-teal-900 font-semibold py-2 px-4 rounded-lg transition text-sm"
+                    >
+                      Redeem Code
+                    </button>
+                  </div>
                 </div>
               )}
 
               {/* Chapters and lessons */}
-              {(lvl.level === 'Beginner' || user?.maqtabUnlocked) && (
+              {isLevelUnlocked() && (
                 <>
                   {lvl.chapters.map((ch) => (
                 <div key={ch.chapter} className="mb-4">
