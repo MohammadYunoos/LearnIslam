@@ -8,8 +8,9 @@ import { openExternal } from '../../lib/external'
 import { getDonationConfig } from '../../services/supabaseService'
 
 interface DonationConfig {
-  razorpay_button_id: string
   buymeacoffee_link: string
+  upi_vpa: string
+  razorpay_button_id?: string
 }
 
 
@@ -62,7 +63,7 @@ export function DonationsPage() {
 
   // Load Razorpay script when config is available
   useEffect(() => {
-    if (!config) return
+    if (!config?.razorpay_button_id) return
 
     const form = document.getElementById('razorpay-form')
     if (!form) return
@@ -98,27 +99,28 @@ export function DonationsPage() {
         </div>
 
         {/* Razorpay Donate Button */}
-        {config && (
-          <>
-            <div className="bg-white border border-border rounded-2xl p-5 mb-4">
-              <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-                💳 Donate with Razorpay
-              </label>
-              <form id="razorpay-form" />
-            </div>
+        {config?.razorpay_button_id && (
+          <div className="bg-white border border-border rounded-2xl p-5 mb-4">
+            <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+              For Indians - 💳 Donate with Razorpay
+            </label>
+            <form id="razorpay-form" />
+          </div>
+        )}
 
-            <div className="bg-white border border-border rounded-2xl p-5">
-              <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-                ☕ Buy Me a Coffee
-              </label>
-              <button
-                onClick={() => openExternal(config.buymeacoffee_link)}
-                className="w-full bg-yellow-400 text-yellow-900 font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform"
-              >
-                Support via Buy Me a Coffee
-              </button>
-            </div>
-          </>
+        {/* Buy Me a Coffee Button */}
+        {config?.buymeacoffee_link && (
+          <div className="bg-white border border-border rounded-2xl p-5 mb-4">
+            <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
+              For Internationals - ☕ Buy Me a Coffee
+            </label>
+            <button
+              onClick={() => openExternal(config.buymeacoffee_link)}
+              className="w-full bg-yellow-400 text-yellow-900 font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform"
+            >
+              Support via Buy Me a Coffee
+            </button>
+          </div>
         )}
 
         {/* Fallback if config not loaded */}

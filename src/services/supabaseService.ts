@@ -96,7 +96,7 @@ export async function getAppVersion() {
 }
 
 export async function getDonationConfig() {
-  return api.get<{ buymeacoffee_link: string; upi_vpa: string }>('/donation/config')
+  return api.get<{ buymeacoffee_link: string; upi_vpa: string; razorpay_button_id?: string }>('/donation/config')
 }
 
 export async function logDonationTransaction(payload: {

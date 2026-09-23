@@ -222,19 +222,13 @@ export function MaqtabPage() {
                 <div className="text-center py-8">
                   <p className="text-4xl mb-3">🔒</p>
                   <p className="text-lg font-semibold text-white mb-2">Section Locked</p>
-                  <p className="text-sm text-white mb-4">Invite 2 friends or redeem a coupon to unlock</p>
+                  <p className="text-sm text-white mb-4">Invite 2 friends to unlock</p>
                   <div className="flex gap-2 justify-center">
                     <button
                       onClick={() => navigate('/invite')}
                       className="bg-teal-900 hover:bg-teal-800 text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
                     >
                       Invite Friends
-                    </button>
-                    <button
-                      onClick={() => navigate('/settings')}
-                      className="bg-gold hover:bg-gold/80 text-teal-900 font-semibold py-2 px-4 rounded-lg transition text-sm"
-                    >
-                      Redeem Code
                     </button>
                   </div>
                 </div>

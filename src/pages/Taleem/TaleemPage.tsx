@@ -323,7 +323,7 @@ export function TaleemPage() {
               <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl px-5 py-4 text-center">
                 <p className="text-sm font-semibold text-amber-900 mb-2">📱 Unlock Books 2-4</p>
                 <p className="text-xs text-amber-800 mb-3">
-                  Leave us a 5-star review on the Play Store to unlock advanced Islamic Q&A volumes.
+                  Please leave us a 5-star review on the Play Store to unlock advanced Islamic Q&A volumes.
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -354,7 +354,7 @@ export function TaleemPage() {
                         <p className="font-bold text-gray-600">
                           Book {v.volume_no}: {toTitleCase(v.title)}
                         </p>
-                        <p className="text-xs text-gray-500">Leave a 5-star review to unlock</p>
+                        <p className="text-xs text-gray-500">Please leave a 5-star review to unlock</p>
                       </div>
                     </div>
                   ) : (
