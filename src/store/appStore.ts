@@ -1,6 +1,7 @@
 // src/store/appStore.ts
 import { create } from 'zustand'
 import type { AppUser } from '../services/authService'
+import type { EngagementNotificationContent } from '../content/engagementNotifications'
 
 interface AppStore {
   user: AppUser | null
@@ -23,6 +24,9 @@ interface AppStore {
   setShowMaqtabNotification: (v: boolean) => void
   maqtabNotificationType: 'incomplete' | 'start'
   setMaqtabNotificationType: (t: 'incomplete' | 'start') => void
+
+  engagementNotification: EngagementNotificationContent | null
+  setEngagementNotification: (content: EngagementNotificationContent | null) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -41,4 +45,6 @@ export const useAppStore = create<AppStore>((set) => ({
   setShowMaqtabNotification: (v) => set({ showMaqtabNotification: v }),
   maqtabNotificationType: 'incomplete',
   setMaqtabNotificationType: (t) => set({ maqtabNotificationType: t }),
+  engagementNotification: null,
+  setEngagementNotification: (engagementNotification) => set({ engagementNotification }),
 }))

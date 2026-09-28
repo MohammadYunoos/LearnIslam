@@ -9,7 +9,7 @@ body,
   min-height: 100dvh;
   background: #faf6ec;
   /* Latin → Inter; Urdu/Arabic script falls back to Nastaliq. */
-  font-family: 'Inter', 'Noto Nastaliq Urdu', system-ui, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 /* Safe-area helpers for Android nav bar / status bar / display cutouts */
@@ -268,6 +268,49 @@ button:active {
   transform: scale(0.97);
 }
 
+/* Maqtab onboarding: subtle eight-point geometry over the deep-green canvas. */
+.maqtab-onboarding {
+  background-color: #0e3b36;
+  background-image:
+    linear-gradient(30deg, rgba(200, 150, 44, 0.07) 12%, transparent 12.5%, transparent 87%, rgba(200, 150, 44, 0.07) 87.5%),
+    linear-gradient(150deg, rgba(200, 150, 44, 0.07) 12%, transparent 12.5%, transparent 87%, rgba(200, 150, 44, 0.07) 87.5%),
+    linear-gradient(30deg, rgba(255, 255, 255, 0.035) 12%, transparent 12.5%, transparent 87%, rgba(255, 255, 255, 0.035) 87.5%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.035) 12%, transparent 12.5%, transparent 87%, rgba(255, 255, 255, 0.035) 87.5%);
+  background-position: 0 0, 0 0, 24px 42px, 24px 42px;
+  background-size: 48px 84px;
+}
+
+@keyframes onboardingNext {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes onboardingPrevious {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.onboarding-slide-next {
+  animation: onboardingNext 0.32s ease-out both;
+}
+.onboarding-slide-previous {
+  animation: onboardingPrevious 0.32s ease-out both;
+}
+@media (max-height: 720px) {
+  .onboarding-visual {
+    max-width: 300px !important;
+  }
+}
+@media (max-height: 650px) {
+  .onboarding-visual {
+    max-width: 260px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-slide-next,
+  .onboarding-slide-previous {
+    animation: none;
+  }
+}
+
 /* Fullscreen lesson card — allow scrolling the full content */
 .fs-card:fullscreen {
   overflow-y: auto;
@@ -326,7 +369,7 @@ button:active {
 
 /* Islamic Q&A — premium reading style */
 .qa-content {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: #2c2a24;
 }
 .qa-content h1,
@@ -398,6 +441,25 @@ button:active {
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 0.85em;
+}
+
+/* Maqtab reader font control. The variable is changed by the lesson toolbar. */
+.lesson-content p {
+  font-size: calc(0.95rem * var(--lesson-font-scale, 1));
+}
+.lesson-content li,
+.lesson-content td,
+.lesson-content th {
+  font-size: calc(0.9rem * var(--lesson-font-scale, 1));
+}
+.lesson-content h1 {
+  font-size: calc(1.4rem * var(--lesson-font-scale, 1));
+}
+.lesson-content h2 {
+  font-size: calc(1.15rem * var(--lesson-font-scale, 1));
+}
+.lesson-content h3 {
+  font-size: calc(1.02rem * var(--lesson-font-scale, 1));
 }
 /* Section header — teal banner, gold serif */
 .qa-content .qa-sec {

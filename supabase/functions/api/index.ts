@@ -844,6 +844,73 @@ RULES:
   })
 
   // Informal pre-test — a small sample WITH answers (client-scored).
+  // Public exam leaderboard: one ranked row per learner for the selected level.
+  // Highest best score wins; equal scores are ordered by the newest best attempt.
+  app.get('/exam/leaderboard', async (c: any) => {
+    const level = c.req.query('level') || 'Beginner'
+    if (!['Beginner', 'Intermediate', 'Advanced'].includes(level)) {
+      return c.json({ error: 'invalid level' }, 400)
+    }
+
+    const { data: attempts, error: attemptsError } = await supabase
+      .from('exam_attempts')
+      .select('user_id, percent, created_at')
+      .eq('level', level)
+      .order('created_at', { ascending: false })
+      .limit(5000)
+    if (attemptsError) return c.json({ error: attemptsError.message }, 500)
+
+    const learners = new Map<string, { attempts: number; percent: number; created_at: string }>()
+    for (const attempt of attempts ?? []) {
+      const userId = String(attempt.user_id)
+      const percent = Number(attempt.percent) || 0
+      const current = learners.get(userId)
+      if (!current) {
+        learners.set(userId, { attempts: 1, percent, created_at: attempt.created_at })
+      } else {
+        current.attempts += 1
+        if (
+          percent > current.percent ||
+          (percent === current.percent && attempt.created_at > current.created_at)
+        ) {
+          current.percent = percent
+          current.created_at = attempt.created_at
+        }
+      }
+    }
+
+    const userIds = [...learners.keys()]
+    if (!userIds.length) return c.json([])
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, age')
+      .in('id', userIds)
+    if (profilesError) return c.json({ error: profilesError.message }, 500)
+    const profileById = new Map((profiles ?? []).map((p: any) => [String(p.id), p]))
+
+    const ranked = userIds
+      .map((userId) => {
+        const result = learners.get(userId)!
+        const profile = profileById.get(userId)
+        return {
+          userId,
+          name: profile?.name || 'Learner',
+          age: profile?.age ?? null,
+          attempts: result.attempts,
+          percent: result.percent,
+          achievedAt: result.created_at,
+        }
+      })
+      .sort(
+        (a, b) =>
+          b.percent - a.percent ||
+          new Date(b.achievedAt).getTime() - new Date(a.achievedAt).getTime()
+      )
+      .map((row, index) => ({ rank: index + 1, ...row }))
+
+    return c.json(ranked)
+  })
+
   app.get('/exam/knowledge-check', async (c: any) => {
     const level = c.req.query('level') || 'Beginner'
     const lang = c.req.query('lang') || 'english'

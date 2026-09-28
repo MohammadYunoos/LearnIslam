@@ -12,8 +12,8 @@ module.exports = {
         border: '#E3D9BE',
       },
       fontFamily: {
-        arabic: ['Amiri', 'serif'],
-        sans: ['Inter', 'sans-serif'],
+        arabic: ['Noto Naskh Arabic', 'Noto Nastaliq Urdu', 'serif'],
+        sans: ['system-ui', 'sans-serif'],
       },
     },
   },

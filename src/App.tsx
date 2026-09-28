@@ -23,6 +23,7 @@ import { QuizPage } from './pages/Maqtab/QuizPage'
 import { KnowledgeCheckPage } from './pages/Maqtab/KnowledgeCheckPage'
 import { ExamPage } from './pages/Maqtab/ExamPage'
 import { CertificatePage } from './pages/Maqtab/CertificatePage'
+import { TopScorersPage } from './pages/Maqtab/TopScorersPage'
 import { HifzPage } from './pages/Hifz/HifzPage'
 import { HifzSurahPage } from './pages/Hifz/HifzSurahPage'
 import { WajifaListPage } from './pages/Wajifa/WajifaListPage'
@@ -52,6 +53,8 @@ import { ReportButton } from './components/ReportButton'
 import { TranslationOverlay } from './components/TranslationOverlay'
 import { DonationNotification } from './components/DonationNotification'
 import { MaqtabProgressNotification } from './components/MaqtabProgressNotification'
+import { EngagementNotificationManager } from './components/EngagementNotificationManager'
+import { engagementById } from './content/engagementNotifications'
 import { useLang } from './i18n/useTr'
 import { ensureLang } from './services/translate'
 import { LocalNotifications } from '@capacitor/local-notifications'
@@ -140,11 +143,13 @@ export default function App() {
     }
 
     async function bootstrap() {
-      const signedIn = await loadSession()
-      if (!signedIn) {
-        const local = getLocalUser()
-        if (local) setUser(local)
+      const local = getLocalUser()
+      if (local) {
+        setUser(local)
+        setLoading(false)
       }
+      const signedIn = await loadSession()
+      if (!signedIn && local && active) setUser(local)
       if (active) setLoading(false)
     }
     bootstrap()
@@ -209,6 +214,13 @@ export default function App() {
                 : 'start'
             )
             setShowMaqtabNotification(true)
+          } else if (actionTypeId === 'engagement') {
+            const content = engagementById(notification.notification.extra?.id)
+            if (content) useAppStore.getState().setEngagementNotification(content)
+          } else if (actionTypeId === 'donation-reminder') {
+            const state = useAppStore.getState()
+            state.setDonationNotificationType('reminder')
+            state.setShowDonationNotification(true)
           }
         }
       ).then((h: any) => {
@@ -234,6 +246,7 @@ export default function App() {
       <ReportButton />
       <DonationNotificationContainer />
       <MaqtabProgressNotificationContainer />
+      <EngagementNotificationManager />
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
@@ -248,6 +261,7 @@ export default function App() {
         <Route path="/maqtab/knowledge-check" element={<PrivateRoute element={<KnowledgeCheckPage />} />} />
         <Route path="/maqtab/exam" element={<PrivateRoute element={<ExamPage />} />} />
         <Route path="/maqtab/certificate" element={<PrivateRoute element={<CertificatePage />} />} />
+        <Route path="/maqtab/top-scorers" element={<PrivateRoute element={<TopScorersPage />} />} />
         <Route path="/maqtab/:lessonId" element={<PrivateRoute element={<LessonPage />} />} />
         <Route
           path="/maqtab/:lessonId/quiz"

@@ -48,7 +48,7 @@ export function DonationNotification({ isOpen, type, onClose }: DonationNotifica
     'Thank You for Your Support!', // 5
     'Congratulations on completing this lesson! 🎉',
     'Consider supporting Islam Seeko to help us create more content.',
-    'It\'s been a week since you last donated. Help us continue the mission!', // 8
+    'Your support helps us continue providing free Islamic education.', // 8
   ])
 
   const [randomHadith] = useState(() =>
@@ -63,7 +63,7 @@ export function DonationNotification({ isOpen, type, onClose }: DonationNotifica
   const titles: Record<NotificationType, string> = {
     session: L[0],
     'post-lesson': L[5],
-    reminder: L[8],
+    reminder: L[0],
   }
 
   const messages: Record<NotificationType, string> = {

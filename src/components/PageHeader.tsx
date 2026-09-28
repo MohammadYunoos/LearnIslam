@@ -1,5 +1,6 @@
 // src/components/PageHeader.tsx
 import { useNavigate } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import { useTr } from '../i18n/useTr'
 
 interface Props {
@@ -10,9 +11,10 @@ interface Props {
   // Skip runtime translation — for titles already in the user's language
   // (e.g. a localized DB lesson title). Prevents MT re-garbling.
   noTranslate?: boolean
+  rightAction?: ReactNode
 }
 
-export function PageHeader({ title, subtitle, back = true, backTo, noTranslate }: Props) {
+export function PageHeader({ title, subtitle, back = true, backTo, noTranslate, rightAction }: Props) {
   const navigate = useNavigate()
   const trTitle = useTr(title)
   const trSub = useTr(subtitle ?? '')
@@ -29,10 +31,11 @@ export function PageHeader({ title, subtitle, back = true, backTo, noTranslate }
           ←
         </button>
       )}
-      <div>
+      <div className="flex-1 min-w-0">
         <p className="font-arabic text-white text-xl font-bold leading-tight">{tTitle}</p>
         {subtitle && <p className="text-sand text-xs">{tSub}</p>}
       </div>
+      {rightAction}
     </div>
   )
 }

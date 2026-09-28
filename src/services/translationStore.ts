@@ -27,8 +27,9 @@ export async function idbGetAll(lang: string): Promise<[string, string][]> {
   try {
     const d = await db()
     const prefix = `${lang}|`
+    const range = IDBKeyRange.bound(prefix, `${prefix}\uffff`)
     const out: [string, string][] = []
-    let cursor = await d.transaction(STORE).store.openCursor()
+    let cursor = await d.transaction(STORE).store.openCursor(range)
     while (cursor) {
       const k = String(cursor.key)
       if (k.startsWith(prefix)) out.push([k.slice(prefix.length), cursor.value as string])

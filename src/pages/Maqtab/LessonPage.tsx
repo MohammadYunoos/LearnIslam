@@ -1,11 +1,11 @@
-// src/pages/Maqtab/LessonPage.tsx
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { PageHeader } from '../../components/PageHeader'
 import { getLessonContent } from '../../services/supabaseService'
-import { useTr, useTrList } from '../../i18n/useTr'
+import { useAppStore } from '../../store/appStore'
+import { useTrList } from '../../i18n/useTr'
 
 interface Lesson {
   id: string
@@ -18,29 +18,196 @@ interface Lesson {
   language?: string
 }
 
+interface ReadingState {
+  progress: number
+  bookmark: number | null
+  fontScale: number
+}
+
+const DEFAULT_READING_STATE: ReadingState = { progress: 0, bookmark: null, fontScale: 1 }
+const FONT_SCALES = [0.85, 1, 1.15, 1.3]
+
+function formatEmbeddedTakeaways(markdown: string) {
+  const lines = markdown.split('\n')
+  const headingIndex = lines.findIndex((line) => /^\s*\*\*Key Takeaways\*\*\s*$/i.test(line))
+  if (headingIndex < 0) return markdown
+
+  let end = lines.length
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
+    if (/^\s*(?:#{1,6}\s+|\*\*[^*]+\*\*\s*$)/.test(lines[i])) {
+      end = i
+      break
+    }
+  }
+  const takeaways = lines
+    .slice(headingIndex + 1, end)
+    .join('\n')
+    .split('✓')
+    .map((line) => line.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/, '').trim())
+    .filter(Boolean)
+  if (!takeaways.length) return markdown
+
+  const formatted = ['## Key Takeaways', '', ...takeaways.map((item) => `- ✓ ${item}`)]
+  return [...lines.slice(0, headingIndex), ...formatted, '', ...lines.slice(end)].join('\n')
+}
+
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
 export function LessonPage() {
   const { lessonId } = useParams()
   const navigate = useNavigate()
+  const user = useAppStore((s) => s.user)
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [loading, setLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
+  const [bookmark, setBookmark] = useState<number | null>(null)
+  const [fontScale, setFontScale] = useState(1)
+  const [bookmarkSaved, setBookmarkSaved] = useState(false)
+  const [toolbarMinimized, setToolbarMinimized] = useState(false)
+  const progressRef = useRef(0)
+  const restoredRef = useRef<string | null>(null)
+  const restoringRef = useRef(true)
+  const pageExitingRef = useRef(false)
+
+  const storageKey = `maqtab_reading_${user?.id ?? 'guest'}_${lessonId ?? 'unknown'}`
 
   useEffect(() => {
     if (!lessonId) return
+    setLoading(true)
+    restoredRef.current = null
+    restoringRef.current = true
+    pageExitingRef.current = false
     getLessonContent(lessonId).then((data) => {
       setLesson(data as Lesson)
       setLoading(false)
     })
   }, [lessonId])
 
-  // Normalise CRLF → LF, then split on blank lines so each heading / list /
-  // rule / paragraph is its own markdown block (kept intact for translation).
-  const body = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
-  const blocks = useMemo(() => body.split(/\n{2,}/).filter((b) => b.trim()), [body])
+  const rawBody = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
+  const formattedBody = useMemo(() => formatEmbeddedTakeaways(rawBody), [rawBody])
+  const blocks = useMemo(
+    () => formattedBody.split(/\n{2,}/).filter((block) => block.trim()),
+    [formattedBody]
+  )
   const trBlocks = useTrList(blocks)
-  // A lesson already stored in the chosen language must NOT be MT-translated again.
   const alreadyLocalized = !!lesson?.language && lesson.language !== 'english'
   const trBody = (alreadyLocalized ? blocks : trBlocks).join('\n\n')
-  const tQuiz = useTr('Take the quiz')
+  const L = useTrList([
+    'Completed',
+    'Decrease font size',
+    'Increase font size',
+    'Save Progress',
+    'Progress saved',
+    'Go to bookmark',
+    'Take the quiz',
+    'You need 80% or higher to pass this lesson quiz.',
+    'Loading...',
+    'Reading progress',
+    'Minimize progress controls',
+    'Show progress controls',
+  ])
+
+  const readSavedState = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}') as Partial<ReadingState>
+      return {
+        progress: clampPercent(parsed.progress ?? 0),
+        bookmark: parsed.bookmark == null ? null : clampPercent(parsed.bookmark),
+        fontScale: FONT_SCALES.includes(parsed.fontScale ?? 1) ? (parsed.fontScale ?? 1) : 1,
+      }
+    } catch {
+      return DEFAULT_READING_STATE
+    }
+  }
+
+  const saveState = (next: Partial<ReadingState>) => {
+    try {
+      const current = readSavedState()
+      localStorage.setItem(storageKey, JSON.stringify({ ...current, ...next }))
+    } catch {
+      /* Reading still works when device storage is unavailable. */
+    }
+  }
+
+  const scrollToPercent = (percent: number, behavior: ScrollBehavior = 'smooth') => {
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+    window.scrollTo({ top: (maxScroll * percent) / 100, behavior })
+  }
+
+  useLayoutEffect(() => {
+    if (loading || !lessonId || restoredRef.current === storageKey) return
+    if (rawBody.trim() && !trBody.trim()) return
+    const saved = readSavedState()
+    setProgress(saved.progress)
+    progressRef.current = saved.progress
+    setBookmark(saved.bookmark)
+    setFontScale(saved.fontScale)
+    const frame = window.requestAnimationFrame(() => {
+      scrollToPercent(saved.progress, 'auto')
+      restoredRef.current = storageKey
+      restoringRef.current = false
+    })
+    return () => window.cancelAnimationFrame(frame)
+    // Restore once after the translated lesson content is rendered.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, lessonId, storageKey, rawBody, trBody])
+
+  useEffect(() => {
+    const preserveProgress = () => {
+      pageExitingRef.current = true
+      saveState({ progress: progressRef.current })
+    }
+    window.addEventListener('beforeunload', preserveProgress)
+    window.addEventListener('pagehide', preserveProgress)
+    return () => {
+      window.removeEventListener('beforeunload', preserveProgress)
+      window.removeEventListener('pagehide', preserveProgress)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey])
+
+  useEffect(() => {
+    let frame = 0
+    let saveTimer = 0
+    const updateProgress = () => {
+      if (restoringRef.current || pageExitingRef.current) return
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+        const next = maxScroll <= 0 ? 100 : clampPercent((window.scrollY / maxScroll) * 100)
+        progressRef.current = next
+        setProgress(next)
+        window.clearTimeout(saveTimer)
+        saveTimer = window.setTimeout(() => saveState({ progress: next }), 250)
+      })
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', updateProgress)
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(saveTimer)
+    }
+    // Storage identity changes only when the user or lesson changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey])
+
+  const changeFontScale = (direction: -1 | 1) => {
+    const currentIndex = FONT_SCALES.indexOf(fontScale)
+    const nextIndex = Math.max(0, Math.min(FONT_SCALES.length - 1, currentIndex + direction))
+    const next = FONT_SCALES[nextIndex]
+    setFontScale(next)
+    saveState({ fontScale: next })
+  }
+
+  const addBookmark = () => {
+    const next = progressRef.current
+    setBookmark(next)
+    saveState({ bookmark: next, progress: next })
+    setBookmarkSaved(true)
+    window.setTimeout(() => setBookmarkSaved(false), 1800)
+  }
 
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [isFs, setIsFs] = useState(false)
@@ -59,48 +226,89 @@ export function LessonPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-28">
-      <PageHeader
-        title={lesson?.title ?? 'Lesson'}
-        backTo="/maqtab"
-        noTranslate={alreadyLocalized}
-      />
+    <div className="bg-cream min-h-screen pb-40">
+      <PageHeader title={lesson?.title ?? 'Lesson'} backTo="/maqtab" noTranslate={alreadyLocalized} />
 
-      <div className="px-4 pt-4">
-        {loading && <p className="text-ink-muted text-sm text-center py-8">Loading…</p>}
-
-        {!loading && lesson && (
-          <div
-            ref={cardRef}
-            className="fs-card relative rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6"
-          >
+      {!loading && lesson && !toolbarMinimized && (
+        <div className="sticky top-0 z-40 bg-[#FFFDF7] border-b border-border shadow-sm px-3 py-2">
+          <div className="flex items-center justify-between text-[11px] font-semibold mb-1.5">
+            <span className="text-teal-900">{L[0]} {progress}%</span>
             <button
-              onClick={toggleFullscreen}
-              className="fixed top-24 right-4 z-50 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg"
-              aria-label="Toggle fullscreen"
+              type="button"
+              onClick={() => setToolbarMinimized(true)}
+              className="w-7 h-7 -my-1 border border-border bg-white text-teal-900 font-bold rounded-md"
+              aria-label={L[10]}
+              title={L[10]}
             >
-              {isFs ? '🗕' : '⛶'}
+              &minus;
             </button>
-            {lesson.arabic_text && (
-              <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-4 pr-10">
-                {lesson.arabic_text}
-              </p>
-            )}
-            <div className="qa-content">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{trBody}</ReactMarkdown>
+          </div>
+          <div className="h-1.5 bg-sand rounded-full overflow-hidden" role="progressbar" aria-label={L[9]} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+            <div className="h-full bg-gold transition-[width] duration-150" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="flex items-center justify-between mt-1.5 gap-2">
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => changeFontScale(-1)} disabled={fontScale === FONT_SCALES[0]} className="w-8 h-8 border border-border bg-white text-teal-900 text-sm font-bold rounded-md disabled:opacity-40" aria-label={L[1]} title={L[1]}>A-</button>
+              <span className="w-10 text-center text-[11px] font-semibold text-ink-muted">{Math.round(fontScale * 100)}%</span>
+              <button type="button" onClick={() => changeFontScale(1)} disabled={fontScale === FONT_SCALES[FONT_SCALES.length - 1]} className="w-8 h-8 border border-border bg-white text-teal-900 text-sm font-bold rounded-md disabled:opacity-40" aria-label={L[2]} title={L[2]}>A+</button>
+            </div>
+            <div className="flex gap-1">
+              {bookmark != null && (
+                <button type="button" onClick={() => scrollToPercent(bookmark)} className="h-8 px-2 border border-gold bg-white text-gold-dark font-bold rounded-md text-[11px]" title={L[5]}>
+                  {L[5]} {bookmark}%
+                </button>
+              )}
+              <button type="button" onClick={addBookmark} className="h-8 px-2.5 bg-teal-900 text-white font-bold rounded-md text-[11px]" title={L[3]}>
+                {bookmarkSaved ? L[4] : L[3]}
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {!loading && lesson && toolbarMinimized && (
+        <div className="fixed top-20 left-0 right-0 max-w-lg mx-auto z-40 pointer-events-none">
+          <button
+            type="button"
+            onClick={() => setToolbarMinimized(false)}
+            className="pointer-events-auto absolute right-4 flex items-center gap-2 bg-teal-900/30 text-white rounded-full shadow-lg px-3 h-10 text-xs font-bold"
+            aria-label={L[11]}
+            title={L[11]}
+          >
+            <span>{L[0]} {progress}%</span>
+            <span className="text-gold text-base leading-none">+</span>
+          </button>
+        </div>
+      )}
+
+      <div className="px-4 pt-4">
+        {loading && <p className="text-ink-muted text-sm text-center py-8">{L[8]}</p>}
+
+        {!loading && lesson && (
+            <div ref={cardRef} className="fs-card relative rounded-lg shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6">
+              <button onClick={toggleFullscreen} className="absolute top-3 right-3 z-10 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+                {isFs ? 'X' : '[ ]'}
+              </button>
+              {lesson.arabic_text && (
+                <p className="font-arabic text-2xl text-teal-900 leading-loose text-right mb-4 pr-10" style={{ fontSize: `${fontScale * 1.5}rem` }}>
+                  {lesson.arabic_text}
+                </p>
+              )}
+              <div
+                className="qa-content lesson-content"
+                style={{ '--lesson-font-scale': fontScale } as React.CSSProperties}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{trBody}</ReactMarkdown>
+              </div>
+            </div>
         )}
       </div>
 
-      {/* Fixed action bar */}
       {!loading && lesson && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4 safe-bottom">
-          <button
-            onClick={() => navigate(`/maqtab/${lessonId}/quiz`)}
-            className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm"
-          >
-            {tQuiz} →
+        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border px-4 pt-3 pb-4 safe-bottom z-40">
+          <p className="text-center text-xs font-semibold text-ink-muted mb-2">{L[7]}</p>
+          <button onClick={() => navigate(`/maqtab/${lessonId}/quiz`)} className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm">
+            {L[6]} &rarr;
           </button>
         </div>
       )}

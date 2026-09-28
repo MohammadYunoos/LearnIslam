@@ -8,6 +8,7 @@ import { getMaqtabChapters, getMaqtabProgress } from '../../services/supabaseSer
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
 import { openPdf } from '../../lib/openPdfNative'
+import { MaqtabOnboarding } from '../../components/MaqtabOnboarding'
 
 interface Lesson {
   id: string
@@ -28,6 +29,17 @@ export function MaqtabPage() {
   const [loading, setLoading] = useState(true)
   const lang = useLang()
   const [visibleLevels, setVisibleLevels] = useState<Set<string>>(new Set())
+  const [showTutorial, setShowTutorial] = useState(false)
+  const tutorialKey = `maqtab_tutorial_complete_${user?.id ?? 'guest'}`
+
+  useEffect(() => {
+    setShowTutorial(localStorage.getItem(tutorialKey) !== '1')
+  }, [tutorialKey])
+
+  const completeTutorial = () => {
+    localStorage.setItem(tutorialKey, '1')
+    setShowTutorial(false)
+  }
 
   useEffect(() => {
     async function load() {
@@ -108,6 +120,8 @@ export function MaqtabPage() {
   const tMin = useTr('min')
   const tLoading = useTr('Loading lessons…')
   const tNone = useTr('No lessons found. Check your Supabase content.')
+  const tTopScorers = useTr('Top Scorers')
+  const tTopScorersSub = useTr('See the leading exam scores across every level')
   // When the DB serves already-localized rows (english-urdu), the `title` is
   // curated Roman — render it verbatim; MT would only garble it.
   const alreadyLocalized = contentDbLang(lang) !== 'english'
@@ -144,7 +158,35 @@ export function MaqtabPage() {
 
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
-      <PageHeader title="Maqtab" subtitle="Your learning journey" backTo="/home" />
+      <PageHeader
+        title="Maqtab"
+        subtitle="Your learning journey"
+        backTo="/home"
+        rightAction={
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowTutorial(true)}
+              className="w-10 h-10 shrink-0 rounded-full bg-white/10 text-white flex items-center justify-center text-lg font-bold"
+              aria-label="Maqtab tutorial"
+              title="Maqtab tutorial"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/maqtab/top-scorers')}
+              className="w-10 h-10 shrink-0 rounded-full bg-white/10 text-gold flex items-center justify-center text-xl"
+              aria-label={tTopScorers}
+              title={tTopScorers}
+            >
+              🏆
+            </button>
+          </div>
+        }
+      />
+
+      <MaqtabOnboarding open={showTutorial} onComplete={completeTutorial} />
 
       <div className="px-4 pt-4">
         {/* Knowledge check (pre-test) — always available */}
@@ -302,6 +344,21 @@ export function MaqtabPage() {
             </div>
           )
         })}
+
+        {!loading && lessons.length > 0 && (
+          <button
+            type="button"
+            onClick={() => navigate('/maqtab/top-scorers')}
+            className="w-full mb-6 border border-gold bg-white rounded-lg px-4 py-4 flex items-center gap-3 text-left shadow-sm active:scale-[0.98]"
+          >
+            <span className="w-10 h-10 shrink-0 rounded-full bg-gold text-teal-900 flex items-center justify-center font-bold">#1</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-teal-900">{tTopScorers}</span>
+              <span className="block text-xs text-ink-muted mt-0.5">{tTopScorersSub}</span>
+            </span>
+            <span className="text-gold-dark text-xl" aria-hidden="true">&rsaquo;</span>
+          </button>
+        )}
       </div>
 
       <BottomNav />

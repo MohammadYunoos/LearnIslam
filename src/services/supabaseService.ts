@@ -57,6 +57,15 @@ export interface ExamAttempt {
   elapsed_seconds: number | null
   created_at: string
 }
+export interface ExamLeaderboardEntry {
+  rank: number
+  userId: string
+  name: string
+  age: number | null
+  attempts: number
+  percent: number
+  achievedAt: string
+}
 
 export async function getExamQuestions(level = 'Beginner', lang = 'english') {
   return api.get<{ questions: ExamQuestion[]; total: number; passPercent: number }>(
@@ -81,6 +90,12 @@ export async function submitExam(payload: {
 
 export async function getExamAttempts(level = 'Beginner') {
   return api.get<ExamAttempt[]>(`/exam/attempts?level=${encodeURIComponent(level)}`)
+}
+
+export async function getExamLeaderboard(level = 'Beginner') {
+  return api.get<ExamLeaderboardEntry[]>(
+    `/exam/leaderboard?level=${encodeURIComponent(level)}`
+  )
 }
 
 export async function getKnowledgeCheck(level = 'Beginner', count = 5, lang = 'english') {

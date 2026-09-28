@@ -3,6 +3,7 @@
 // Micro-batches per-string requests and caches results in memory + localStorage.
 import { api } from './apiClient'
 import { idbGetAll, idbBulkPut } from './translationStore'
+import { curatedTranslation } from '../i18n/curatedTranslations'
 
 const mem = new Map<string, string>() // key `${lang}|${text}` -> translated
 
@@ -73,6 +74,7 @@ export function clearCached(lang: string, text: string) {
 }
 
 function readLocal(lang: string, text: string): string | null {
+  if (text.length > 256) return null
   try {
     return localStorage.getItem(cacheKey(lang, text))
   } catch {
@@ -80,6 +82,7 @@ function readLocal(lang: string, text: string): string | null {
   }
 }
 function writeLocal(lang: string, text: string, val: string) {
+  if (text.length > 256) return
   try {
     localStorage.setItem(cacheKey(lang, text), val)
   } catch {
@@ -105,11 +108,14 @@ async function flush(lang: string) {
   try {
     const res = await api.post<{ translations: string[] }>('/translate', { texts, target: lang })
     const arr = res?.translations ?? texts
+    const rows: { source_text: string; translated_text: string }[] = []
     texts.forEach((t, i) => {
       const val = arr[i] ?? t
       mem.set(`${lang}|${t}`, val)
       writeLocal(lang, t, val)
+      rows.push({ source_text: t, translated_text: val })
     })
+    void idbBulkPut(lang, rows)
   } catch {
     texts.forEach((t) => mem.set(`${lang}|${t}`, t))
   } finally {
@@ -120,26 +126,34 @@ async function flush(lang: string) {
 
 // ── Offline bulk cache (IndexedDB) ──────────────────────────────────────────
 const syncFlag = (lang: string) => `tr_sync_${TR_CACHE_VERSION}_${lang}`
+const syncingLanguages = new Set<string>()
 
 // Load every cached row for a language into the in-memory map so
 // cachedTranslation() resolves synchronously (instant, offline).
-export async function primeFromIdb(lang: string): Promise<void> {
-  if (!lang || lang === 'en') return
-  const rows = await idbGetAll(lang)
-  for (const [src, val] of rows) mem.set(`${lang}|${src}`, val)
-  if (rows.length) notify()
+const primePromises = new Map<string, Promise<void>>()
+
+export function primeFromIdb(lang: string): Promise<void> {
+  if (!lang || lang === 'en') return Promise.resolve()
+  const existing = primePromises.get(lang)
+  if (existing) return existing
+  const promise = idbGetAll(lang).then((rows) => {
+    for (const [src, val] of rows) mem.set(`${lang}|${src}`, val)
+  })
+  primePromises.set(lang, promise)
+  return promise
 }
 
 // One-time bulk download of all translations for a language → mem + IndexedDB.
 // Guarded per cache-version so it only refetches when the version bumps.
 export async function syncLang(lang: string): Promise<void> {
   if (!lang || lang === 'en') return
+  if (syncingLanguages.has(lang)) return
   try {
     if (localStorage.getItem(syncFlag(lang))) return
   } catch {
     /* ignore */
   }
-  inc()
+  syncingLanguages.add(lang)
   try {
     const res = await api.get<{ rows: { source_text: string; translated_text: string }[] }>(
       `/translate/all?target=${encodeURIComponent(lang)}`
@@ -160,7 +174,7 @@ export async function syncLang(lang: string): Promise<void> {
   } catch {
     /* offline / failed — reads fall back to per-string fetch */
   } finally {
-    dec()
+    syncingLanguages.delete(lang)
   }
 }
 
@@ -179,8 +193,7 @@ function queue(lang: string, text: string): Promise<void> {
   p.texts.add(text)
   return new Promise((resolve) => {
     p!.resolvers.push(resolve)
-    if (p!.timer) clearTimeout(p!.timer)
-    p!.timer = setTimeout(() => flush(lang), 50)
+    if (!p!.timer) p!.timer = setTimeout(() => flush(lang), 50)
   })
 }
 
@@ -192,6 +205,8 @@ export function cachedTranslation(text: string, lang: string): string | null {
   if (!lang || lang === 'en' || !text.trim()) return text
   const override = OVERRIDES[lang]?.[text.trim()]
   if (override) return override
+  const curated = curatedTranslation(text, lang)
+  if (curated != null) return curated
   const k = `${lang}|${text}`
   if (mem.has(k)) return mem.get(k)!
   const local = readLocal(lang, text)
@@ -207,6 +222,8 @@ export async function translateOne(text: string, lang: string): Promise<string> 
   if (!lang || lang === 'en' || !text.trim()) return text
   const override = OVERRIDES[lang]?.[text.trim()]
   if (override) return override
+  const curated = curatedTranslation(text, lang)
+  if (curated != null) return curated
   const k = `${lang}|${text}`
   if (mem.has(k)) return mem.get(k)!
   const local = readLocal(lang, text)
@@ -214,6 +231,8 @@ export async function translateOne(text: string, lang: string): Promise<string> 
     mem.set(k, local)
     return local
   }
+  await primeFromIdb(lang)
+  if (mem.has(k)) return mem.get(k)!
   await queue(lang, text)
   return mem.get(k) ?? text
 }
@@ -221,5 +240,8 @@ export async function translateOne(text: string, lang: string): Promise<string> 
 // Translate a list; resolves to an array aligned to the input.
 export async function translateMany(texts: string[], lang: string): Promise<string[]> {
   if (!lang || lang === 'en') return texts
-  return Promise.all(texts.map((t) => translateOne(t, lang)))
+  const unique = [...new Set(texts)]
+  const translated = await Promise.all(unique.map((t) => translateOne(t, lang)))
+  const bySource = new Map(unique.map((text, index) => [text, translated[index]]))
+  return texts.map((text) => bySource.get(text) ?? text)
 }

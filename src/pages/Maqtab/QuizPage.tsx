@@ -32,6 +32,7 @@ interface Question {
 // this lesson, so repeated attempts feel fresh and don't repeat until the pool
 // cycles. Seen ids persist per lesson in localStorage.
 const ATTEMPT_SIZE = 10
+const PASS_PERCENT = 80
 const seenKey = (id: string) => `quiz_seen_${id}`
 function readSeen(id: string): string[] {
   try {
@@ -170,7 +171,7 @@ export function QuizPage() {
   const total = questions.length
   const percent = total ? Math.round((score / total) * 100) : 0
 
-  const allCorrect = total > 0 && score === total
+  const passed = total > 0 && percent >= PASS_PERCENT
 
   const L = useTrList([
     'Loading quiz…', // 0
@@ -183,17 +184,19 @@ export function QuizPage() {
     'Back', // 7
     'Finish → Back to Maqtab', // 8
     'Mashallah!', // 9
-    'Good job — all answers correct!', // 10
+    'Good job - you passed the lesson quiz!', // 10
     'Alhamdulillah, continue →', // 11
     'Review answers', // 12
     'correct', // 13
+    'You need 80% or higher to pass this lesson quiz.', // 14
+    'Score below 80% - review the answers and try again.', // 15
   ])
   // Quiz text is served verbatim from maqtab_quiz — no runtime translation.
 
   const handleSubmit = async () => {
     setSubmitted(true)
-    // Only mark the lesson completed when every answer is correct.
-    if (allCorrect) {
+    // A score of 80% or higher completes the lesson.
+    if (passed) {
       playCelebration()
       setCelebrate(true)
       if (user && lessonId) {
@@ -229,16 +232,24 @@ export function QuizPage() {
           </div>
         )}
 
+        {!loading && total > 0 && !submitted && (
+          <div className="bg-sand border border-gold/40 rounded-xl px-4 py-3 text-center">
+            <p className="text-sm font-semibold text-teal-900">{L[14]}</p>
+          </div>
+        )}
+
         {submitted && total > 0 && (
           <div className="bg-white border-t-4 border-gold rounded-2xl p-5 text-center">
             <p className="text-3xl font-bold text-teal-900">{percent}%</p>
             <p className="text-sm text-ink-muted mt-1">
               {score} / {total} {L[13]}
             </p>
-            {allCorrect && (
+            {passed ? (
               <span className="inline-block mt-2 text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1">
                 ✓ {L[3]}
               </span>
+            ) : (
+              <p className="text-xs font-semibold text-red-600 mt-2">{L[15]}</p>
             )}
             {saving && <p className="text-xs text-ink-muted mt-2">{L[4]}</p>}
           </div>
@@ -292,7 +303,7 @@ export function QuizPage() {
             >
               {L[5]}
             </button>
-          ) : allCorrect ? (
+          ) : passed ? (
             <button
               onClick={() => navigate('/maqtab')}
               className="w-full bg-gold text-teal-900 font-bold rounded-xl py-3 text-sm"
@@ -318,7 +329,7 @@ export function QuizPage() {
         </div>
       )}
 
-      {/* Celebration overlay — all answers correct */}
+      {/* Celebration overlay - passing score */}
       {celebrate && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-6">
           <div className="bg-cream rounded-2xl p-6 text-center border-t-4 border-gold w-full max-w-sm relative overflow-hidden">
@@ -331,6 +342,8 @@ export function QuizPage() {
             <div className="text-5xl mb-3">🎉</div>
             <h3 className="font-arabic text-teal-900 text-2xl font-bold mb-1">{L[9]}</h3>
             <p className="text-sm text-ink font-semibold mb-1">{L[10]}</p>
+            <p className="text-3xl font-bold text-teal-900 mt-3">{percent}%</p>
+            <p className="text-sm text-ink-muted mt-1">{score} / {total} {L[13]}</p>
             <span className="inline-block my-3 text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1">
               ✓ {L[3]}
             </span>
