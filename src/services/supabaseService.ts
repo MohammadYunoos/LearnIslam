@@ -216,30 +216,24 @@ export async function askMasail(question: string, madhab: string): Promise<strin
   return res?.answer ?? 'Unable to answer right now. Please consult your local Alim.'
 }
 
-// ── INVITE / REVIEW UNLOCK ──────────────────────────────
+// ── INVITES ─────────────────────────────────────────────
 
 export async function getInviteStatus() {
-  return api.get<{ code: string; redeemedCount: number; maqtabUnlocked: boolean }>('/invite/status')
+  return api.get<{ ok: boolean; code: string; redeemedCount: number; maqtabUnlocked: boolean; error?: string }>('/invite/status')
 }
 
 export async function redeemInviteCode(code: string) {
-  return api.post<{ ok: boolean; error?: string }>('/invite/redeem', { code })
+  return api.post<{ ok: boolean; error?: string; redeemedCount?: number; inviterUnlocked?: boolean }>('/invite/redeem', { code })
 }
 
-export async function confirmReview() {
-  return api.post<{ ok: boolean }>('/review/confirm', {})
-}
-
-// ── COUPON GENERATION ───────────────────────────────────
+// Backward-compatible aliases for older call sites.
 
 export async function generateUserCoupon() {
-  return api.get<{ ok: boolean; code?: string; error?: string }>('/coupon/generate')
+  return getInviteStatus()
 }
 
-// ── COUPON REDEMPTION ───────────────────────────────────
-
 export async function redeemCoupon(code: string) {
-  return api.post<{ ok: boolean; error?: string; level?: string }>('/coupon/redeem', { code })
+  return redeemInviteCode(code)
 }
 
 // ── HELPERS ─────────────────────────────────────────────

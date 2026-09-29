@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Capacitor } from '@capacitor/core'
@@ -46,6 +46,7 @@ import { ContactPage } from './pages/Settings/ContactPage'
 import { DeleteAccountPage } from './pages/Settings/DeleteAccountPage'
 import { FeedbackPage } from './pages/Admin/FeedbackPage'
 import { TranslationsPage } from './pages/Admin/TranslationsPage'
+import { TutorialPage } from './pages/Tutorial/TutorialPage'
 import { QiblaPage } from './pages/Qibla/QiblaPage'
 import { NamaazPage } from './pages/Namaaz/NamaazPage'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -70,11 +71,16 @@ function LangSync() {
 }
 
 function DonationNotificationContainer() {
+  const location = useLocation()
   const { showDonationNotification, setShowDonationNotification, donationNotificationType } =
     useAppStore()
+  const isDonationPage = location.pathname.startsWith('/donate')
+  useEffect(() => {
+    if (isDonationPage && showDonationNotification) setShowDonationNotification(false)
+  }, [isDonationPage, setShowDonationNotification, showDonationNotification])
   return (
     <DonationNotification
-      isOpen={showDonationNotification}
+      isOpen={showDonationNotification && !isDonationPage}
       type={donationNotificationType}
       onClose={() => setShowDonationNotification(false)}
     />
@@ -82,11 +88,16 @@ function DonationNotificationContainer() {
 }
 
 function MaqtabProgressNotificationContainer() {
+  const location = useLocation()
   const { showMaqtabNotification, setShowMaqtabNotification, maqtabNotificationType } =
     useAppStore()
+  const isMaqtabPage = location.pathname.startsWith('/maqtab')
+  useEffect(() => {
+    if (isMaqtabPage && showMaqtabNotification) setShowMaqtabNotification(false)
+  }, [isMaqtabPage, setShowMaqtabNotification, showMaqtabNotification])
   return (
     <MaqtabProgressNotification
-      isOpen={showMaqtabNotification}
+      isOpen={showMaqtabNotification && !isMaqtabPage}
       type={maqtabNotificationType}
       onClose={() => setShowMaqtabNotification(false)}
     />
@@ -131,8 +142,8 @@ export default function App() {
   useEffect(() => {
     let active = true
 
-    async function loadSession() {
-      const res = await getSessionUser()
+    async function loadSession(forceRefresh = false) {
+      const res = await getSessionUser(forceRefresh)
       if (!active) return
       if (res) {
         setUser(res.user)
@@ -148,7 +159,7 @@ export default function App() {
         setUser(local)
         setLoading(false)
       }
-      const signedIn = await loadSession()
+      const signedIn = await loadSession(true)
       if (!signedIn && local && active) setUser(local)
       if (active) setLoading(false)
     }
@@ -156,7 +167,7 @@ export default function App() {
 
     // React to sign-in / sign-out.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') loadSession()
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') loadSession(true)
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setNeedsProfile(false)
@@ -251,6 +262,7 @@ export default function App() {
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/home" element={<PrivateRoute element={<HomePage />} />} />
+        <Route path="/tutorial" element={<PrivateRoute element={<TutorialPage />} />} />
         <Route path="/guide" element={<PrivateRoute element={<GuideHomePage />} />} />
         <Route path="/guide/:slug" element={<PrivateRoute element={<TopicPage />} />} />
         <Route path="/guide/:slug/steps" element={<PrivateRoute element={<StepPlayerPage />} />} />

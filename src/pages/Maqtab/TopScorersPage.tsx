@@ -64,7 +64,7 @@ export function TopScorersPage() {
   }, [level])
 
   return (
-    <div className="bg-cream min-h-screen pb-24">
+    <div className="maqtab-page min-h-screen pb-24">
       <PageHeader title={L[0] || 'Top Scorers'} subtitle={L[1] || 'Exam leaderboard'} backTo="/maqtab" noTranslate />
 
       <main className="px-4 pt-4">

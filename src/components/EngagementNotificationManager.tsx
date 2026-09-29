@@ -1,7 +1,12 @@
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAppStore } from '../store/appStore'
 import { sendLocalNotification } from '../lib/notificationService'
-import { randomEngagementNotification } from '../content/engagementNotifications'
+import {
+  engagementCategoryForPath,
+  randomEngagementNotification,
+  type EngagementCategory,
+} from '../content/engagementNotifications'
 import { EngagementNotification } from './EngagementNotification'
 
 const NOTIFICATION_INTERVAL_MS = 10 * 60 * 1000
@@ -9,9 +14,15 @@ const FIRST_PROMPT_DELAY_MS = 4000
 const MODAL_RETRY_MS = 60 * 1000
 
 export function EngagementNotificationManager() {
+  const location = useLocation()
   const user = useAppStore((state) => state.user)
   const content = useAppStore((state) => state.engagementNotification)
   const setContent = useAppStore((state) => state.setEngagementNotification)
+
+  useEffect(() => {
+    const activeCategory = engagementCategoryForPath(location.pathname)
+    if (content?.category === activeCategory) setContent(null)
+  }, [content, location.pathname, setContent])
 
   useEffect(() => {
     if (!user) return
@@ -38,11 +49,35 @@ export function EngagementNotificationManager() {
         return
       }
 
+      const pathname = window.location.pathname
+      const activeCategory = engagementCategoryForPath(pathname)
       const previousId = localStorage.getItem(lastContentKey)
-      const roll = Math.random()
       localStorage.setItem(lastShownKey, String(Date.now()))
 
-      if (roll < 0.5) {
+      const choices: Array<{ kind: 'donation' | 'engagement'; weight: number; categories?: EngagementCategory[] }> = []
+      if (!pathname.startsWith('/donate')) choices.push({ kind: 'donation', weight: 0.5 })
+      if (activeCategory !== 'maqtab') {
+        choices.push({ kind: 'engagement', weight: 0.3, categories: ['maqtab'] })
+      }
+      const otherCategoryPool: EngagementCategory[] = ['qa', 'hifz', 'masnoon', 'detoxify', 'masail']
+      const otherCategories = otherCategoryPool
+        .filter((category) => category !== activeCategory)
+      if (otherCategories.length) {
+        choices.push({ kind: 'engagement', weight: 0.2, categories: otherCategories })
+      }
+
+      const totalWeight = choices.reduce((sum, choice) => sum + choice.weight, 0)
+      let pick = Math.random() * totalWeight
+      const selected = choices.find((choice) => {
+        pick -= choice.weight
+        return pick <= 0
+      }) ?? choices[choices.length - 1]
+      if (!selected) {
+        schedule(NOTIFICATION_INTERVAL_MS)
+        return
+      }
+
+      if (selected.kind === 'donation') {
         localStorage.setItem(lastContentKey, 'donation')
         state.setDonationNotificationType('reminder')
         state.setShowDonationNotification(true)
@@ -53,10 +88,7 @@ export function EngagementNotificationManager() {
           data: { path: '/donate' },
         })
       } else {
-        const categories = roll < 0.8
-          ? (['maqtab'] as const)
-          : (['qa', 'hifz', 'masnoon', 'detoxify', 'masail'] as const)
-        const next = randomEngagementNotification(previousId, [...categories])
+        const next = randomEngagementNotification(previousId, selected.categories)
         localStorage.setItem(lastContentKey, next.id)
         setContent(next)
         void sendLocalNotification({

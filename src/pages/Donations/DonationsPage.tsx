@@ -1,5 +1,5 @@
 // src/pages/Donations/DonationsPage.tsx
-// Donations page: Razorpay payment button
+// Donations page: voluntary support through Razorpay or Buy Me a Coffee.
 import { useEffect, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
@@ -41,8 +41,23 @@ export function DonationsPage() {
 
   const tTitle = useTr('Support Islam Seeko')
   const L = useTrList([
-    'Islam Seeko is provided free of charge. Your voluntary donations help support app development, content creation, hosting, and maintenance.',
+    'Islam Seeko is provided free of charge in BETA version. Your voluntary donations help support app development, content creation, hosting, and maintenance.',
     'Donations are optional and do not provide any additional features, content, or benefits.',
+    'Keep Islamic learning free',
+    'Your support helps maintain reliable access and create carefully reviewed learning resources.',
+    'Learning',
+    'More useful lessons',
+    'Quality',
+    'Careful content work',
+    'Access',
+    'Available to everyone',
+    'Choose a way to support',
+    'India',
+    'Donate securely with Razorpay',
+    'International',
+    'Support through Buy Me a Coffee',
+    'Support now',
+    'Donation options are loading. Please try again shortly.',
   ])
 
   // Load config + record donation timestamp
@@ -55,8 +70,6 @@ export function DonationsPage() {
         /* config unavailable */
       }
 
-      // Record donation timestamp for 7-day reminder
-      localStorage.setItem('mymaqtab_donation_time', Date.now().toString())
     }
     init()
   }, [])
@@ -79,57 +92,82 @@ export function DonationsPage() {
   }, [config])
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
-      <PageHeader title={tTitle} subtitle="💚 Your support helps us grow 💚" backTo="/home" />
+    <div className="bg-cream min-h-screen pb-24 page-fade">
+      <PageHeader title={tTitle} subtitle={L[2]} backTo="/home" />
 
-      <div className="px-4 pt-4">
-        {/* Hadith Quote with Islamic styling */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-gold rounded-2xl p-4 mb-4">
-          <p className="text-center text-xs text-teal-900 italic leading-relaxed mb-2">
-            🌸 {randomHadith.text} 🌸
+      <main className="px-4 pt-5">
+        <section className="relative overflow-hidden bg-teal-900 text-white border border-teal-700 rounded-lg px-5 py-6 shadow-lg">
+          <div className="absolute top-0 right-0 w-24 h-24 border border-gold/20 rotate-45 translate-x-12 -translate-y-12" aria-hidden="true" />
+          <p className="text-[11px] font-bold uppercase text-gold tracking-wide mb-2">{L[2]}</p>
+          <h1 className="font-arabic text-2xl font-bold leading-tight mb-3">{tTitle}</h1>
+          <p className="text-sm text-sand leading-relaxed">{L[3]}</p>
+        </section>
+
+        <section className="grid grid-cols-3 border-y border-border my-5 py-4">
+          {[
+            [L[4], L[5]],
+            [L[6], L[7]],
+            [L[8], L[9]],
+          ].map(([title, detail], index) => (
+            <div key={title} className={`px-2 text-center ${index > 0 ? 'border-l border-border' : ''}`}>
+              <p className="text-xs font-bold text-teal-900">{title}</p>
+              <p className="text-[10px] text-ink-muted leading-snug mt-1">{detail}</p>
+            </div>
+          ))}
+        </section>
+
+        <blockquote className="reader-surface rounded-lg px-5 py-4 mb-6">
+          <p className="text-sm text-teal-900 italic leading-relaxed">
+            “{randomHadith.text}”
           </p>
-          <p className="text-xs text-right text-ink-muted">— {randomHadith.source}</p>
-        </div>
+          <footer className="text-[11px] font-semibold text-gold-dark mt-2">— {randomHadith.source}</footer>
+        </blockquote>
 
-        {/* Info card with hearts and flowers */}
-        <div className="bg-gradient-to-r from-blue-50 to-teal-50 border-2 border-gold rounded-2xl p-4 mb-4">
-          <div className="text-center text-lg mb-2">❤️ 🌸 ❤️</div>
-          <p className="text-xs text-teal-900 leading-relaxed mb-3">{L[0]}</p>
-          <p className="text-xs text-teal-900 leading-relaxed">{L[1]}</p>
-        </div>
+        <h2 className="text-base font-bold text-teal-900 mb-3">{L[10]}</h2>
 
-        {/* Razorpay Donate Button */}
         {config?.razorpay_button_id && (
-          <div className="bg-white border border-border rounded-2xl p-5 mb-4">
-            <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-              For Indians - 💳 Donate with Razorpay
-            </label>
+          <section className="bg-white border border-border rounded-lg p-4 mb-3 shadow-sm">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-9 h-9 rounded-md bg-teal-900 text-white flex items-center justify-center font-bold" aria-hidden="true">₹</div>
+              <div>
+                <p className="text-sm font-bold text-teal-900">{L[11]}</p>
+                <p className="text-xs text-ink-muted mt-0.5">{L[12]}</p>
+              </div>
+            </div>
             <form id="razorpay-form" />
-          </div>
+          </section>
         )}
 
-        {/* Buy Me a Coffee Button */}
         {config?.buymeacoffee_link && (
-          <div className="bg-white border border-border rounded-2xl p-5 mb-4">
-            <label className="block text-xs font-semibold text-teal-700 mb-3 uppercase tracking-wide">
-              For Internationals - ☕ Buy Me a Coffee
-            </label>
+          <section className="bg-white border border-border rounded-lg p-4 mb-3 shadow-sm">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-9 h-9 rounded-md bg-gold text-teal-900 flex items-center justify-center font-bold" aria-hidden="true">$</div>
+              <div>
+                <p className="text-sm font-bold text-teal-900">{L[13]}</p>
+                <p className="text-xs text-ink-muted mt-0.5">{L[14]}</p>
+              </div>
+            </div>
             <button
               onClick={() => openExternal(config.buymeacoffee_link)}
-              className="w-full bg-yellow-400 text-yellow-900 font-bold rounded-xl py-3 text-sm active:scale-[0.98] transition-transform"
+              className="w-full bg-gold text-teal-900 border border-gold-dark/20 font-bold rounded-lg py-3 text-sm shadow-sm"
             >
-              Support via Buy Me a Coffee
+              {L[15]}
             </button>
+          </section>
+        )}
+
+        {!config && (
+          <div className="bg-white border border-border rounded-lg p-5 text-center">
+            <div className="w-5 h-5 border-2 border-teal-900/20 border-t-teal-900 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-ink-muted">{L[16]}</p>
           </div>
         )}
 
-        {/* Fallback if config not loaded */}
-        {!config && (
-          <div className="bg-white border border-border rounded-2xl p-4 text-center">
-            <p className="text-sm text-ink-muted">Donation options unavailable. Please try again later.</p>
-          </div>
-        )}
-      </div>
+        <div className="mt-5 border-t border-border pt-4 text-center">
+          <p className="text-xs text-ink-muted leading-relaxed">{L[0]}</p>
+          <p className="text-[11px] text-gold-dark mt-2">{L[1]}</p>
+        </div>
+      </main>
 
       <BottomNav />
     </div>

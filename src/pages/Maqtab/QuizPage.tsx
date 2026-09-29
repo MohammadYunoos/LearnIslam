@@ -214,7 +214,7 @@ export function QuizPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-28">
+    <div className="maqtab-page maqtab-assessment-page min-h-screen pb-28">
       <PageHeader title="Quiz" backTo={`/maqtab/${lessonId}`} />
 
       <div className="px-4 pt-4 space-y-4">
@@ -294,7 +294,7 @@ export function QuizPage() {
       </div>
 
       {!loading && total > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-4 safe-bottom">
+        <div className="maqtab-reader-footer fixed bottom-0 left-0 right-0 max-w-lg mx-auto border-t p-4 safe-bottom">
           {!submitted ? (
             <button
               onClick={handleSubmit}

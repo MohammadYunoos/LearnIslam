@@ -144,6 +144,16 @@ export function engagementById(id: string | undefined) {
   return ENGAGEMENT_NOTIFICATIONS.find((item) => item.id === id)
 }
 
+export function engagementCategoryForPath(pathname: string): EngagementCategory | null {
+  if (pathname.startsWith('/maqtab')) return 'maqtab'
+  if (pathname.startsWith('/taleem')) return 'qa'
+  if (pathname.startsWith('/hifz')) return 'hifz'
+  if (pathname.startsWith('/wajifa')) return 'masnoon'
+  if (pathname.startsWith('/detoxify')) return 'detoxify'
+  if (pathname.startsWith('/guide') || pathname.startsWith('/masail')) return 'masail'
+  return null
+}
+
 export function randomEngagementNotification(
   previousId?: string | null,
   categories?: EngagementCategory[],

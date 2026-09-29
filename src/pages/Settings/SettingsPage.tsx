@@ -5,7 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { logout as clearDevice, saveProfile } from '../../services/authService'
-import { redeemCoupon } from '../../services/supabaseService'
+import { redeemInviteCode } from '../../services/supabaseService'
 import { useTr, useTrList } from '../../i18n/useTr'
 import { isAdmin } from '../../lib/admin'
 import { APP_VERSION_NAME } from '../../version'
@@ -96,20 +96,16 @@ export function SettingsPage() {
     setCouponError('')
     setCouponMessage('')
     try {
-      const result = await redeemCoupon(couponCode.trim())
+      const result = await redeemInviteCode(couponCode.trim())
       if (result.ok) {
-        setCouponMessage(`✅ Coupon redeemed! ${result.level === 'intermediate' ? 'Intermediate' : 'Advanced'} section unlocked!`)
         setCouponCode('')
-        setTimeout(() => {
-          setShowCouponModal(false)
-          window.location.reload()
-        }, 2000)
+        setCouponMessage('Invite accepted. Your friend received referral credit.')
       } else {
-        setCouponError(result.error || 'Failed to redeem coupon')
+        setCouponError(result.error || 'Failed to redeem invite code')
       }
     } catch (e) {
-      setCouponError('Error redeeming coupon. Please try again.')
-      console.error('Coupon redemption error:', e)
+      setCouponError(e instanceof Error ? e.message : 'Error redeeming invite code. Please try again.')
+      console.error('Invite redemption error:', e)
     } finally {
       setCouponLoading(false)
     }
@@ -132,8 +128,8 @@ export function SettingsPage() {
     'Save', // 13
     'Saving…', // 14
     'Cancel', // 15
-    'Redeem Coupon', // 16
-    'Coupon Code', // 17
+    'Redeem Invite Code', // 16
+    'Invite Code', // 17
     'Redeem', // 18
     'Redeeming…', // 19
   ])
@@ -265,6 +261,12 @@ export function SettingsPage() {
 
         {/* Settings Menu */}
         <div className="bg-white border border-border rounded-2xl divide-y divide-border mb-4">
+          <button
+            onClick={() => navigate('/tutorial')}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"
+          >
+            App Tutorial
+          </button>
           <button
             onClick={() => navigate('/settings/about')}
             className="w-full text-left px-4 py-3 text-sm font-semibold text-teal-900 active:bg-sand transition-colors"

@@ -2,9 +2,8 @@
   // My Maqtab API — a single Edge Function exposing every app operation.
   // Deployed at: {SUPABASE_URL}/functions/v1/api/<route>
   //
-  // Alpha: verify_jwt = false (see supabase/config.toml). The client sends the
-  // user id via the `x-user-id` header (or `userId` in body/query). In production,
-  // turn verify_jwt on and derive the user id from the JWT `sub` instead.
+  // Requests pass through Supabase JWT verification. Account-scoped operations
+  // additionally resolve the user through Supabase Auth before using service role.
   import { Hono } from 'npm:hono@4'
   import { cors } from 'npm:hono@4/cors'
   import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -20,27 +19,33 @@
 
   const app = new Hono().basePath('/api')
 
-  app.use('*', cors({ origin: '*', allowHeaders: ['Content-Type', 'Authorization', 'apikey', 'x-user-id'] }))
+  app.use('*', cors({ origin: '*', allowHeaders: ['Content-Type', 'Authorization', 'apikey'] }))
 
-  // Extract the authenticated user id from the Supabase JWT (role=authenticated).
-  function jwtSub(c: any): string | null {
+  // Resolve identity from a JWT verified by Supabase Auth. Never trust a decoded
+  // token payload or a client-supplied user id for account-scoped operations.
+  async function uid(c: any, allowAnonymous = true): Promise<string | null> {
     const auth = c.req.header('Authorization') || ''
     const token = auth.replace(/^Bearer\s+/i, '')
-    if (!token || token.split('.').length !== 3) return null
-    try {
-      const payload = JSON.parse(
-        atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
-      )
-      if (payload.role === 'authenticated' && payload.sub) return payload.sub as string
-      return null
-    } catch {
-      return null
-    }
+    if (!token) return null
+    const { data, error } = await supabase.auth.getUser(token)
+    if (error || !data.user || (!allowAnonymous && data.user.is_anonymous)) return null
+    return data.user.id
   }
 
-  // Resolve the acting user id: signed-in JWT first, then guest header/body/query.
-  function uid(c: any, bodyUserId?: string): string | null {
-    return jwtSub(c) || bodyUserId || c.req.query('userId') || c.req.header('x-user-id') || null
+  async function canAccessMaqtabLevel(userId: string | null, level: string): Promise<boolean> {
+    if (!level || level === 'Beginner') return true
+    if (level !== 'Intermediate' && level !== 'Advanced') return false
+    if (!userId) return false
+    const { data } = await supabase
+      .from('profiles')
+      .select('maqtab_unlocked, maqtab_intermediate_unlocked, maqtab_advanced_unlocked')
+      .eq('id', userId)
+      .single()
+    if (!data) return false
+    if (data.maqtab_unlocked) return true
+    if (level === 'Intermediate') return !!data.maqtab_intermediate_unlocked
+    if (level === 'Advanced') return !!data.maqtab_advanced_unlocked
+    return false
   }
 
   async function sha256(text: string): Promise<string> {
@@ -109,6 +114,10 @@
 
   app.get('/maqtab/lesson/:id', async (c) => {
     const { data } = await supabase.from('maqtab_lessons').select('*').eq('id', c.req.param('id')).single()
+    if (!data) return c.json({ error: 'lesson not found' }, 404)
+    if (!(await canAccessMaqtabLevel(await uid(c), data.level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     return c.json(data)
   })
 
@@ -123,6 +132,9 @@
       .eq('id', lessonId)
       .single()
     if (!lesson) return c.json([])
+    if (!(await canAccessMaqtabLevel(await uid(c), lesson.level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     const level = lesson.level || 'Beginner'
     const lang = lesson.language || 'english'
     const sel = 'id, question, options, correct_idx, explanation, sort_order, chapter_num, lesson_no'
@@ -348,7 +360,7 @@
   // ── DONATION LOGGING ──────────────────────────────────────
   app.post('/donation/log', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     const { error } = await supabase.from('donation_transactions').insert({
       user_id: userId,
       amount: body.amount,
@@ -368,7 +380,7 @@
   // ── FEEDBACK (Ulema / tester review) ────────────────────
   app.post('/feedback', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     const { error } = await supabase.from('feedback').insert({
       user_id: userId,
       user_name: body.userName ?? null,
@@ -392,7 +404,7 @@
   // ── PROFILE ─────────────────────────────────────────────
   app.put('/profile', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.id)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     const { error } = await supabase.from('profiles').upsert({
       id: userId,
@@ -408,7 +420,7 @@
   })
 
   app.get('/profile', async (c) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
     return c.json(data)
@@ -416,7 +428,7 @@
 
   // ── MAQTAB PROGRESS ─────────────────────────────────────
   app.get('/maqtab/progress', async (c) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json([])
     const { data } = await supabase
       .from('maqtab_progress')
@@ -427,8 +439,17 @@
 
   app.post('/maqtab/complete', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
+    const { data: lesson } = await supabase
+      .from('maqtab_lessons')
+      .select('level')
+      .eq('id', body.lessonId)
+      .single()
+    if (!lesson) return c.json({ error: 'lesson not found' }, 404)
+    if (!(await canAccessMaqtabLevel(userId, lesson.level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     const { error } = await supabase
       .from('maqtab_progress')
       .upsert({ user_id: userId, lesson_id: body.lessonId, quiz_score: body.score })
@@ -439,7 +460,7 @@
 
   // ── HIFZ PROGRESS ───────────────────────────────────────
   app.get('/hifz/progress', async (c) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json([])
     const { data } = await supabase.from('hifz_progress').select('*').eq('user_id', userId)
     return c.json(data ?? [])
@@ -447,7 +468,7 @@
 
   app.post('/hifz/status', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     const status = body.status as string
     const { error } = await supabase.from('hifz_progress').upsert({
@@ -466,7 +487,7 @@
 
   // ── TASBIH PROGRESS ─────────────────────────────────────
   app.get('/tasbih/progress', async (c) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json([])
     const { data } = await supabase.from('tasbih_progress').select('*').eq('user_id', userId)
     return c.json(data ?? [])
@@ -474,7 +495,7 @@
 
   app.post('/tasbih/save', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     const { error } = await supabase.from('tasbih_progress').upsert({
       user_id: userId,
@@ -489,7 +510,7 @@
   // ── EVENTS ──────────────────────────────────────────────
   app.post('/events', async (c) => {
     const body = await c.req.json()
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     await logEvent(userId, body.eventType, body.data)
     return c.json({ ok: true })
@@ -497,7 +518,7 @@
 
   // ── ANALYZER ────────────────────────────────────────────
   app.get('/analyzer/summary', async (c) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json(null)
     const [hifzRes, maqtabRes, eventsRes] = await Promise.all([
       supabase.from('hifz_progress').select('*').eq('user_id', userId),
@@ -766,6 +787,9 @@ RULES:
   app.get('/exam/questions', async (c: any) => {
     const level = c.req.query('level') || 'Beginner'
     const lang = c.req.query('lang') || 'english'
+    if (!(await canAccessMaqtabLevel(await uid(c), level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     let { data } = await supabase
       .from('beginner_exam_questions')
       .select('id, chapter_num, question, options')
@@ -792,9 +816,12 @@ RULES:
   // Score the submitted answers server-side and record the attempt.
   app.post('/exam/submit', async (c: any) => {
     const body = await c.req.json().catch(() => ({}))
-    const userId = uid(c, body.userId)
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
     const level = body.level || 'Beginner'
+    if (!(await canAccessMaqtabLevel(userId, level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     const answers: Record<string, number> = body.answers || {}
     const ids = Object.keys(answers)
     if (!ids.length) return c.json({ error: 'no answers' }, 400)
@@ -803,6 +830,7 @@ RULES:
       .from('beginner_exam_questions')
       .select('id, correct_idx, chapter_num')
       .in('id', ids)
+      .eq('level', level)
     const rows = data ?? []
     const total = rows.length
     let score = 0
@@ -830,7 +858,7 @@ RULES:
 
   // This user's attempt history (newest first).
   app.get('/exam/attempts', async (c: any) => {
-    const userId = uid(c)
+    const userId = await uid(c)
     if (!userId) return c.json([])
     const level = c.req.query('level') || 'Beginner'
     const { data } = await supabase
@@ -915,6 +943,9 @@ RULES:
     const level = c.req.query('level') || 'Beginner'
     const lang = c.req.query('lang') || 'english'
     const count = Math.max(1, Math.min(20, Number(c.req.query('count')) || 5))
+    if (!(await canAccessMaqtabLevel(await uid(c), level))) {
+      return c.json({ error: 'level locked' }, 403)
+    }
     let { data } = await supabase
       .from('beginner_exam_questions')
       .select('id, question, options, correct_idx, explanation')
@@ -969,32 +1000,55 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
     return c.json({ scanned: rows.length, changed })
   })
 
-  // ── INVITE / REVIEW UNLOCK ──────────────────────────────
+  // ── INVITES ─────────────────────────────────────────────
 
   function generateInviteCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    const random = new Uint32Array(8)
+    crypto.getRandomValues(random)
     let code = ''
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    for (const value of random) code += chars[value % chars.length]
     return code
   }
 
-  app.get('/invite/status', async (c: any) => {
-    const userId = uid(c)
-    if (!userId) return c.json({ error: 'no user id' }, 400)
+  async function inviteStatus(c: any) {
+    const userId = await uid(c, false)
+    if (!userId) return c.json({ ok: false, error: 'signed-in account required for invites' }, 401)
 
-    let { data: profile } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
-      .select('invite_code')
+      .select('invite_code, maqtab_unlocked')
       .eq('id', userId)
       .single()
 
-    if (!profile) return c.json({ error: 'profile not found' }, 404)
+    if (!profile) return c.json({ ok: false, error: 'profile not found' }, 404)
 
     let code = profile.invite_code
     if (!code) {
-      code = generateInviteCode()
-      await supabase.from('profiles').update({ invite_code: code }).eq('id', userId)
+      if (profile.invite_code === '') {
+        await supabase.from('profiles').update({ invite_code: null }).eq('id', userId).eq('invite_code', '')
+      }
+      for (let attempt = 0; attempt < 5 && !code; attempt++) {
+        const candidate = generateInviteCode()
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ invite_code: candidate })
+          .eq('id', userId)
+          .is('invite_code', null)
+          .select('invite_code')
+          .maybeSingle()
+        if (!error && data?.invite_code) code = data.invite_code
+        if (!data && !error) {
+          const { data: current } = await supabase
+            .from('profiles')
+            .select('invite_code')
+            .eq('id', userId)
+            .single()
+          code = current?.invite_code ?? null
+        }
+      }
     }
+    if (!code) return c.json({ ok: false, error: 'could not generate invite code' }, 500)
 
     const { count } = await supabase
       .from('invite_redemptions')
@@ -1002,78 +1056,41 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
       .eq('inviter_user_id', userId)
 
     return c.json({
+      ok: true,
       code,
       redeemedCount: count ?? 0,
-      maqtabUnlocked: (count ?? 0) >= 2,
+      maqtabUnlocked: !!profile.maqtab_unlocked || (count ?? 0) >= 2,
     })
-  })
-
-  app.post('/invite/redeem', async (c: any) => {
-    const userId = uid(c)
-    if (!userId) return c.json({ error: 'no user id' }, 400)
-
-    const body = await c.req.json()
-    const code = body.code as string
-    if (!code) return c.json({ error: 'code required' }, 400)
-
-    const { data: inviter } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('invite_code', code)
-      .single()
-
-    if (!inviter) return c.json({ ok: false, error: 'invalid code' }, 400)
-    if (inviter.id === userId) return c.json({ ok: false, error: 'cannot redeem own code' }, 400)
-
-    const { error: redeemError } = await supabase
-      .from('invite_redemptions')
-      .insert({ inviter_user_id: inviter.id, invitee_user_id: userId })
-
-    if (redeemError) {
-      if (redeemError.message.includes('duplicate')) {
-        return c.json({ ok: false, error: 'you already redeemed a code' }, 400)
-      }
-      return c.json({ ok: false, error: redeemError.message }, 500)
-    }
-
-    const { count } = await supabase
-      .from('invite_redemptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('inviter_user_id', inviter.id)
-
-    if ((count ?? 0) >= 2) {
-      await supabase.from('profiles').update({ maqtab_unlocked: true }).eq('id', inviter.id)
-    }
-
-    await logEvent(userId, 'invite_redeemed', { code })
-    return c.json({ ok: true })
-  })
-
-  app.post('/review/confirm', async (c: any) => {
-    const userId = uid(c)
-    if (!userId) return c.json({ error: 'no user id' }, 400)
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ qa_unlocked: true })
-      .eq('id', userId)
-
-    if (error) return c.json({ ok: false }, 500)
-
-    await logEvent(userId, 'review_unlocked', {})
-    return c.json({ ok: true })
-  })
-
-  // ── COUPON GENERATION ───────────────────────────────────
-  function generateCouponCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let code = ''
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)]
-    return code
   }
 
+  async function redeemInvite(c: any) {
+    const userId = await uid(c, false)
+    if (!userId) return c.json({ ok: false, error: 'signed-in account required to redeem invites' }, 401)
+
+    const body = await c.req.json().catch(() => ({}))
+    const code = String(body.code ?? '').trim().toUpperCase()
+    if (!code) return c.json({ error: 'code required' }, 400)
+
+    const { data, error } = await supabase.rpc('redeem_invite_atomic', {
+      p_invitee: userId,
+      p_code: code,
+    })
+    if (error) return c.json({ ok: false, error: 'invite redemption failed' }, 500)
+    const result = data as { ok?: boolean; error?: string } | null
+    if (!result?.ok) return c.json({ ok: false, error: result?.error ?? 'invalid code' }, 400)
+
+    await logEvent(userId, 'invite_redeemed', {})
+    return c.json(result)
+  }
+
+  app.get('/invite/status', inviteStatus)
+  app.post('/invite/redeem', redeemInvite)
+
+  // ── COUPON GENERATION ───────────────────────────────────
   app.get('/coupon/generate', async (c: any) => {
-    const userId = uid(c)
+    return inviteStatus(c)
+    /* Legacy implementation retained below for deployment diff history only.
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
 
     try {
@@ -1117,8 +1134,13 @@ Put each term in the first column and its meaning in the second. Keep the "GLOSS
 
   // ── COUPON REDEMPTION ───────────────────────────────────
 
+  */
+  })
+
   app.post('/coupon/redeem', async (c: any) => {
-    const userId = uid(c)
+    return redeemInvite(c)
+    /* Legacy implementation retained below for deployment diff history only.
+    const userId = await uid(c)
     if (!userId) return c.json({ error: 'no user id' }, 400)
 
     const body = await c.req.json()
@@ -1179,6 +1201,9 @@ if (coupon.current_uses + 1 >= coupon.max_uses) {
 
     await logEvent(userId, 'coupon_redeemed', { code, level: coupon.unlock_level })
     return c.json({ ok: true, level: coupon.unlock_level })
+  })
+
+  */
   })
 
   Deno.serve(app.fetch)

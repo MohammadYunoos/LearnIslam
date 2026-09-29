@@ -66,12 +66,24 @@ export function LessonPage() {
   const [fontScale, setFontScale] = useState(1)
   const [bookmarkSaved, setBookmarkSaved] = useState(false)
   const [toolbarMinimized, setToolbarMinimized] = useState(false)
+  const [lessonHeaderHeight, setLessonHeaderHeight] = useState(0)
+  const lessonHeaderRef = useRef<HTMLDivElement | null>(null)
   const progressRef = useRef(0)
   const restoredRef = useRef<string | null>(null)
   const restoringRef = useRef(true)
   const pageExitingRef = useRef(false)
 
   const storageKey = `maqtab_reading_${user?.id ?? 'guest'}_${lessonId ?? 'unknown'}`
+
+  useLayoutEffect(() => {
+    const header = lessonHeaderRef.current
+    if (!header) return
+    const updateHeight = () => setLessonHeaderHeight(Math.ceil(header.getBoundingClientRect().height))
+    updateHeight()
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!lessonId) return
@@ -226,11 +238,18 @@ export function LessonPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-40">
-      <PageHeader title={lesson?.title ?? 'Lesson'} backTo="/maqtab" noTranslate={alreadyLocalized} />
+    <div className="maqtab-page maqtab-reader-page min-h-screen pb-40">
+      <div ref={lessonHeaderRef} className="fixed top-0 left-0 right-0 z-40 max-w-lg mx-auto">
+        <PageHeader
+          title={lesson?.title ?? 'Lesson'}
+          backTo="/maqtab"
+          noTranslate={alreadyLocalized}
+          compact
+          marqueeTitle
+        />
 
-      {!loading && lesson && !toolbarMinimized && (
-        <div className="sticky top-0 z-40 bg-[#FFFDF7] border-b border-border shadow-sm px-3 py-2">
+        {!loading && lesson && !toolbarMinimized && (
+          <div className="maqtab-reader-toolbar border-b shadow-sm px-3 py-2">
           <div className="flex items-center justify-between text-[11px] font-semibold mb-1.5">
             <span className="text-teal-900">{L[0]} {progress}%</span>
             <button
@@ -263,29 +282,31 @@ export function LessonPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
-      {!loading && lesson && toolbarMinimized && (
-        <div className="fixed top-20 left-0 right-0 max-w-lg mx-auto z-40 pointer-events-none">
-          <button
-            type="button"
-            onClick={() => setToolbarMinimized(false)}
-            className="pointer-events-auto absolute right-4 flex items-center gap-2 bg-teal-900/30 text-white rounded-full shadow-lg px-3 h-10 text-xs font-bold"
-            aria-label={L[11]}
-            title={L[11]}
-          >
-            <span>{L[0]} {progress}%</span>
-            <span className="text-gold text-base leading-none">+</span>
-          </button>
-        </div>
-      )}
+        {!loading && lesson && toolbarMinimized && (
+          <div className="maqtab-reader-toolbar flex justify-end border-b shadow-sm px-3 py-1.5 pointer-events-none">
+            <button
+              type="button"
+              onClick={() => setToolbarMinimized(false)}
+              className="pointer-events-auto flex items-center gap-2 bg-teal-900/30 text-teal-900 border border-teal-900/20 rounded-full shadow px-3 h-9 text-xs font-bold backdrop-blur-sm"
+              aria-label={L[11]}
+              title={L[11]}
+            >
+              <span>{L[0]} {progress}%</span>
+              <span className="text-gold-dark text-base leading-none">+</span>
+            </button>
+          </div>
+        )}
+      </div>
+      <div aria-hidden="true" style={{ height: `${lessonHeaderHeight}px` }} />
 
       <div className="px-4 pt-4">
         {loading && <p className="text-ink-muted text-sm text-center py-8">{L[8]}</p>}
 
         {!loading && lesson && (
-            <div ref={cardRef} className="fs-card relative rounded-lg shadow-md border border-gold/30 bg-[#FFFDF7] px-5 py-6">
+            <div ref={cardRef} className="maqtab-reader-surface fs-card relative px-5 py-6">
               <button onClick={toggleFullscreen} className="absolute top-3 right-3 z-10 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg" aria-label="Toggle fullscreen" title="Toggle fullscreen">
                 {isFs ? 'X' : '[ ]'}
               </button>
@@ -295,7 +316,7 @@ export function LessonPage() {
                 </p>
               )}
               <div
-                className="qa-content lesson-content"
+                className="qa-content lesson-content maqtab-lesson-content"
                 style={{ '--lesson-font-scale': fontScale } as React.CSSProperties}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{trBody}</ReactMarkdown>
@@ -305,7 +326,7 @@ export function LessonPage() {
       </div>
 
       {!loading && lesson && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border px-4 pt-3 pb-4 safe-bottom z-40">
+        <div className="maqtab-reader-footer fixed bottom-0 left-0 right-0 max-w-lg mx-auto border-t px-4 pt-3 pb-4 safe-bottom z-40">
           <p className="text-center text-xs font-semibold text-ink-muted mb-2">{L[7]}</p>
           <button onClick={() => navigate(`/maqtab/${lessonId}/quiz`)} className="w-full bg-teal-900 text-white font-bold rounded-xl py-3 text-sm">
             {L[6]} &rarr;

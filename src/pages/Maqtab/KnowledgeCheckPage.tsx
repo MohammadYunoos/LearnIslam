@@ -59,7 +59,7 @@ export function KnowledgeCheckPage() {
         : 'Perfect place to begin! Start the Beginner lessons from Chapter 1, In sha Allah.'
 
   return (
-    <div className="bg-cream min-h-screen pb-24">
+    <div className="maqtab-page maqtab-assessment-page min-h-screen pb-24">
       <PageHeader title="Knowledge Check" subtitle="Beginner · quick check" backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">

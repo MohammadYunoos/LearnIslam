@@ -7,6 +7,7 @@ import { getHadeesOfTheDay, getMaqtabProgress } from '../../services/supabaseSer
 import { useTr, useTrList, useLang } from '../../i18n/useTr'
 import { Logo } from '../../components/Logo'
 import { APP_VERSION_NAME } from '../../version'
+import { appTutorialKey } from '../../lib/tutorial'
 
 // `img` = filename under public/menu/. Drop a JPG/PNG there per tile; if it is
 // missing the tile falls back to the glossy background automatically. `glossyClass` sets
@@ -41,6 +42,12 @@ export function HomePage() {
   const setPopup = useAppStore((s) => s.setShowHadeesPopup)
   const [hadees, setHadees] = useState<Hadees | null>(null)
   const [progress, setProgress] = useState<{ lesson_id: string; quiz_score: number }[]>([])
+
+  useEffect(() => {
+    if (user && localStorage.getItem(appTutorialKey(user.id)) !== '1') {
+      navigate('/tutorial', { replace: true })
+    }
+  }, [navigate, user])
 
   useEffect(() => {
     getHadeesOfTheDay().then(setHadees)
@@ -86,12 +93,24 @@ export function HomePage() {
             <p className="text-sand text-xs">{tGreet}, {user?.name}</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/settings')}
-          className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm"
-        >
-          ⚙️
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => navigate('/tutorial')}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm font-bold"
+            aria-label="App tutorial"
+            title="App tutorial"
+          >
+            ?
+          </button>
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm"
+            aria-label="Settings"
+            title="Settings"
+          >
+            ⚙️
+          </button>
+        </div>
       </div>
 
       <div className="px-4 pt-4">

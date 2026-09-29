@@ -8,6 +8,9 @@ export async function openExternal(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
     await Browser.open({ url })
   } else {
-    window.open(url, '_blank', 'noopener,noreferrer')
+    const opened = window.open('', '_blank')
+    if (!opened) throw new Error('The browser blocked the external link')
+    opened.opener = null
+    opened.location.href = url
   }
 }

@@ -58,7 +58,7 @@ export function StepPlayerPage() {
 
   if (!topic || steps.length === 0) {
     return (
-      <div className="bg-cream min-h-screen">
+      <div className="reader-page min-h-screen">
         <PageHeader title="Steps" backTo="/guide" />
         <p className="text-sm text-ink-muted text-center py-10">No steps available.</p>
       </div>
@@ -76,7 +76,7 @@ export function StepPlayerPage() {
   const imgUrl = step.animationUrl || (useRemote ? remoteSrc : localSrc || remoteSrc)
 
   return (
-    <div className="bg-cream min-h-screen flex flex-col">
+    <div className="reader-page min-h-screen flex flex-col">
       <PageHeader
         title={topic.title}
         subtitle={`${L[6]} ${index + 1} ${L[7]} ${steps.length}`}
@@ -143,7 +143,7 @@ export function StepPlayerPage() {
           </div>
         )}
 
-        <div className="mt-6 text-center px-2">
+        <div className="reader-surface rounded-lg mt-6 text-center px-5 py-4 w-full max-w-md">
           <p className="text-lg font-bold text-teal-900">{tTitle}</p>
           <p className="text-sm text-ink-muted mt-2 leading-relaxed">{tDesc}</p>
 
@@ -175,7 +175,7 @@ export function StepPlayerPage() {
       </div>
 
       {/* Controls */}
-      <div className="sticky bottom-0 bg-cream border-t border-border p-4 flex items-center justify-between gap-3 safe-bottom">
+      <div className="reader-toolbar sticky bottom-0 border-t p-4 flex items-center justify-between gap-3 safe-bottom">
         <button
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={atStart}

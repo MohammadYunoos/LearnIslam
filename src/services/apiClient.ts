@@ -6,12 +6,6 @@ import { supabase } from '../lib/supabase'
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api`
 const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Alpha: identify the user via the device id stored at login.
-// Production: this becomes unnecessary once JWT verification derives the id.
-function currentUserId(): string | null {
-  return localStorage.getItem('mymaqtab_user_id')
-}
-
 async function bearerToken(): Promise<string> {
   const { data } = await supabase.auth.getSession()
   return data.session?.access_token ?? ANON
@@ -28,9 +22,6 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     apikey: ANON,
     Authorization: `Bearer ${await bearerToken()}`,
   }
-  const userId = currentUserId()
-  if (userId) headers['x-user-id'] = userId
-
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS)
   try {
@@ -40,8 +31,16 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: ctrl.signal,
     })
-    if (!res.ok) throw new Error(`API ${res.status} ${path}`)
     const text = await res.text()
+    if (!res.ok) {
+      let message = `Request failed (${res.status})`
+      try {
+        message = JSON.parse(text)?.error || message
+      } catch {
+        /* Keep the status-based fallback for non-JSON errors. */
+      }
+      throw new Error(message)
+    }
     return (text ? JSON.parse(text) : null) as T
   } finally {
     clearTimeout(timer)

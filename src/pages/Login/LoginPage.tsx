@@ -91,7 +91,8 @@ export function LoginPage() {
           try {
             await redeemInviteCode(inviteCode.trim())
           } catch (e) {
-            console.warn('Invite code redemption failed:', e)
+            setError(e instanceof Error ? e.message : 'Invite code redemption failed')
+            return
           }
         }
         setUser(u)
@@ -103,7 +104,8 @@ export function LoginPage() {
           try {
             await redeemInviteCode(inviteCode.trim())
           } catch (e) {
-            console.warn('Invite code redemption failed:', e)
+            setError(e instanceof Error ? e.message : 'Invite code redemption failed')
+            return
           }
         }
         setUser(u)
@@ -253,18 +255,22 @@ export function LoginPage() {
               <option value="ur-roman">Roman Urdu (English letters)</option>
             </select>
 
-            <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
-              Invite Code (optional)
-            </label>
-            <input
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              placeholder="e.g. ABC123"
-              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3 font-mono"
-            />
-            <p className="text-[11px] text-ink-muted mb-4 leading-relaxed">
-              Enter a friend's invite code to unlock Maqtab Intermediate & Advanced sections.
-            </p>
+            {isGoogle && (
+              <>
+                <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+                  Invite Code (optional)
+                </label>
+                <input
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABC12345"
+                  className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3 font-mono"
+                />
+                <p className="text-[11px] text-ink-muted mb-4 leading-relaxed">
+                  Enter a friend's invite code to count toward their Maqtab unlock progress.
+                </p>
+              </>
+            )}
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button

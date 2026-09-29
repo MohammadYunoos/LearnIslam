@@ -121,7 +121,7 @@ export function ExamPage() {
   const answeredAll = total > 0 && Object.keys(answers).length >= total
 
   return (
-    <div className="bg-cream min-h-screen pb-28">
+    <div className="maqtab-page maqtab-assessment-page min-h-screen pb-28">
       <PageHeader title={`${level} Exam`} subtitle="Maqtab · certificate exam" backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">

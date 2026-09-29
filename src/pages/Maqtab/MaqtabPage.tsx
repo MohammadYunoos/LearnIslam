@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { OverflowMarquee } from '../../components/OverflowMarquee'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
 import { getMaqtabChapters, getMaqtabProgress } from '../../services/supabaseService'
@@ -141,13 +142,13 @@ export function MaqtabPage() {
   const getLevelStyle = (level: string) => {
     switch (level) {
       case 'Beginner':
-        return { glossy: 'glossy-sky', accent: 'bg-blue-500', text: 'text-blue-900', border: 'border-blue-200' }
+        return 'maqtab-level--beginner'
       case 'Intermediate':
-        return { glossy: 'glossy', accent: 'bg-green-500', text: 'text-green-900', border: 'border-green-200' }
+        return 'maqtab-level--intermediate'
       case 'Advanced':
-        return { glossy: 'glossy-purple', accent: 'bg-purple-500', text: 'text-purple-900', border: 'border-purple-200' }
+        return 'maqtab-level--advanced'
       default:
-        return { glossy: 'glossy-gold', accent: 'bg-gray-500', text: 'text-gray-900', border: 'border-gray-200' }
+        return 'maqtab-level--default'
     }
   }
 
@@ -157,7 +158,7 @@ export function MaqtabPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-20 page-fade">
+    <div className="maqtab-page min-h-screen pb-20 page-fade">
       <PageHeader
         title="Maqtab"
         subtitle="Your learning journey"
@@ -188,18 +189,18 @@ export function MaqtabPage() {
 
       <MaqtabOnboarding open={showTutorial} onComplete={completeTutorial} />
 
-      <div className="px-4 pt-4">
+      <div className="maqtab-content px-4 pt-4">
         {/* Knowledge check (pre-test) — always available */}
         <button
           onClick={() => navigate('/maqtab/knowledge-check')}
-          className="glossy-sky w-full rounded-2xl p-4 text-left shadow mb-4 active:scale-[0.98] transition-transform"
+          className="maqtab-diagnostic w-full p-4 text-left mb-4 active:scale-[0.98] transition-transform"
         >
           <p className="text-sm font-bold text-teal-900">📝 {tKnowledge}</p>
           <p className="text-xs text-teal-900/80 mt-0.5">{tKnowledgeSub}</p>
         </button>
 
         {lessons.length > 0 && (
-          <div className="bg-white border border-border rounded-2xl p-4 mb-4">
+          <div className="maqtab-progress-panel p-4 mb-6">
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-semibold text-teal-900">{tOverall}</p>
               <p className="text-xs font-bold text-gold-dark">
@@ -207,7 +208,7 @@ export function MaqtabPage() {
                 {completedCount} / {lessons.length}
               </p>
             </div>
-            <div className="h-2 bg-sand rounded-full overflow-hidden">
+            <div className="maqtab-progress-track h-2 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gold rounded-full transition-all"
                 style={{
@@ -224,9 +225,11 @@ export function MaqtabPage() {
           <p className="text-ink-muted text-sm text-center py-8">{tNone}</p>
         )}
 
-        {levels.map((lvl, idx) => {
+        {levels.map((lvl) => {
           const style = getLevelStyle(lvl.level)
           const levelDone = levelCompletion(lvl.level)
+          const levelLessons = lvl.chapters.flatMap((chapter) => chapter.lessons)
+          const levelCompleted = levelLessons.filter((lesson) => done.has(lesson.id)).length
 
           const isLevelUnlocked = () => {
             if (lvl.level === 'Beginner') return true
@@ -236,35 +239,32 @@ export function MaqtabPage() {
           }
 
           return (
-            <div
+            <section
               key={lvl.level}
               data-level={lvl.level}
-              className={`mb-6 rounded-2xl p-4 ${style.glossy} shadow-md ${visibleLevels.has(lvl.level) ? 'section-fill' : 'opacity-0'}`}
+              className={`maqtab-level ${style} mb-8 ${visibleLevels.has(lvl.level) ? 'section-fill' : 'opacity-0'}`}
             >
-              {/* Level heading */}
-              <span className={`text-xs font-bold text-white bg-teal-900 rounded-full px-3 py-1 uppercase tracking-wide inline-block mb-3`}>
-                {levelMap.get(lvl.level) ?? lvl.level}
-              </span>
+              <div className="maqtab-level-header">
+                <h2 className="maqtab-level-title">{levelMap.get(lvl.level) ?? lvl.level}</h2>
+                <span className="maqtab-level-count">{levelCompleted}/{levelLessons.length}</span>
+              </div>
 
               {/* About section with PDF */}
-              <div className="mb-4 mt-3">
+              <div className="mb-5">
                 <button
                   onClick={() => openPdf(getPdfPath(lvl.level), `${lvl.level.toLowerCase()}.pdf`)}
-                  className="w-full rounded-xl p-3 glossy-gold text-teal-900 text-center text-sm font-semibold active:scale-[0.98] transition-transform shadow"
+                  className="maqtab-about w-full p-3 text-left text-sm font-semibold active:scale-[0.98] transition-transform"
                 >
                   📖 {tAbout} {lvl.level}
                 </button>
               </div>
 
-              {/* Separator */}
-              <div className="h-px bg-border my-3" />
-
               {/* Lock UI for Intermediate/Advanced if not unlocked */}
               {!isLevelUnlocked() && (
-                <div className="text-center py-8">
+                <div className="maqtab-locked text-center py-8">
                   <p className="text-4xl mb-3">🔒</p>
-                  <p className="text-lg font-semibold text-white mb-2">Section Locked</p>
-                  <p className="text-sm text-white mb-4">Invite 2 friends to unlock</p>
+                  <p className="text-lg font-semibold text-teal-900 mb-2">Section Locked</p>
+                  <p className="text-sm text-ink-muted mb-4">Invite 2 friends to unlock</p>
                   <div className="flex gap-2 justify-center">
                     <button
                       onClick={() => navigate('/invite')}
@@ -280,9 +280,9 @@ export function MaqtabPage() {
               {isLevelUnlocked() && (
                 <>
                   {lvl.chapters.map((ch) => (
-                <div key={ch.chapter} className="mb-4">
+                <div key={ch.chapter} className="maqtab-chapter mb-5">
                   {/* Chapter title */}
-                  <p className={`text-sm font-bold mb-2 pl-1 ${lvl.level === 'Intermediate' ? 'text-white' : 'text-teal-900'}`}>
+                  <p className="maqtab-chapter-title mb-2">
                     {tChapter} {ch.chapter}
                     {ch.lessons[0]?.chapter_title ? ` · ${ch.lessons[0].chapter_title}` : chapLabel(ch) ? ` · ${chapLabel(ch)}` : ''}
                   </p>
@@ -293,20 +293,19 @@ export function MaqtabPage() {
                         <button
                           key={lesson.id}
                           onClick={() => navigate(`/maqtab/${lesson.id}`)}
-                          className="tile-in w-full rounded-2xl p-3.5 flex items-center gap-3 text-left shadow-md active:scale-[0.98] transition-transform bg-white border border-border"
+                          className={`maqtab-lesson-row tile-in w-full p-3 flex items-center gap-3 text-left active:scale-[0.98] transition-transform ${isDone ? 'is-complete' : ''}`}
                         >
                           <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
-                              isDone ? 'bg-teal-900 text-white' : 'bg-teal-900/10 text-teal-900'
-                            }`}
+                            className="maqtab-lesson-index w-9 h-9 flex items-center justify-center font-bold text-sm shrink-0"
                           >
                             {isDone ? '✓' : lesson.lesson_num}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-ink truncate">
-                              {titleMap.get(lesson.title) ?? lesson.title}
-                            </p>
-                            <p className="text-xs text-ink-muted">
+                            <OverflowMarquee
+                              text={titleMap.get(lesson.title) ?? lesson.title}
+                              className="maqtab-lesson-title text-sm font-bold"
+                            />
+                            <p className="maqtab-lesson-meta text-xs">
                               {tLesson} {lesson.lesson_num}
                               {lesson.duration_min ? ` · ${lesson.duration_min} ${tMin}` : ''}
                             </p>
@@ -323,25 +322,19 @@ export function MaqtabPage() {
                   <button
                     onClick={() => levelDone && navigate(`/maqtab/exam?level=${lvl.level}`)}
                     disabled={!levelDone}
-                    className={`w-full rounded-2xl p-4 text-center transition-transform ${
-                      levelDone
-                        ? 'glossy-gold text-teal-900 shadow-xl border-b-4 border-gold active:translate-y-1 active:shadow-lg active:border-b-2'
-                        : 'bg-white border border-border opacity-70'
-                    }`}
+                    className={`maqtab-exam w-full p-4 text-center transition-transform ${levelDone ? 'is-ready' : 'is-locked'}`}
                   >
-                    <p className={`text-sm font-bold ${levelDone ? 'text-teal-900' : 'text-ink-muted'}`}>
+                    <p className="text-sm font-bold">
                       {levelDone ? '🎓' : '🔒'} {tExam}
                     </p>
-                    <p className={`text-xs mt-0.5 ${levelDone ? 'text-teal-900/70' : 'text-ink-muted'}`}>
+                    <p className="text-xs mt-1 opacity-75">
                       {levelDone ? tExamReady : tExamLocked}
                     </p>
                   </button>
                 </>
               )}
 
-              {/* Separator between levels */}
-              {idx < levels.length - 1 && <div className="h-1 bg-border my-4" />}
-            </div>
+            </section>
           )
         })}
 
@@ -349,7 +342,7 @@ export function MaqtabPage() {
           <button
             type="button"
             onClick={() => navigate('/maqtab/top-scorers')}
-            className="w-full mb-6 border border-gold bg-white rounded-lg px-4 py-4 flex items-center gap-3 text-left shadow-sm active:scale-[0.98]"
+            className="maqtab-leaderboard-link w-full mb-6 px-4 py-4 flex items-center gap-3 text-left active:scale-[0.98]"
           >
             <span className="w-10 h-10 shrink-0 rounded-full bg-gold text-teal-900 flex items-center justify-center font-bold">#1</span>
             <span className="flex-1 min-w-0">

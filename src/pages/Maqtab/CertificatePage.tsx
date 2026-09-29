@@ -108,7 +108,7 @@ export function CertificatePage() {
   const shareText = `Alhamdulillah! I completed the ${level} section on Islam Seeko and earned my certificate. Learn with me — download the app: ${APP_LINK}`
 
   return (
-    <div className="bg-cream min-h-screen pb-24">
+    <div className="maqtab-page min-h-screen pb-24">
       <PageHeader title="Certificate" subtitle={`${level} completed`} backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">

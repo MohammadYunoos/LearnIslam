@@ -44,7 +44,7 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 // Map the current Supabase session to an AppUser + whether a profile exists.
-export async function getSessionUser(): Promise<{ user: AppUser; hasProfile: boolean } | null> {
+export async function getSessionUser(forceRefresh = false): Promise<{ user: AppUser; hasProfile: boolean } | null> {
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -59,7 +59,7 @@ export async function getSessionUser(): Promise<{ user: AppUser; hasProfile: boo
   // This stops a logged-in user being bounced to Login on reopen when the
   // profile fetch is slow or the network/API is down.
   const cached = getLocalUser()
-  if (cached && cached.id === id && cached.madhab) {
+  if (!forceRefresh && cached && cached.id === id && cached.madhab) {
     return { hasProfile: true, user: cached }
   }
 
@@ -68,6 +68,10 @@ export async function getSessionUser(): Promise<{ user: AppUser; hasProfile: boo
     profile = await api.get('/profile')
   } catch {
     /* profile not reachable — fall through */
+  }
+
+  if (!profile && cached && cached.id === id && cached.madhab) {
+    return { hasProfile: true, user: cached }
   }
 
   if (profile && profile.name) {
@@ -113,16 +117,7 @@ export async function saveProfile(
   return user
 }
 
-// ── Guest (local UUID) ──────────────────────────────────
-
-function generateUUID(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
+// ── Guest (Supabase anonymous Auth session) ─────────────
 
 export async function continueAsGuest(
   name: string,
@@ -131,11 +126,14 @@ export async function continueAsGuest(
   madhab: string,
   language: string
 ): Promise<AppUser> {
-  let userId = localStorage.getItem(USER_ID_KEY)
+  const { data: existing } = await supabase.auth.getSession()
+  let userId = existing.session?.user.id ?? null
   if (!userId) {
-    userId = generateUUID()
-    localStorage.setItem(USER_ID_KEY, userId)
+    const { data, error } = await supabase.auth.signInAnonymously()
+    if (error || !data.user) throw error ?? new Error('Unable to start guest session')
+    userId = data.user.id
   }
+  localStorage.setItem(USER_ID_KEY, userId)
   const userData: AppUser = { id: userId, name: name.trim(), age, gender, madhab, language, tier: 'free', inviteCode: '', maqtabUnlocked: false, maqtabIntermediateUnlocked: false, maqtabAdvancedUnlocked: false, qaUnlocked: false }
   try {
     await api.put('/profile', userData)

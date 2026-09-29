@@ -56,20 +56,25 @@ or just deploy and use the hosted URL.
 ## Deploy
 
 ```bash
-# Alpha: JWT verification OFF (local-UUID login has no token).
-supabase functions deploy api --no-verify-jwt
+# Apply supabase/invite_security_fix.sql first using the SQL editor or your
+# normal migration flow, then deploy with JWT verification enabled.
+supabase functions deploy api
 ```
 
-config.toml already sets `verify_jwt = false` for `[functions.api]`.
+`config.toml` sets `verify_jwt = true` for `[functions.api]`. Do not deploy this
+function with `--no-verify-jwt`: account-scoped routes rely on a verified Supabase
+Auth identity.
 
-## Alpha vs Production
+Enable **Anonymous Sign-Ins** in Supabase Auth settings before deploying so
+Continue as Guest receives a real, verifiable anonymous session. Anonymous accounts
+can use learning features, but cannot generate or redeem invite codes.
 
-- **Alpha (now):** `--no-verify-jwt`. The client sends the device id in the `x-user-id`
-  header; the function scopes queries by it. Same trust level as the current open RLS.
-- **Production:** enable Supabase Google auth, remove `--no-verify-jwt` (set
-  `verify_jwt = true`), and change `uid()` in `index.ts` to read the JWT `sub` instead of
-  the header. Then tighten RLS so the anon key only reaches Storage/auth (the DB is only
-  touched by this function via the service-role key).
+## Authentication
+
+The client sends the active Supabase access token. The function verifies it through
+Supabase Auth before using the service-role client, and never accepts a client-supplied
+user id. Keep direct table RLS restricted because all application database access should
+go through this function.
 
 ## Routes
 
@@ -127,7 +132,7 @@ supabase secrets set LOCALIZE_SECRET=<random>
 #    (Supabase SQL editor, or: supabase db execute < supabase/localize_setup.sql)
 
 # 3. Deploy
-supabase functions deploy api --no-verify-jwt
+supabase functions deploy api
 
 # 4. Create Database Webhooks (dashboard → Database → Webhooks), one per table:
 #    Table:  maqtab_lessons   Events: Insert, Update
