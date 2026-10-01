@@ -124,6 +124,82 @@
   // Lesson quiz — drawn from `beginner_exam_questions` for the lesson's chapter,
   // in the lesson's language (falls back to english). The client picks a random
   // subset per attempt and scores locally (question rows include correct_idx).
+  // ── MAQTAB LESSON FEEDBACK ──────────────────────────────
+  async function getMaqtabRatingSummary(lessonId: string) {
+    const { data } = await supabase
+      .from('maqtab_lesson_ratings')
+      .select('rating')
+      .eq('lesson_id', lessonId)
+    const ratings = data ?? []
+    const ratingCount = ratings.length
+    const averageRating = ratingCount
+      ? Math.round((ratings.reduce((total: number, row: any) => total + Number(row.rating), 0) / ratingCount) * 10) / 10
+      : null
+    return { averageRating, ratingCount }
+  }
+
+  app.get('/maqtab/lesson/:id/feedback', async (c) => {
+    const lessonId = c.req.param('id')
+    const userId = await uid(c)
+    const [{ count }, likedRes, ratingRes] = await Promise.all([
+      supabase.from('maqtab_lesson_likes').select('*', { count: 'exact', head: true }).eq('lesson_id', lessonId),
+      userId
+        ? supabase.from('maqtab_lesson_likes').select('lesson_id').eq('lesson_id', lessonId).eq('user_id', userId).maybeSingle()
+        : Promise.resolve({ data: null }),
+      userId
+        ? supabase.from('maqtab_lesson_ratings').select('rating').eq('lesson_id', lessonId).eq('user_id', userId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ])
+    const ratingSummary = await getMaqtabRatingSummary(lessonId)
+    return c.json({
+      likeCount: count ?? 0,
+      liked: !!likedRes.data,
+      rating: ratingRes.data?.rating ?? null,
+      ...ratingSummary,
+    })
+  })
+
+  app.post('/maqtab/lesson/:id/like', async (c) => {
+    const lessonId = c.req.param('id')
+    const userId = await uid(c)
+    if (!userId) return c.json({ error: 'sign in required' }, 401)
+    const { data: existing } = await supabase
+      .from('maqtab_lesson_likes')
+      .select('lesson_id')
+      .eq('lesson_id', lessonId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    const write = existing
+      ? supabase.from('maqtab_lesson_likes').delete().eq('lesson_id', lessonId).eq('user_id', userId)
+      : supabase.from('maqtab_lesson_likes').insert({ lesson_id: lessonId, user_id: userId })
+    const { error } = await write
+    if (error) return c.json({ error: error.message }, 500)
+    const { count } = await supabase
+      .from('maqtab_lesson_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('lesson_id', lessonId)
+    await logEvent(userId, existing ? 'lesson_unliked' : 'lesson_liked', { lessonId })
+    return c.json({ liked: !existing, likeCount: count ?? 0 })
+  })
+
+  app.post('/maqtab/lesson/:id/rating', async (c) => {
+    const lessonId = c.req.param('id')
+    const userId = await uid(c)
+    if (!userId) return c.json({ error: 'sign in required' }, 401)
+    const body = await c.req.json()
+    const rating = Number(body?.rating)
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return c.json({ error: 'rating must be between 1 and 5' }, 400)
+    }
+    const { error } = await supabase
+      .from('maqtab_lesson_ratings')
+      .upsert({ lesson_id: lessonId, user_id: userId, rating }, { onConflict: 'lesson_id,user_id' })
+    if (error) return c.json({ error: error.message }, 500)
+    const ratingSummary = await getMaqtabRatingSummary(lessonId)
+    await logEvent(userId, 'lesson_rated', { lessonId, rating })
+    return c.json({ rating, ...ratingSummary })
+  })
+
   app.get('/maqtab/quiz/:lessonId', async (c) => {
     const lessonId = c.req.param('lessonId')
     const { data: lesson } = await supabase

@@ -501,7 +501,7 @@ export function TaleemPage() {
   }, [activeId, loadingDoc, content, storageKey])
 
   return (
-    <div className="bg-cream min-h-screen pb-20 page-fade">
+    <div className="taleem-page min-h-screen pb-20 page-fade">
       <div className={activeId ? 'sticky top-0 z-40' : ''}>
         <PageHeader
           title="Islamic Q & A"
@@ -609,10 +609,10 @@ export function TaleemPage() {
 
         {/* Landing: list every book one below the other, About the Book first. */}
         {!loadingList && volumes.length > 0 && active < 0 && (
-          <div className="space-y-3">
+          <div className="taleem-content space-y-3">
             <button
               onClick={() => openPdf(ABOUT_PDF, 'about.pdf')}
-              className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md border-2 border-gold flex items-center gap-3 active:scale-[0.98] transition-transform"
+              className="taleem-about w-full text-left px-4 py-3 flex items-center gap-3 active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">📖</span>
               <div>
@@ -622,7 +622,7 @@ export function TaleemPage() {
             </button>
 
             {showReviewPrompt && (
-              <div className="bg-white border border-border rounded-lg px-5 py-4 shadow-sm">
+              <div className="taleem-review px-4 py-4">
                 <p className="text-sm font-bold text-teal-900 mb-1">Rate Islam Seeko</p>
                 <p className="text-xs text-ink-muted leading-relaxed mb-3">
                   Your honest Play Store feedback helps other learners and helps us improve. Rating is optional and does not unlock content.
@@ -651,7 +651,7 @@ export function TaleemPage() {
                 <div key={v.id}>
                   <button
                     onClick={() => openVolume(i)}
-                    className="glossy-gold w-full text-left rounded-full px-5 py-4 shadow-md flex items-center gap-3 active:scale-[0.98] transition-transform"
+                    className="taleem-volume-row w-full text-left px-4 py-3 flex items-center gap-3 active:scale-[0.98] transition-transform"
                   >
                     <span className="text-2xl">📗</span>
                     <p className="font-bold text-teal-900">
@@ -673,12 +673,12 @@ export function TaleemPage() {
             >
               ← All books
             </button>
-            <p className="text-base font-bold text-teal-900 mb-2">
+            <p className="taleem-book-heading text-base font-bold mb-2">
               BOOK {volumes[active]?.volume_no}: {toTitleCase(volumes[active]?.title ?? '')}
             </p>
           <div
             ref={cardRef}
-            className="fs-card relative rounded-2xl shadow-md border border-gold/30 bg-[#FFFDF7]"
+            className="maqtab-reader-surface fs-card relative"
           >
             <button
               onClick={toggleFullscreen}
@@ -691,7 +691,7 @@ export function TaleemPage() {
               <p className="text-sm text-ink-muted p-8">Loading volume…</p>
             ) : (
               <div
-                className="qa-content lesson-content w-full px-5 py-6"
+                className="qa-content lesson-content maqtab-lesson-content w-full px-5 py-6"
                 style={{ '--lesson-font-scale': fontScale } as React.CSSProperties}
               >
                 {lang !== 'en' && !alreadyLocalized && (

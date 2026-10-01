@@ -3,9 +3,13 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useTr } from '../../i18n/useTr'
 import { APP_VERSION_NAME } from '../../version'
+import { FirebaseCrashlytics } from '@capacitor-firebase/crashlytics'
+import { useState } from 'react'
 
 export function AboutPage() {
   const tAbout = useTr('About Islam Seeko')
+  const [throwOnRender, setThrowOnRender] = useState(false)
+  if (throwOnRender) throw new Error('Test JS crash (ErrorBoundary)')
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -28,6 +32,25 @@ export function AboutPage() {
           <p className="text-xs text-ink-muted text-center">
             Version {APP_VERSION_NAME}
           </p>
+        </div>
+
+        {/* TEMP: Crashlytics test buttons — REMOVE before shipping. */}
+        <div className="bg-red-50 border border-red-300 rounded-2xl p-5 mt-4 space-y-2">
+          <p className="text-xs text-red-600 font-semibold text-center mb-2">
+            Crashlytics test (remove before release)
+          </p>
+          <button
+            onClick={() => FirebaseCrashlytics.crash({ message: 'Test native crash' })}
+            className="w-full bg-red-600 text-white font-bold rounded-xl py-2 text-sm"
+          >
+            Trigger native crash
+          </button>
+          <button
+            onClick={() => setThrowOnRender(true)}
+            className="w-full bg-red-600 text-white font-bold rounded-xl py-2 text-sm"
+          >
+            Trigger JS crash
+          </button>
         </div>
       </div>
 

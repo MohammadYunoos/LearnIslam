@@ -29,12 +29,7 @@ import { HifzSurahPage } from './pages/Hifz/HifzSurahPage'
 import { WajifaListPage } from './pages/Wajifa/WajifaListPage'
 import { TasbihPage } from './pages/Wajifa/TasbihPage'
 import { DetoxifyPage } from './pages/Detoxify/DetoxifyPage'
-import { MasailPage } from './pages/Masail/MasailPage'
 import { AnalyzerPage } from './pages/Analyzer/AnalyzerPage'
-import { UlemaListPage } from './pages/Ulema/UlemaListPage'
-import { UlemaProfilePage } from './pages/Ulema/UlemaProfilePage'
-import { MessagesPage } from './pages/Messages/MessagesPage'
-import { ThreadPage } from './pages/Messages/ThreadPage'
 import { InvitePage } from './pages/Invite/InvitePage'
 import { DonationsPage } from './pages/Donations/DonationsPage'
 import { PlansPage } from './pages/Plans/PlansPage'
@@ -49,6 +44,7 @@ import { TranslationsPage } from './pages/Admin/TranslationsPage'
 import { TutorialPage } from './pages/Tutorial/TutorialPage'
 import { QiblaPage } from './pages/Qibla/QiblaPage'
 import { NamaazPage } from './pages/Namaaz/NamaazPage'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReportButton } from './components/ReportButton'
 import { TranslationOverlay } from './components/TranslationOverlay'
@@ -250,6 +246,7 @@ export default function App() {
   if (loading) return <SplashScreen />
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <LangSync />
       <TranslationOverlay />
@@ -286,15 +283,7 @@ export default function App() {
         <Route path="/detoxify" element={<PrivateRoute element={<DetoxifyPage />} />} />
         <Route path="/qibla" element={<PrivateRoute element={<QiblaPage />} />} />
         <Route path="/namaaz-timings" element={<PrivateRoute element={<NamaazPage />} />} />
-        <Route path="/masail" element={<PrivateRoute element={<MasailPage />} />} />
         <Route path="/analyzer" element={<PrivateRoute element={<AnalyzerPage />} />} />
-        <Route path="/ulema" element={<PrivateRoute element={<UlemaListPage />} />} />
-        <Route path="/ulema/:id" element={<PrivateRoute element={<UlemaProfilePage />} />} />
-        <Route path="/messages" element={<PrivateRoute element={<MessagesPage />} />} />
-        <Route
-          path="/messages/:ulemaId"
-          element={<PrivateRoute element={<ThreadPage />} />}
-        />
         <Route path="/invite" element={<PrivateRoute element={<InvitePage />} />} />
         <Route path="/plans" element={<PrivateRoute element={<PlansPage />} />} />
         <Route path="/donate" element={<DonationsPage />} />
@@ -309,5 +298,6 @@ export default function App() {
         <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }

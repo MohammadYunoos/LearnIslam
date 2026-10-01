@@ -22,7 +22,6 @@ const MENU_ITEMS = [
   { num: "07", title: "Detoxify", sub: "Heart and Akhlaq", icon: "🌿", img: "detoxify.jpg", path: "/detoxify", glossyClass: "glossy" },
   { num: "08", title: "Find Qibla", sub: "Direction of the Ka’bah", icon: "🧭", img: "qibla.jpg", path: "/qibla", glossyClass: "glossy-gold" },
   { num: "09", title: "Ehtimam-e-Namaaz", sub: "Prayer & Roza timings", icon: "🕰️", img: "namaaz.jpg", path: "/namaaz-timings", glossyClass: "glossy-sky" },
-  { num: "10", title: "Ask Ulema", sub: "Send your masail to scholars", icon: "🕌", img: "ulema.jpg", path: "/masail", glossyClass: "glossy" },
 ]
 
 const menuImg = (name: string) => `${import.meta.env.BASE_URL}menu/${name}`

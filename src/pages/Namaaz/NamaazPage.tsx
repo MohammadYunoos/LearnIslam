@@ -1,6 +1,6 @@
 // src/pages/Namaaz/NamaazPage.tsx
 // Ehtimam-e-Namaaz — prayer, Sunnah/Nafl and Roza timings for the user's
-// location, Hanafi / Deobandi convention (Karachi 18°/18°, Hanafi Asr).
+// Location-based prayer and fasting timings using the app's configured convention.
 // Defaults to today; any date can be picked.
 import { useEffect, useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
@@ -101,7 +101,7 @@ export function NamaazPage() {
     <div className="bg-cream min-h-screen pb-20 page-fade">
       <PageHeader
         title="Ehtimam-e-Namaaz"
-        subtitle="Timings · Hanafi / Deobandi"
+        subtitle="Prayer and fasting timings"
         backTo="/home"
       />
 

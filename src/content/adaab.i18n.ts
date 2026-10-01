@@ -2,7 +2,7 @@
 // Curated Urdu + Roman-Urdu wording for the Adaab section (proof batch).
 //
 // WHY: machine translation produces awkward religious wording. These lines are
-// hand-authored (Hanafi / Deobandi idiom) so the app serves natural phrasing.
+// Hand-authored so the app serves natural phrasing.
 // `en` is copied BYTE-EXACT from src/content/adaab.ts (curly quotes “ ” ‘ ’, the
 // ﷺ glyph and em-dashes must match) — the /translate lookup hashes on it.
 // Quoted du‘a / transliteration inside a line is kept verbatim; only the

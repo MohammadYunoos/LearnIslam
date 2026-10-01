@@ -25,7 +25,6 @@ export function TopicPage() {
   const trItems = useTrList(itemTexts)
   const trMap = new Map(itemTexts.map((t, i) => [t, trItems[i]]))
   const tPlay = useTr('Play step-by-step')
-  const tAsk = useTr('Ask Ulema')
   const tComing = useTr('Content coming soon, In sha Allah.')
 
   if (!topic) {
@@ -101,12 +100,6 @@ export function TopicPage() {
             ▶ {tPlay}
           </button>
         )}
-        <button
-          onClick={() => navigate('/masail')}
-          className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"
-        >
-          🕌 {tAsk}
-        </button>
       </div>
 
       <BottomNav />

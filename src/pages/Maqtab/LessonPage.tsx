@@ -2,8 +2,14 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Capacitor } from '@capacitor/core'
 import { PageHeader } from '../../components/PageHeader'
-import { getLessonContent } from '../../services/supabaseService'
+import {
+  getLessonContent,
+  getMaqtabLessonFeedback,
+  rateMaqtabLesson,
+  toggleMaqtabLessonLike,
+} from '../../services/supabaseService'
 import { useAppStore } from '../../store/appStore'
 import { useTrList } from '../../i18n/useTr'
 
@@ -66,6 +72,12 @@ export function LessonPage() {
   const [fontScale, setFontScale] = useState(1)
   const [bookmarkSaved, setBookmarkSaved] = useState(false)
   const [toolbarMinimized, setToolbarMinimized] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [liked, setLiked] = useState(false)
+  const [rating, setRating] = useState<number | null>(null)
+  const [averageRating, setAverageRating] = useState<number | null>(null)
+  const [ratingCount, setRatingCount] = useState(0)
+  const [feedbackBusy, setFeedbackBusy] = useState(false)
   const [lessonHeaderHeight, setLessonHeaderHeight] = useState(0)
   const lessonHeaderRef = useRef<HTMLDivElement | null>(null)
   const progressRef = useRef(0)
@@ -97,6 +109,21 @@ export function LessonPage() {
     })
   }, [lessonId])
 
+  useEffect(() => {
+    if (!lessonId) return
+    getMaqtabLessonFeedback(lessonId)
+      .then((feedback) => {
+        setLikeCount(feedback.likeCount)
+        setLiked(feedback.liked)
+        setRating(feedback.rating)
+        setAverageRating(feedback.averageRating)
+        setRatingCount(feedback.ratingCount)
+      })
+      .catch(() => {
+        // Feedback is supplementary; a lesson still works when it is unavailable.
+      })
+  }, [lessonId])
+
   const rawBody = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
   const formattedBody = useMemo(() => formatEmbeddedTakeaways(rawBody), [rawBody])
   const blocks = useMemo(
@@ -119,6 +146,10 @@ export function LessonPage() {
     'Reading progress',
     'Minimize progress controls',
     'Show progress controls',
+    'Like',
+    'Rate this lesson',
+    'Share',
+    'ratings',
   ])
 
   const readSavedState = () => {
@@ -221,6 +252,48 @@ export function LessonPage() {
     window.setTimeout(() => setBookmarkSaved(false), 1800)
   }
 
+  const toggleLike = async () => {
+    if (!lessonId || feedbackBusy) return
+    setFeedbackBusy(true)
+    try {
+      const feedback = await toggleMaqtabLessonLike(lessonId)
+      setLiked(feedback.liked)
+      setLikeCount(feedback.likeCount)
+    } finally {
+      setFeedbackBusy(false)
+    }
+  }
+
+  const setLessonRating = async (nextRating: number) => {
+    if (!lessonId || feedbackBusy) return
+    setFeedbackBusy(true)
+    try {
+      const feedback = await rateMaqtabLesson(lessonId, nextRating)
+      setRating(feedback.rating)
+      setAverageRating(feedback.averageRating)
+      setRatingCount(feedback.ratingCount)
+    } finally {
+      setFeedbackBusy(false)
+    }
+  }
+
+  const shareLesson = async () => {
+    const appLink = 'https://play.google.com/store/apps/details?id=com.mymaqtab.app'
+    const message = `I am learning ${lesson?.title ?? 'Islamic lessons'} on Islam Seeko. Join me: ${appLink}`
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const { Share } = await import('@capacitor/share')
+        await Share.share({ title: 'Learn with Islam Seeko', text: message, dialogTitle: L[14] })
+      } else if (navigator.share) {
+        await navigator.share({ title: 'Learn with Islam Seeko', text: message })
+      } else {
+        await navigator.clipboard.writeText(message)
+      }
+    } catch {
+      // A dismissed share sheet should not interrupt reading.
+    }
+  }
+
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [isFs, setIsFs] = useState(false)
   useEffect(() => {
@@ -306,6 +379,7 @@ export function LessonPage() {
         {loading && <p className="text-ink-muted text-sm text-center py-8">{L[8]}</p>}
 
         {!loading && lesson && (
+          <>
             <div ref={cardRef} className="maqtab-reader-surface fs-card relative px-5 py-6">
               <button onClick={toggleFullscreen} className="absolute top-3 right-3 z-10 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg" aria-label="Toggle fullscreen" title="Toggle fullscreen">
                 {isFs ? 'X' : '[ ]'}
@@ -322,6 +396,44 @@ export function LessonPage() {
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{trBody}</ReactMarkdown>
               </div>
             </div>
+            <section className="maqtab-lesson-feedback" aria-label="Lesson feedback">
+              <button
+                type="button"
+                onClick={toggleLike}
+                disabled={feedbackBusy}
+                className={`maqtab-feedback-action ${liked ? 'is-active' : ''}`}
+                aria-pressed={liked}
+              >
+                <span aria-hidden="true">{liked ? '♥' : '♡'}</span>
+                {L[12]} <strong>{likeCount}</strong>
+              </button>
+              <div className="maqtab-rating" aria-label={L[13]}>
+                <span className="maqtab-rating-label">{L[13]}</span>
+                <div className="maqtab-stars" role="radiogroup" aria-label={L[13]}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setLessonRating(star)}
+                      disabled={feedbackBusy}
+                      className={star <= (rating ?? 0) ? 'is-selected' : ''}
+                      aria-label={`${star} star${star === 1 ? '' : 's'}`}
+                      aria-pressed={star === rating}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <span className="maqtab-rating-summary">
+                  {averageRating == null ? 'No ratings yet' : `${averageRating.toFixed(1)} / 5 · ${ratingCount} ${L[15]}`}
+                </span>
+              </div>
+              <button type="button" onClick={shareLesson} className="maqtab-feedback-action">
+                <span aria-hidden="true">↗</span>
+                {L[14]}
+              </button>
+            </section>
+          </>
         )}
       </div>
 

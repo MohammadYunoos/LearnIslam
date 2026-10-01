@@ -40,6 +40,31 @@ export async function completeLesson(userId: string, lessonId: string, score: nu
   await api.post('/maqtab/complete', { userId, lessonId, score })
 }
 
+export interface MaqtabLessonFeedback {
+  likeCount: number
+  liked: boolean
+  rating: number | null
+  averageRating: number | null
+  ratingCount: number
+}
+
+export async function getMaqtabLessonFeedback(lessonId: string) {
+  return api.get<MaqtabLessonFeedback>(`/maqtab/lesson/${encodeURIComponent(lessonId)}/feedback`)
+}
+
+export async function toggleMaqtabLessonLike(lessonId: string) {
+  return api.post<{ likeCount: number; liked: boolean }>(
+    `/maqtab/lesson/${encodeURIComponent(lessonId)}/like`
+  )
+}
+
+export async function rateMaqtabLesson(lessonId: string, rating: number) {
+  return api.post<{ rating: number; averageRating: number | null; ratingCount: number }>(
+    `/maqtab/lesson/${encodeURIComponent(lessonId)}/rating`,
+    { rating }
+  )
+}
+
 // ── BEGINNER EXAM ───────────────────────────────────────
 
 export interface ExamQuestion {

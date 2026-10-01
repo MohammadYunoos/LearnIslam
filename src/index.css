@@ -304,7 +304,8 @@ button:active {
 }
 
 /* Maqtab: a calm, bookish learning surface with restrained level accents. */
-.maqtab-page {
+.maqtab-page,
+.taleem-page {
   color: #20312d;
   background-color: #f4f2ec;
   background-image:
@@ -491,6 +492,42 @@ html[dir='rtl'] .maqtab-lesson-row {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(88, 66, 24, 0.08);
 }
+.taleem-content {
+  color: #20312d;
+}
+.taleem-about,
+.taleem-volume-row {
+  color: #173f39;
+  background: #fffefa;
+  border: 1px solid #d8d3c6;
+  border-left: 3px solid #b8872e;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(38, 49, 45, 0.06);
+}
+.taleem-about {
+  background: #efe0b7;
+  border-color: #c79a39;
+  border-left-width: 4px;
+}
+.taleem-volume-row {
+  min-height: 3.6rem;
+}
+.taleem-volume-row p,
+.taleem-about p {
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+.taleem-review {
+  background: rgba(255, 254, 250, 0.92);
+  border: 1px solid #d9d4c7;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(38, 49, 45, 0.05);
+}
+.taleem-book-heading {
+  color: #173f39;
+  font-family: Georgia, 'Noto Naskh Arabic', serif;
+  letter-spacing: 0;
+}
 .maqtab-reader-toolbar,
 .maqtab-reader-footer {
   background: rgba(250, 248, 241, 0.97);
@@ -503,6 +540,91 @@ html[dir='rtl'] .maqtab-lesson-row {
   border: 1px solid #d7d1c2;
   border-radius: 8px;
   box-shadow: 0 7px 22px rgba(45, 55, 50, 0.09);
+}
+.maqtab-lesson-feedback {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(9.5rem, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.9rem 0 1rem;
+  padding: 0.7rem;
+  color: #173f39;
+  background: rgba(255, 254, 250, 0.88);
+  border: 1px solid #d8d3c5;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(38, 49, 45, 0.05);
+}
+.maqtab-feedback-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.55rem;
+  color: #174d45;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #fffefa;
+  border: 1px solid #d8d3c5;
+  border-radius: 6px;
+}
+.maqtab-feedback-action span {
+  font-size: 1rem;
+  line-height: 1;
+}
+.maqtab-feedback-action.is-active {
+  color: #8d671f;
+  background: #f5e8bd;
+  border-color: #c8992e;
+}
+.maqtab-rating {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+}
+.maqtab-rating-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #6b736e;
+}
+.maqtab-stars {
+  display: flex;
+  gap: 0.05rem;
+}
+.maqtab-stars button {
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  color: #c5bda9;
+  font-size: 1.15rem;
+  line-height: 1;
+  background: transparent;
+}
+.maqtab-stars button.is-selected {
+  color: #c38b1d;
+}
+.maqtab-rating-summary {
+  min-height: 0.8rem;
+  color: #6b736e;
+  font-size: 0.62rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.maqtab-stars button:disabled,
+.maqtab-feedback-action:disabled {
+  opacity: 0.55;
+}
+@media (max-width: 359px) {
+  .maqtab-lesson-feedback {
+    grid-template-columns: 1fr 1fr;
+  }
+  .maqtab-rating {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .maqtab-feedback-action {
+    grid-row: 2;
+  }
 }
 .qa-content.maqtab-lesson-content {
   font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Naskh Arabic', sans-serif;
@@ -541,6 +663,21 @@ html[dir='rtl'] .maqtab-lesson-row {
   direction: ltr;
   animation: overflowMarquee var(--marquee-duration, 12s) linear infinite;
   will-change: transform;
+}
+.tutorial-audio-toggle {
+  min-width: 4.4rem;
+  padding: 0.35rem 0.55rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.tutorial-audio-toggle[aria-pressed='true'] {
+  color: #173f39;
+  background: #f5e8bd;
+  border-color: #c8992e;
 }
 .overflow-marquee-gap {
   display: block;

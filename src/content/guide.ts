@@ -1,5 +1,5 @@
 // src/content/guide.ts
-// My Guide content. Maslak: Hanafi / Deobandi.
+// My Guide content and references for everyday Islamic practice.
 //
 // Rulings follow the standard Hanafi position (as in Nur al-Idah, Bahishti
 // Zewar, Taleem-ul-Haqq). A reference is attached only where it is well
@@ -51,7 +51,7 @@ export interface GuideTopic {
   steps?: GuideStep[]
 }
 
-export const MASLAK = 'Hanafi / Deobandi'
+export const MASLAK = 'Hanafi'
 
 export const GROUP_LABELS: Record<GuideGroup, string> = {
   purity: 'Taharat — Purification',

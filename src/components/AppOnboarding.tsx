@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { TutorialAudio } from './TutorialAudio'
 
 interface Slide {
   title: string
@@ -59,12 +60,9 @@ const SLIDES: Slide[] = [
   },
   {
     title: 'Ask, Reflect, and Improve',
-    description: 'Send questions to scholars and use Detoxify to reflect on habits, character, and spiritual growth.',
-    images: [
-      { src: menuImage('ulema.jpg'), label: 'Ask Ulema' },
-      { src: menuImage('detoxify.jpg'), label: 'Detoxify' },
-    ],
-    points: ['Scholar guidance', 'Private questions', 'Heart and Akhlaq'],
+    description: 'Use Detoxify to reflect on habits, character, and spiritual growth with small daily actions.',
+    images: [{ src: menuImage('detoxify.jpg'), label: 'Detoxify' }],
+    points: ['Daily reflection', 'Private progress', 'Heart and Akhlaq'],
   },
   {
     title: 'Track Meaningful Progress',
@@ -138,9 +136,12 @@ export function AppOnboarding({ onComplete }: Props) {
       <div className="relative w-full max-w-lg min-h-[100dvh] flex flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] overflow-hidden">
         <header className="h-10 flex items-center justify-between shrink-0">
           <p className="text-white text-sm font-bold">Islam Seeko</p>
-          <button type="button" onClick={onComplete} className="text-white/80 text-xs font-semibold px-2 py-2">
-            Skip Tutorial
-          </button>
+          <div className="flex items-center gap-2">
+            <TutorialAudio />
+            <button type="button" onClick={onComplete} className="text-white/80 text-xs font-semibold px-2 py-2">
+              Skip Tutorial
+            </button>
+          </div>
         </header>
 
         <div key={index} className={`onboarding-slide onboarding-slide-${direction} flex-1 min-h-0 flex flex-col justify-center`}>

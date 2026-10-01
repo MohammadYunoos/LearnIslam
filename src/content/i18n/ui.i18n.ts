@@ -177,7 +177,6 @@ export const UI_I18N: Tr[] = [
   { en: 'Direction of the Ka‘bah', ur: 'کعبہ کی سمت', roman: 'Kaaba ki simt' },
   { en: 'Ehtimam-e-Namaaz', ur: 'اہتمامِ نماز', roman: 'Ehtimam-e-Namaaz' },
   { en: 'Prayer & Roza timings', ur: 'نماز اور روزہ کے اوقات', roman: 'namaz aur roza ke auqaat' },
-  { en: 'Timings · Hanafi / Deobandi', ur: 'اوقات · حنفی / دیوبندی', roman: 'auqaat · Hanafi / Deobandi' },
 
   // ── Maqtab chapter/level names (were MT-garbled) ──────
   { en: 'Beginner', ur: 'ابتدائی', roman: 'ibtidai' },

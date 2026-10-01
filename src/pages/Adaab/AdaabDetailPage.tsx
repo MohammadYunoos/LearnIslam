@@ -1,5 +1,5 @@
 // src/pages/Adaab/AdaabDetailPage.tsx
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { GuideDisclaimer } from '../../components/GuideDisclaimer'
@@ -11,14 +11,12 @@ import { useTr, useTrList } from '../../i18n/useTr'
 
 export function AdaabDetailPage() {
   const { slug } = useParams()
-  const navigate = useNavigate()
   const gender = useAppStore((s) => s.user?.gender)
   const topic = slug ? getAdaab(slug) : undefined
 
   const items = topic ? itemsForGender(topic.items, gender) : []
   const trItems = useTrList(items.map((i) => i.text))
   const tIntro = useTr(topic?.intro ?? '')
-  const tAsk = useTr('Ask Ulema')
 
   if (!topic) {
     return (
@@ -59,16 +57,6 @@ export function AdaabDetailPage() {
             ))}
           </ol>
         </div>
-      </div>
-
-      {/* Always-visible action bar */}
-      <div className="reader-toolbar fixed bottom-bar left-0 right-0 max-w-lg mx-auto border-t p-3">
-        <button
-          onClick={() => navigate('/masail')}
-          className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"
-        >
-          🕌 {tAsk}
-        </button>
       </div>
 
       <BottomNav />

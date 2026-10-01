@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { TutorialAudio } from './TutorialAudio'
 
 interface Slide {
   image: string
@@ -123,9 +124,12 @@ export function MaqtabOnboarding({ open, onComplete }: Props) {
       <div className="relative w-full max-w-lg min-h-[100dvh] flex flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] overflow-hidden">
         <header className="h-10 flex items-center justify-between shrink-0">
           <p className="text-white text-sm font-bold">Islam Seeko Maqtab</p>
-          <button type="button" onClick={onComplete} className="text-white/80 text-xs font-semibold px-2 py-2">
-            Skip Tutorial
-          </button>
+          <div className="flex items-center gap-2">
+            <TutorialAudio />
+            <button type="button" onClick={onComplete} className="text-white/80 text-xs font-semibold px-2 py-2">
+              Skip Tutorial
+            </button>
+          </div>
         </header>
 
         <div key={index} className={`onboarding-slide onboarding-slide-${direction} flex-1 min-h-0 flex flex-col justify-center`}>
