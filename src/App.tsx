@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
@@ -55,6 +55,25 @@ import { engagementById } from './content/engagementNotifications'
 import { useLang } from './i18n/useTr'
 import { ensureLang } from './services/translate'
 import { LocalNotifications } from '@capacitor/local-notifications'
+import { logAnalyticsEvent, logScreenView, setAnalyticsUserId } from './lib/analytics'
+import { registerForPushNotifications, addPushTapListener } from './lib/push'
+
+// Shared by local-notification taps and FCM push taps so both sources drive
+// the same in-app modals via one dispatch contract (actionTypeId/type + extra/data).
+function dispatchNotificationAction(actionTypeId: string | undefined, extra: any) {
+  if (actionTypeId === 'maqtab-progress') {
+    const { setShowMaqtabNotification, setMaqtabNotificationType } = useAppStore.getState()
+    setMaqtabNotificationType(extra?.type === 'incomplete' ? 'incomplete' : 'start')
+    setShowMaqtabNotification(true)
+  } else if (actionTypeId === 'engagement') {
+    const content = engagementById(extra?.id)
+    if (content) useAppStore.getState().setEngagementNotification(content)
+  } else if (actionTypeId === 'donation-reminder') {
+    const state = useAppStore.getState()
+    state.setDonationNotificationType('reminder')
+    state.setShowDonationNotification(true)
+  }
+}
 
 // Prime the offline translation cache + background-sync whenever the language
 // changes (no-op for English).
@@ -66,9 +85,37 @@ function LangSync() {
   return null
 }
 
+// Named sections that get their own analytics event (in addition to the
+// generic screen_view fired for every route) — fires once per section entry,
+// not on every sub-page navigation within the same section.
+const SECTION_EVENTS: Array<{ prefix: string; event: string }> = [
+  { prefix: '/guide', event: 'masail_viewed' },
+  { prefix: '/detoxify', event: 'detoxify_viewed' },
+  { prefix: '/adaab', event: 'adaab_viewed' },
+  { prefix: '/namaaz-timings', event: 'namaaz_viewed' },
+  { prefix: '/qibla', event: 'qibla_viewed' },
+]
+
+function AnalyticsRouteTracker() {
+  const location = useLocation()
+  const lastSection = useRef<string | null>(null)
+
+  useEffect(() => {
+    void logScreenView(location.pathname)
+
+    const section = SECTION_EVENTS.find((s) => location.pathname.startsWith(s.prefix))
+    if (section && lastSection.current !== section.prefix) {
+      void logAnalyticsEvent(section.event)
+    }
+    lastSection.current = section?.prefix ?? null
+  }, [location.pathname])
+
+  return null
+}
+
 function DonationNotificationContainer() {
   const location = useLocation()
-  const { showDonationNotification, setShowDonationNotification, donationNotificationType } =
+  const { showDonationNotification, setShowDonationNotification, donationNotificationType, firstRunSuppressed } =
     useAppStore()
   const isDonationPage = location.pathname.startsWith('/donate')
   useEffect(() => {
@@ -76,7 +123,7 @@ function DonationNotificationContainer() {
   }, [isDonationPage, setShowDonationNotification, showDonationNotification])
   return (
     <DonationNotification
-      isOpen={showDonationNotification && !isDonationPage}
+      isOpen={showDonationNotification && !isDonationPage && !firstRunSuppressed}
       type={donationNotificationType}
       onClose={() => setShowDonationNotification(false)}
     />
@@ -85,7 +132,7 @@ function DonationNotificationContainer() {
 
 function MaqtabProgressNotificationContainer() {
   const location = useLocation()
-  const { showMaqtabNotification, setShowMaqtabNotification, maqtabNotificationType } =
+  const { showMaqtabNotification, setShowMaqtabNotification, maqtabNotificationType, appOpenSuppressed, firstRunSuppressed } =
     useAppStore()
   const isMaqtabPage = location.pathname.startsWith('/maqtab')
   useEffect(() => {
@@ -93,7 +140,7 @@ function MaqtabProgressNotificationContainer() {
   }, [isMaqtabPage, setShowMaqtabNotification, showMaqtabNotification])
   return (
     <MaqtabProgressNotification
-      isOpen={showMaqtabNotification && !isMaqtabPage}
+      isOpen={showMaqtabNotification && !isMaqtabPage && !appOpenSuppressed && !firstRunSuppressed}
       type={maqtabNotificationType}
       onClose={() => setShowMaqtabNotification(false)}
     />
@@ -133,10 +180,29 @@ function PrivateRoute({ element }: { element: ReactElement }) {
 export default function App() {
   const setUser = useAppStore((s) => s.setUser)
   const setNeedsProfile = useAppStore((s) => s.setNeedsProfile)
+  const setAppOpenSuppressed = useAppStore((s) => s.setAppOpenSuppressed)
+  const setFirstRunSuppressed = useAppStore((s) => s.setFirstRunSuppressed)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
+
+    // Suppress notifications for 5 min on app open
+    setAppOpenSuppressed(true)
+    const suppressTimer = setTimeout(() => {
+      if (active) setAppOpenSuppressed(false)
+    }, 5 * 60 * 1000)
+
+    // Check if first run
+    let firstRunTimer: ReturnType<typeof setTimeout> | undefined
+    const isFirstRun = !localStorage.getItem('app_launched_before')
+    if (isFirstRun) {
+      setFirstRunSuppressed(true)
+      firstRunTimer = setTimeout(() => {
+        if (active) setFirstRunSuppressed(false)
+      }, 5 * 60 * 1000)
+      localStorage.setItem('app_launched_before', 'true')
+    }
 
     async function loadSession(forceRefresh = false) {
       const res = await getSessionUser(forceRefresh)
@@ -144,6 +210,8 @@ export default function App() {
       if (res) {
         setUser(res.user)
         setNeedsProfile(!res.hasProfile)
+        void setAnalyticsUserId(res.user.id)
+        void registerForPushNotifications()
         return true
       }
       return false
@@ -167,12 +235,14 @@ export default function App() {
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setNeedsProfile(false)
+        void setAnalyticsUserId(null)
       }
     })
 
     // Native: handle the OAuth deep-link return and complete the PKCE exchange.
     let removeListener: (() => void) | undefined
     let removeNotificationListener: (() => void) | undefined
+    let removePushListener: (() => void) | undefined
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (url && url.startsWith('com.mymaqtab.app://auth')) {
@@ -210,36 +280,30 @@ export default function App() {
       LocalNotifications.addListener(
         'localNotificationActionPerformed',
         async (notification: any) => {
-          const actionTypeId = notification.notification.actionTypeId
-          if (actionTypeId === 'maqtab-progress') {
-            // App is already running, just navigate via store
-            const { setShowMaqtabNotification, setMaqtabNotificationType } =
-              useAppStore.getState()
-            setMaqtabNotificationType(
-              notification.notification.extra?.type === 'incomplete'
-                ? 'incomplete'
-                : 'start'
-            )
-            setShowMaqtabNotification(true)
-          } else if (actionTypeId === 'engagement') {
-            const content = engagementById(notification.notification.extra?.id)
-            if (content) useAppStore.getState().setEngagementNotification(content)
-          } else if (actionTypeId === 'donation-reminder') {
-            const state = useAppStore.getState()
-            state.setDonationNotificationType('reminder')
-            state.setShowDonationNotification(true)
-          }
+          dispatchNotificationAction(
+            notification.notification.actionTypeId,
+            notification.notification.extra
+          )
         }
       ).then((h: any) => {
         removeNotificationListener = () => h.remove()
+      })
+
+      // Push notification taps (FCM) drive the same modals as local
+      // notifications — see dispatchNotificationAction.
+      removePushListener = addPushTapListener((data) => {
+        dispatchNotificationAction(data.type, data)
       })
     }
 
     return () => {
       active = false
+      clearTimeout(suppressTimer)
+      if (firstRunTimer) clearTimeout(firstRunTimer)
       sub.subscription.unsubscribe()
       removeListener?.()
       removeNotificationListener?.()
+      removePushListener?.()
     }
   }, [setUser, setNeedsProfile])
 
@@ -249,6 +313,7 @@ export default function App() {
     <ErrorBoundary>
     <BrowserRouter>
       <LangSync />
+      <AnalyticsRouteTracker />
       <TranslationOverlay />
       <UpdateBanner />
       <ReportButton />

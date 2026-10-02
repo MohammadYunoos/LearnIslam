@@ -136,7 +136,7 @@ export async function getAppVersion() {
 }
 
 export async function getDonationConfig() {
-  return api.get<{ buymeacoffee_link: string; upi_vpa: string; razorpay_button_id?: string }>('/donation/config')
+  return api.get<{ buymeacoffee_link: string; upi_vpa: string }>('/donation/config')
 }
 
 export async function logDonationTransaction(payload: {
@@ -205,6 +205,16 @@ export async function updateHifzStatus(
   status: 'NotStarted' | 'InProgress' | 'Completed'
 ) {
   await api.post('/hifz/status', { userId, surahId, status })
+}
+
+// ── PUSH (FCM) ──────────────────────────────────────────
+
+export async function registerDeviceToken(fcmToken: string, platform = 'android') {
+  await api.post('/push/register', { fcmToken, platform })
+}
+
+export async function unregisterDeviceToken(fcmToken: string) {
+  await api.post('/push/unregister', { fcmToken })
 }
 
 // ── WAJIFA ──────────────────────────────────────────────

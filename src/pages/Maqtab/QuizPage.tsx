@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { useAppStore } from '../../store/appStore'
 import { getQuiz, completeLesson } from '../../services/supabaseService'
 import { useTrList } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
 
 interface RawQuiz {
   id: string
@@ -195,6 +196,7 @@ export function QuizPage() {
 
   const handleSubmit = async () => {
     setSubmitted(true)
+    void logAnalyticsEvent('quiz_submitted', { lesson_id: lessonId, percent, passed })
     // A score of 80% or higher completes the lesson.
     if (passed) {
       playCelebration()
@@ -203,6 +205,7 @@ export function QuizPage() {
         setSaving(true)
         await completeLesson(user.id, lessonId, percent)
         setSaving(false)
+        void logAnalyticsEvent('lesson_completed', { lesson_id: lessonId, percent })
         // Show donation notification after lesson completion
         setTimeout(() => {
           const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()

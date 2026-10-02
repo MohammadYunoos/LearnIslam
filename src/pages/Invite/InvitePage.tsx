@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useAppStore } from '../../store/appStore'
+import { logAnalyticsEvent } from '../../lib/analytics'
 
 export function InvitePage() {
   const [code, setCode] = useState('')
@@ -62,6 +63,7 @@ export function InvitePage() {
         await navigator.clipboard.writeText(message)
         alert('Coupon code copied to clipboard!')
       }
+      void logAnalyticsEvent('invite_sent')
     } catch (e) {
       console.error('Share failed:', e)
     }

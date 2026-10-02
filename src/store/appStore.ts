@@ -27,6 +27,14 @@ interface AppStore {
 
   engagementNotification: EngagementNotificationContent | null
   setEngagementNotification: (content: EngagementNotificationContent | null) => void
+
+  // Suppress non-donate notifications for 5 min after app open
+  appOpenSuppressed: boolean
+  setAppOpenSuppressed: (v: boolean) => void
+
+  // Suppress all notifications (including donate) on first run for 5 min
+  firstRunSuppressed: boolean
+  setFirstRunSuppressed: (v: boolean) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -47,4 +55,8 @@ export const useAppStore = create<AppStore>((set) => ({
   setMaqtabNotificationType: (t) => set({ maqtabNotificationType: t }),
   engagementNotification: null,
   setEngagementNotification: (engagementNotification) => set({ engagementNotification }),
+  appOpenSuppressed: false,
+  setAppOpenSuppressed: (v) => set({ appOpenSuppressed: v }),
+  firstRunSuppressed: false,
+  setFirstRunSuppressed: (v) => set({ firstRunSuppressed: v }),
 }))

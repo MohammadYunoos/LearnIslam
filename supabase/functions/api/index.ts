@@ -76,6 +76,8 @@
       hasAnthropic: !!Deno.env.get('ANTHROPIC_API_KEY'),
       hasGemini: !!Deno.env.get('GEMINI_API_KEY'),
       hasLocalizeSecret: !!Deno.env.get('LOCALIZE_SECRET'),
+      hasPushAdminSecret: !!Deno.env.get('PUSH_ADMIN_SECRET'),
+      hasFirebaseServiceAccount: !!Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON'),
     })
   )
 
@@ -279,96 +281,6 @@
     return c.json(data)
   })
 
-  // ── TRANSLATE (Google free endpoint + DB cache) ─────────
-  app.post('/translate', async (c) => {
-    const { texts, target } = await c.req.json()
-    const list: string[] = Array.isArray(texts) ? texts : []
-    const tl = String(target || 'en')
-    if (!list.length || tl === 'en') return c.json({ translations: list })
-
-    const out: string[] = new Array(list.length)
-    const misses: { i: number; text: string; hash: string }[] = []
-
-    for (let i = 0; i < list.length; i++) {
-      const text = list[i] ?? ''
-      if (!text.trim()) {
-        out[i] = text
-        continue
-      }
-      const hash = await sha256(tl + '|' + text)
-      const { data } = await supabase
-        .from('translations')
-        .select('translated_text')
-        .eq('hash', hash)
-        .single()
-      if (data?.translated_text != null) out[i] = data.translated_text
-      else misses.push({ i, text, hash })
-    }
-
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-    // Roman Urdu: translate to Urdu but return Google's romanization (Latin letters).
-    const roman = tl === 'ur-roman'
-    const googleTl = roman ? 'ur' : tl
-
-    // Translate one text with retry/backoff to survive the free endpoint's rate limits.
-    async function gtx(text: string): Promise<string | null> {
-      const dt = roman ? '&dt=t&dt=rm' : '&dt=t'
-      for (let attempt = 0; attempt < 4; attempt++) {
-        try {
-          const res = await fetch(
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(
-              googleTl
-            )}${dt}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
-              body: 'q=' + encodeURIComponent(text),
-            }
-          )
-          if (res.status === 429 || res.status >= 500) {
-            await sleep(400 * (attempt + 1))
-            continue
-          }
-          const json = await res.json()
-          const chunks = json?.[0] ?? []
-          if (roman) {
-            // Romanization lives in trailing chunks: [null, null, "roman text"].
-            const rm = chunks
-              .filter((seg: any[]) => seg?.[0] == null && typeof seg?.[2] === 'string')
-              .map((seg: any[]) => seg[2])
-              .join('')
-            if (rm) return rm
-            // fall back to plain Urdu translation if no romanization returned
-          }
-          const t = chunks.map((seg: any[]) => seg?.[0] ?? '').join('')
-          if (t) return t
-        } catch {
-          /* retry */
-        }
-        await sleep(250)
-      }
-      return null
-    }
-
-    for (const m of misses) {
-      const t = await gtx(m.text)
-      if (t) {
-        out[m.i] = t
-        await supabase.from('translations').insert({
-          hash: m.hash,
-          target_lang: tl,
-          source_text: m.text,
-          translated_text: t,
-        })
-      } else {
-        out[m.i] = m.text // leave English; NOT cached, so it retries next time
-      }
-      await sleep(120) // gentle spacing between calls
-    }
-
-    return c.json({ translations: out })
-  })
 
   // ── CURATED TRANSLATION OVERRIDES ───────────────────────
   app.post('/translate/set', async (c) => {
@@ -593,6 +505,60 @@
     return c.json({ ok: true })
   })
 
+  // ── PUSH (FCM) ──────────────────────────────────────────
+  app.post('/push/register', async (c: any) => {
+    const userId = await uid(c, false)
+    if (!userId) return c.json({ error: 'unauthorized' }, 401)
+    const body = await c.req.json().catch(() => null)
+    const fcmToken = body?.fcmToken
+    if (!fcmToken) return c.json({ error: 'fcmToken required' }, 400)
+    const { error } = await supabase
+      .from('device_tokens')
+      .upsert(
+        { user_id: userId, fcm_token: fcmToken, platform: body?.platform ?? 'android', updated_at: new Date().toISOString() },
+        { onConflict: 'fcm_token' }
+      )
+    if (error) return c.json({ error: error.message }, 500)
+    return c.json({ ok: true })
+  })
+
+  app.post('/push/unregister', async (c: any) => {
+    const userId = await uid(c, false)
+    if (!userId) return c.json({ error: 'unauthorized' }, 401)
+    const body = await c.req.json().catch(() => null)
+    if (body?.fcmToken) {
+      await supabase.from('device_tokens').delete().eq('fcm_token', body.fcmToken).eq('user_id', userId)
+    }
+    return c.json({ ok: true })
+  })
+
+  // Admin-only: push to one user (all their devices) or a list of user ids.
+  // Auth via shared secret header, same convention as /localize/*.
+  app.post('/push/send', async (c: any) => {
+    if (!checkPushSecret(c)) return c.json({ error: 'unauthorized' }, 401)
+    const body = await c.req.json().catch(() => null)
+    const userIds: string[] = Array.isArray(body?.userIds) ? body.userIds : []
+    const title = body?.title
+    const bodyText = body?.body
+    if (!userIds.length || !title || !bodyText) {
+      return c.json({ error: 'userIds, title, body required' }, 400)
+    }
+    const { data: tokens, error } = await supabase
+      .from('device_tokens')
+      .select('fcm_token')
+      .in('user_id', userIds)
+    if (error) return c.json({ error: error.message }, 500)
+
+    const results = await Promise.all(
+      (tokens ?? []).map((row: { fcm_token: string }) =>
+        sendFcmMessage(row.fcm_token, title, bodyText, body?.data ?? {})
+      )
+    )
+    const sent = results.filter((r: { ok: boolean }) => r.ok).length
+    const failed = results.filter((r: { ok: boolean }) => !r.ok)
+    return c.json({ ok: true, sent, failedCount: failed.length, failed })
+  })
+
   // ── ANALYZER ────────────────────────────────────────────
   app.get('/analyzer/summary', async (c) => {
     const userId = await uid(c)
@@ -769,6 +735,121 @@ RULES:
   function checkLocalizeSecret(c: any): boolean {
     const secret = Deno.env.get('LOCALIZE_SECRET') ?? ''
     return !!secret && c.req.header('x-localize-secret') === secret
+  }
+
+  function checkPushSecret(c: any): boolean {
+    const secret = Deno.env.get('PUSH_ADMIN_SECRET') ?? ''
+    return !!secret && c.req.header('x-push-secret') === secret
+  }
+
+  // ── FCM (HTTP v1 API) ───────────────────────────────────
+  // Firebase service account JSON lives in secret FIREBASE_SERVICE_ACCOUNT_JSON.
+  // We sign our own OAuth2 JWT (RS256) rather than pulling in firebase-admin,
+  // to keep this a single dependency-light Edge Function.
+  let cachedAccessToken: { token: string; expiresAt: number } | null = null
+
+  function base64UrlFromBytes(bytes: Uint8Array): string {
+    let str = ''
+    for (const b of bytes) str += String.fromCharCode(b)
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  }
+
+  function base64UrlFromString(s: string): string {
+    return base64UrlFromBytes(new TextEncoder().encode(s))
+  }
+
+  function pemToPkcs8(pem: string): ArrayBuffer {
+    const b64 = pem
+      .replace(/-----BEGIN PRIVATE KEY-----/, '')
+      .replace(/-----END PRIVATE KEY-----/, '')
+      .replace(/\s+/g, '')
+    const raw = atob(b64)
+    const bytes = new Uint8Array(raw.length)
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+    return bytes.buffer
+  }
+
+  async function getFcmAccessToken(): Promise<string> {
+    const now = Math.floor(Date.now() / 1000)
+    if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
+      return cachedAccessToken.token
+    }
+
+    const saJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON') ?? ''
+    if (!saJson) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON not configured')
+    const sa = JSON.parse(saJson)
+
+    const header = base64UrlFromString(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+    const claims = base64UrlFromString(
+      JSON.stringify({
+        iss: sa.client_email,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600,
+      })
+    )
+    const unsigned = `${header}.${claims}`
+
+    const key = await crypto.subtle.importKey(
+      'pkcs8',
+      pemToPkcs8(sa.private_key),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      key,
+      new TextEncoder().encode(unsigned)
+    )
+    const jwt = `${unsigned}.${base64UrlFromBytes(new Uint8Array(signature))}`
+
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    })
+    const tokenData = await res.json()
+    if (!res.ok || !tokenData.access_token) {
+      throw new Error(`FCM token exchange failed: ${JSON.stringify(tokenData)}`)
+    }
+    cachedAccessToken = { token: tokenData.access_token, expiresAt: now + (tokenData.expires_in ?? 3600) }
+    return cachedAccessToken.token
+  }
+
+  async function sendFcmMessage(
+    fcmToken: string,
+    title: string,
+    body: string,
+    data: Record<string, unknown>
+  ): Promise<{ ok: boolean; token: string; error?: string }> {
+    const sa = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON') ?? '{}')
+    try {
+      const accessToken = await getFcmAccessToken()
+      const res = await fetch(
+        `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: {
+              token: fcmToken,
+              notification: { title, body },
+              data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
+            },
+          }),
+        }
+      )
+      const resData = await res.json()
+      if (!res.ok) return { ok: false, token: fcmToken, error: JSON.stringify(resData) }
+      return { ok: true, token: fcmToken }
+    } catch (e) {
+      return { ok: false, token: fcmToken, error: e instanceof Error ? e.message : String(e) }
+    }
   }
 
   // Database Webhook target.

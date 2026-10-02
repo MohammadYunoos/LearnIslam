@@ -15,6 +15,7 @@ import {
 import { getSurahTranslation, getSurahTransliteration } from '../../services/quranText'
 import { useAppStore } from '../../store/appStore'
 import { useTr, useTrList } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
 
 type Mode = 'single' | 'all'
 
@@ -162,6 +163,7 @@ export function HifzSurahPage() {
     if (!slug) return
     setStatus(slug, 'Completed')
     setStatusState('Completed')
+    void logAnalyticsEvent('hifz_surah_completed', { surah_slug: slug })
   }
 
   const memoCount = memorised.length

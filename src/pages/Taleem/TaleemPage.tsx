@@ -8,11 +8,12 @@ import rehypeSlug from 'rehype-slug'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { getQaVolumes, getQaVolume } from '../../services/supabaseService'
-import { useLang, useTrList } from '../../i18n/useTr'
+import { useLang, useTr, useTrList } from '../../i18n/useTr'
 import { contentDbLang } from '../../i18n/contentLang'
 import { openPdf } from '../../lib/openPdfNative'
 import { openExternal } from '../../lib/external'
 import { useAppStore } from '../../store/appStore'
+import { useScrollDirection } from '../../hooks/useScrollDirection'
 
 // Supabase storage PDF (LearnIslam/About_Us/about.pdf)
 const ABOUT_PDF = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/LearnIslam/About_Us/about.pdf`
@@ -275,6 +276,7 @@ export function TaleemPage() {
   const [fontScale, setFontScale] = useState(1)
   const [progressSaved, setProgressSaved] = useState(false)
   const [toolbarMinimized, setToolbarMinimized] = useState(false)
+  const isScrollingDown = useScrollDirection()
   const [showReviewPrompt, setShowReviewPrompt] = useState(() => {
     const dismissedAt = Number(localStorage.getItem(REVIEW_PROMPT_KEY)) || 0
     const hasReadQa = localStorage.getItem(REVIEW_ELIGIBLE_KEY) === 'true'
@@ -287,6 +289,8 @@ export function TaleemPage() {
   const pageExitingRef = useRef(false)
   const [isFs, setIsFs] = useState(false)
   const lang = useLang()
+  const rateTitle = useTr('Rate Islam Seeko')
+  const rateDesc = useTr('Your honest Play Store feedback helps other learners and helps us improve. Rating is optional and does not unlock content.')
 
   const activeId = volumes[active]?.id
   const storageKey = `qa_reading_${user?.id ?? 'guest'}_${activeId ?? 'none'}`
@@ -510,8 +514,8 @@ export function TaleemPage() {
           compact={!!activeId}
         />
 
-        {activeId && !loadingDoc && content !== null && !toolbarMinimized && (
-          <div className="bg-[#FFFDF7] border-b border-border shadow-sm px-2.5 py-1.5">
+        {activeId && !loadingDoc && content !== null && !toolbarMinimized && isScrollingDown && (
+          <div className="bg-[#FFFDF7] border-b border-border shadow-sm px-2.5 py-1.5 transition-opacity duration-300">
           <div className="flex items-center justify-between text-[10px] font-semibold mb-1">
             <span className="text-teal-900">{toolbarLabels[0]} {progress}%</span>
             <button
@@ -623,9 +627,9 @@ export function TaleemPage() {
 
             {showReviewPrompt && (
               <div className="taleem-review px-4 py-4">
-                <p className="text-sm font-bold text-teal-900 mb-1">Rate Islam Seeko</p>
+                <p className="text-sm font-bold text-teal-900 mb-1">{rateTitle}</p>
                 <p className="text-xs text-ink-muted leading-relaxed mb-3">
-                  Your honest Play Store feedback helps other learners and helps us improve. Rating is optional and does not unlock content.
+                  {rateDesc}
                 </p>
                 {reviewError && <p className="text-xs text-red-600 mb-3">{reviewError}</p>}
                 <div className="grid grid-cols-2 gap-2">

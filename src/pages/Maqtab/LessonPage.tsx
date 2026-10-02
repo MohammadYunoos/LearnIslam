@@ -12,6 +12,8 @@ import {
 } from '../../services/supabaseService'
 import { useAppStore } from '../../store/appStore'
 import { useTrList } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
+import { useScrollDirection } from '../../hooks/useScrollDirection'
 
 interface Lesson {
   id: string
@@ -72,6 +74,7 @@ export function LessonPage() {
   const [fontScale, setFontScale] = useState(1)
   const [bookmarkSaved, setBookmarkSaved] = useState(false)
   const [toolbarMinimized, setToolbarMinimized] = useState(false)
+  const isScrollingDown = useScrollDirection()
   const [likeCount, setLikeCount] = useState(0)
   const [liked, setLiked] = useState(false)
   const [rating, setRating] = useState<number | null>(null)
@@ -272,6 +275,7 @@ export function LessonPage() {
       setRating(feedback.rating)
       setAverageRating(feedback.averageRating)
       setRatingCount(feedback.ratingCount)
+      void logAnalyticsEvent('lesson_rated', { lesson_id: lessonId, rating: nextRating })
     } finally {
       setFeedbackBusy(false)
     }
@@ -321,8 +325,8 @@ export function LessonPage() {
           marqueeTitle
         />
 
-        {!loading && lesson && !toolbarMinimized && (
-          <div className="maqtab-reader-toolbar border-b shadow-sm px-3 py-2">
+        {!loading && lesson && !toolbarMinimized && isScrollingDown && (
+          <div className="maqtab-reader-toolbar border-b shadow-sm px-3 py-2 transition-opacity duration-300">
           <div className="flex items-center justify-between text-[11px] font-semibold mb-1.5">
             <span className="text-teal-900">{L[0]} {progress}%</span>
             <button

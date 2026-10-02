@@ -18,6 +18,8 @@ export function EngagementNotificationManager() {
   const user = useAppStore((state) => state.user)
   const content = useAppStore((state) => state.engagementNotification)
   const setContent = useAppStore((state) => state.setEngagementNotification)
+  const appOpenSuppressed = useAppStore((state) => state.appOpenSuppressed)
+  const firstRunSuppressed = useAppStore((state) => state.firstRunSuppressed)
 
   useEffect(() => {
     const activeCategory = engagementCategoryForPath(location.pathname)
@@ -38,6 +40,13 @@ export function EngagementNotificationManager() {
 
     const showWhenAvailable = () => {
       const state = useAppStore.getState()
+
+      // Skip if notifications are suppressed
+      if (state.appOpenSuppressed || state.firstRunSuppressed) {
+        schedule(NOTIFICATION_INTERVAL_MS)
+        return
+      }
+
       const anotherModalIsOpen =
         state.showDonationNotification ||
         state.showMaqtabNotification ||
@@ -110,7 +119,7 @@ export function EngagementNotificationManager() {
     schedule(initialDelay)
 
     return () => window.clearTimeout(timer)
-  }, [user, setContent])
+  }, [user, setContent, appOpenSuppressed, firstRunSuppressed])
 
   return <EngagementNotification content={content} onClose={() => setContent(null)} />
 }

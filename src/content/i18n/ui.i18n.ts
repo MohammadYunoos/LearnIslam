@@ -178,9 +178,58 @@ export const UI_I18N: Tr[] = [
   { en: 'Ehtimam-e-Namaaz', ur: 'اہتمامِ نماز', roman: 'Ehtimam-e-Namaaz' },
   { en: 'Prayer & Roza timings', ur: 'نماز اور روزہ کے اوقات', roman: 'namaz aur roza ke auqaat' },
 
+  // ── Maqtab chapter/level names ──────────────────────
+
   // ── Maqtab chapter/level names (were MT-garbled) ──────
   { en: 'Beginner', ur: 'ابتدائی', roman: 'ibtidai' },
   { en: 'Foundations of Iman', ur: 'ایمان کی بنیادیں', roman: 'imaan ki buniyadein' },
   { en: 'Taharah — Purification', ur: 'طہارت — پاکی', roman: 'taharat — paaki' },
   { en: 'Salah — Prayer', ur: 'نماز', roman: 'namaz' },
+
+  // ── Notifications ─────────────────────────────────────
+  { en: 'Support Islam Seeko', ur: 'Islam Seeko کو سپورٹ کریں', roman: 'Islam Seeko ko support karein' },
+  { en: 'Help us continue providing free Islamic education.', ur: 'ہمیں مفت اسلامی تعلیم فراہم کرنا جاری رکھنے میں مدد کریں۔', roman: 'hamein muft Islamic taleem farham karna jari rakhne me madad karein.' },
+  { en: 'Your donations help support app development, content creation, and maintenance.', ur: 'آپ کے عطیات ایپ کی ترقی، مواد کی تخلیق، اور دیکھ بھال میں مدد کرتے ہیں۔', roman: 'aap ke atiyat app ki taraqqi, mowad ki takhleq, aur dekh-bhal me madad karte hain.' },
+  { en: 'Donate Now', ur: 'ابھی عطیہ دیں', roman: 'abhi atiha dein' },
+  { en: 'Maybe Later', ur: 'شاید بعد میں', roman: 'shayed baad me' },
+  { en: 'Thank You for Your Support!', ur: 'آپ کی مدد کے لیے شکریہ!', roman: 'aap ki madad ke liye shukriya!' },
+  { en: 'Congratulations on completing this lesson! 🎉', ur: 'اس سبق کو مکمل کرنے پر مبارک ہو! 🎉', roman: 'is sabaq ko mukammal karne par mubarak ho! 🎉' },
+  { en: 'Consider supporting Islam Seeko to help us create more content.', ur: 'Islam Seeko کو سپورٹ کرنے پر غور کریں تاکہ ہم مزید مواد بنا سکیں۔', roman: 'Islam Seeko ko support karne par ghour karein taakah ham mazeed mowad bana saken.' },
+  { en: 'Your support helps us continue providing free Islamic education.', ur: 'آپ کی مدد ہمیں مفت اسلامی تعلیم فراہم کرنا جاری رکھنے میں مدد کرتی ہے۔', roman: 'aap ki madad hamein muft Islamic taleem farham karna jari rakhne me madad karti hai.' },
+
+  // ── Invite page ───────────────────────────────────────
+  { en: 'Invite Friends', ur: 'دوستوں کو مدعو کریں', roman: 'dostoun ko madau karein' },
+  { en: 'Share Your Invite Code', ur: 'اپنا مدعو کوڈ شیئر کریں', roman: 'apna madau code share karein' },
+  { en: 'Two successful invites unlock Intermediate and Advanced Maqtab', ur: 'دو کامیاب مدعویت درمیانی اور اعلیٰ مکتب کو کھول دیتی ہے', roman: 'do kamyaab madawwat darmiyani aur aaliya Maqtab ko khol deti hai' },
+  { en: 'Loading invite code...', ur: 'مدعو کوڈ لوڈ ہو رہا ہے...', roman: 'madau code load ho raha hai...' },
+  { en: 'Your Invite Code', ur: 'آپ کا مدعو کوڈ', roman: 'aap ka madau code' },
+  { en: 'Share Invite', ur: 'مدعویت شیئر کریں', roman: 'madawwat share karein' },
+  { en: 'Invite progress:', ur: 'مدعویت کی ترقی:', roman: 'madawwat ki taraqqi:' },
+  { en: 'Share this invite code with friends', ur: 'یہ مدعو کوڈ دوستوں کے ساتھ شیئر کریں', roman: 'yeh madau code dostoun ke sath share karein' },
+  { en: 'They redeem it during signup or settings', ur: 'وہ سائن اپ یا ترتیبات کے دوران اسے حاصل کرتے ہیں', roman: 'woh sign up ya tartibat ke douran ise hasil karte hain' },
+  { en: 'Each person can redeem only one invite code', ur: 'ہر فرد صرف ایک مدعو کوڈ حاصل کر سکتا ہے', roman: 'har fard sirf ek madau code hasil kar sakta hai' },
+  { en: 'Maqtab levels are unlocked', ur: 'مکتب کی سطحیں کھل گئی ہیں', roman: 'Maqtab ki sathen khul gayin hain' },
+  { en: 'Two distinct friends unlock your Maqtab levels', ur: 'دو مختلف دوست آپ کی مکتب کی سطحوں کو کھولتے ہیں', roman: 'do mukhtalif dost aap ki Maqtab ki satahon ko kholtey hain' },
+
+  // ── Lesson toolbar ─────────────────────────────────────
+  { en: 'Completed', ur: 'مکمل', roman: 'mukammal' },
+  { en: 'Decrease font size', ur: 'فونٹ کا سائز کم کریں', roman: 'font ka size kam karein' },
+  { en: 'Increase font size', ur: 'فونٹ کا سائز بڑھائیں', roman: 'font ka size barhayein' },
+  { en: 'Save Progress', ur: 'پیش رفت محفوظ کریں', roman: 'paish-raft mehfooz karein' },
+  { en: 'Progress saved', ur: 'پیش رفت محفوظ ہو گئی', roman: 'paish-raft mehfooz ho gayi' },
+  { en: 'Go to saved progress', ur: 'محفوظ پیش رفت پر جائیں', roman: 'mehfooz paish-raft par jayein' },
+  { en: 'Reading progress', ur: 'پڑھنے کی پیش رفت', roman: 'parhne ki paish-raft' },
+  { en: 'Minimize progress controls', ur: 'پیش رفت کنٹرول کو کم کریں', roman: 'paish-raft control ko kam karein' },
+  { en: 'Show progress controls', ur: 'پیش رفت کنٹرول دکھائیں', roman: 'paish-raft control dikhayin' },
+
+  // ── Common actions ────────────────────────────────────
+  { en: 'Copy', ur: 'کاپی کریں', roman: 'copy karein' },
+  { en: 'Copied!', ur: 'کاپی ہو گیا!', roman: 'copy ho gaya!' },
+  { en: 'Download', ur: 'ڈاؤن لوڈ کریں', roman: 'download karein' },
+  { en: 'Share', ur: 'شیئر کریں', roman: 'share karein' },
+  { en: 'Close', ur: 'بند کریں', roman: 'band karein' },
+  { en: 'Cancel', ur: 'منسوخ کریں', roman: 'mansookh karein' },
+  { en: 'OK', ur: 'ٹھیک ہے', roman: 'theek hai' },
+  { en: 'Yes', ur: 'جی ہاں', roman: 'ji han' },
+  { en: 'No', ur: 'نہیں', roman: 'nahin' },
 ]

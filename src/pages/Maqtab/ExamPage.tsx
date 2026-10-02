@@ -13,6 +13,7 @@ import {
   type ExamAttempt,
 } from '../../services/supabaseService'
 import { useTr, useLang } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
 import { contentDbLang } from '../../i18n/contentLang'
 
 type Phase = 'intro' | 'exam' | 'result'
@@ -103,6 +104,7 @@ export function ExamPage() {
     try {
       const res = await submitExam({ level, answers, elapsedSeconds: elapsed })
       setResult({ score: res.score, total: res.total, percent: res.percent, passed: res.passed })
+      void logAnalyticsEvent('exam_submitted', { level, percent: res.percent, passed: res.passed })
       if (res.passed) {
         localStorage.setItem(
           `exam_pass_${level.toLowerCase()}`,
