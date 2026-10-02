@@ -12,6 +12,7 @@
   // SUPABASE_SERVICE_ROLE_KEY, so also accept a custom secret SERVICE_ROLE_KEY.
   // Without a service-role key the client only has anon rights and RLS blocks
   // all writes to the progress tables.
+   // Test.
   const SERVICE_KEY =
     Deno.env.get('SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
