@@ -1,12 +1,15 @@
 // src/pages/Donations/DonationsPage.tsx
 // Donations page: voluntary support via UPI (QR or manual) or Buy Me a Coffee.
 import { useEffect, useState } from 'react'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useTr } from '../../i18n/useTr'
 import { openExternal } from '../../lib/external'
 import { getDonationConfig } from '../../services/supabaseService'
 import { logAnalyticsEvent } from '../../lib/analytics'
+import { Capacitor } from '@capacitor/core'
 
 interface DonationConfig {
   buymeacoffee_link: string
@@ -69,6 +72,47 @@ export function DonationsPage() {
     }
   }
 
+  const handleDownloadQR = async () => {
+    try {
+      void logAnalyticsEvent('donation_qr_downloaded', {})
+      const isNative = Capacitor.isNativePlatform()
+
+      if (isNative) {
+        const response = await fetch(QR_IMAGE)
+        const blob = await response.blob()
+        const reader = new FileReader()
+
+        reader.onload = async () => {
+          const base64 = (reader.result as string).split(',')[1]
+
+          const fileName = 'Islam-Seeko-UPI-QR.jpg'
+          const savedPath = await Filesystem.writeFile({
+            path: fileName,
+            data: base64,
+            directory: Directory.Pictures,
+            recursive: true,
+          })
+
+          await Share.share({
+            title: 'Islam Seeko UPI QR Code',
+            text: 'Save this QR code to pay via UPI',
+            url: savedPath.uri,
+            dialogTitle: 'Save QR Code',
+          })
+        }
+
+        reader.readAsDataURL(blob)
+      } else {
+        const link = document.createElement('a')
+        link.href = QR_IMAGE
+        link.download = 'Islam-Seeko-UPI-QR.jpg'
+        link.click()
+      }
+    } catch (error) {
+      console.error('Download failed:', error)
+    }
+  }
+
   return (
     <div className="bg-cream min-h-screen pb-24 page-fade">
       <PageHeader title={tTitle} subtitle="Keep Islamic learning free" backTo="/home" />
@@ -119,13 +163,12 @@ export function DonationsPage() {
                 alt="UPI QR code"
                 className="w-96 h-96 object-contain rounded-lg border border-border"
               />
-              <a
-                href={QR_IMAGE}
-                download="Islam-Seeko-UPI-QR.jpg"
-                className="text-xs font-bold text-teal-900 border border-teal-900/30 rounded-md px-4 py-2 bg-sand hover:bg-sand/80"
+              <button
+                onClick={handleDownloadQR}
+                className="text-xs font-bold text-teal-900 border border-teal-900/30 rounded-md px-4 py-2 bg-sand hover:bg-sand/80 active:bg-sand/60"
               >
                 Download QR
-              </a>
+              </button>
             </div>
 
             <div className="flex border-t border-border">
