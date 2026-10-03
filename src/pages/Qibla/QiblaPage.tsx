@@ -115,7 +115,7 @@ export function QiblaPage() {
         )}
 
         {manual && (
-          <div className="bg-white border border-border rounded-2xl p-4 mb-4 space-y-3">
+          <div className="glossy-gold rounded-2xl p-4 mb-4 space-y-3">
             <p className="text-sm text-ink">Location unavailable. Enter coordinates or retry GPS.</p>
             <div className="flex gap-2">
               <input
@@ -147,7 +147,7 @@ export function QiblaPage() {
         {err && <p className="text-xs text-red-500 text-center mb-3">{err}</p>}
 
         {coords && bearing != null && (
-          <div className="bg-white border border-border rounded-2xl p-6 text-center">
+          <div className="glossy-gold rounded-2xl p-6 text-center">
             {/* Compass dial */}
             <div className="relative w-56 h-56 mx-auto mb-4">
               {/* Pulsing rings */}

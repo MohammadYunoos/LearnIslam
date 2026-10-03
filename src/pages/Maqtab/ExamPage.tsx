@@ -13,6 +13,7 @@ import {
   type ExamAttempt,
 } from '../../services/supabaseService'
 import { useTr, useLang } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
 import { contentDbLang } from '../../i18n/contentLang'
 
 type Phase = 'intro' | 'exam' | 'result'
@@ -103,6 +104,7 @@ export function ExamPage() {
     try {
       const res = await submitExam({ level, answers, elapsedSeconds: elapsed })
       setResult({ score: res.score, total: res.total, percent: res.percent, passed: res.passed })
+      void logAnalyticsEvent('exam_submitted', { level, percent: res.percent, passed: res.passed })
       if (res.passed) {
         localStorage.setItem(
           `exam_pass_${level.toLowerCase()}`,
@@ -121,7 +123,7 @@ export function ExamPage() {
   const answeredAll = total > 0 && Object.keys(answers).length >= total
 
   return (
-    <div className="bg-cream min-h-screen pb-28">
+    <div className="maqtab-page maqtab-assessment-page min-h-screen pb-28">
       <PageHeader title={`${level} Exam`} subtitle="Maqtab · certificate exam" backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">

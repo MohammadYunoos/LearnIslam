@@ -14,8 +14,11 @@ export function ReportButton() {
   const [sending, setSending] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Hidden on the login screen.
-  if (location.pathname.startsWith('/login')) return null
+  // Donation has no reportable learning content. Detail readers have their own
+  // fixed action bar, so keep the report control above it instead of overlapping.
+  if (location.pathname.startsWith('/login') || location.pathname.startsWith('/donate')) return null
+  const hasReaderToolbar = location.pathname.startsWith('/adaab/') || location.pathname.startsWith('/hifz/')
+  const hasTwoRowReaderToolbar = location.pathname.startsWith('/guide/')
 
   const submit = async () => {
     if (!message.trim()) return
@@ -45,7 +48,9 @@ export function ReportButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-3 z-40 bg-white border border-gold text-gold-dark rounded-full shadow-md px-3 py-2 text-xs font-bold"
+        className={`fixed right-3 z-40 bg-white border border-gold text-gold-dark rounded-full shadow-md px-3 py-2 text-xs font-bold ${
+          hasTwoRowReaderToolbar ? 'bottom-48' : hasReaderToolbar ? 'bottom-36' : 'bottom-20'
+        }`}
         aria-label="Report or suggest correction"
       >
         ⚑ Report

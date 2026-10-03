@@ -1,5 +1,5 @@
 // src/content/i18n/guide.i18n.ts
-// Curated Urdu + Roman-Urdu for the Guide (Hanafi / Deobandi fiqh) — topic
+// Curated Urdu + Roman-Urdu for the Guide — topic
 // titles, group labels, section titles, ruling items, and step-by-step text.
 // Reference citations (Reference.source) and Arabic are NOT translated here.
 import type { Tr } from './types'

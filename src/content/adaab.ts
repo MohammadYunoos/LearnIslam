@@ -1,5 +1,5 @@
 // src/content/adaab.ts
-// Adaab = the etiquettes (manners) of daily life in Islam. Maslak: Hanafi / Deobandi.
+// Adaab = the etiquettes (manners) of daily life in Islam.
 // Same reference policy as the guide: a reference is shown only where well established
 // (Qur'an ayah, or a hadith with a known narrator/collection). Confirm with an Alim.
 import { MASLAK } from './guide'

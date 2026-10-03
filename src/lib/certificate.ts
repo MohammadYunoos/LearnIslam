@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core'
 
 export interface CertData {
   name: string
+  islamSeekoId: string
   percent: number
   date: string // e.g. '21 Aug 2026'
   level: string // e.g. 'Beginner', 'Intermediate', 'Advanced'
@@ -33,6 +34,12 @@ export function drawCertificate(canvas: HTMLCanvasElement, d: CertData): HTMLCan
   ctx.strokeStyle = '#0E3B36'
   ctx.lineWidth = 2
   ctx.strokeRect(40, 40, W - 80, H - 80)
+
+  // Small verification reference tied to the learner's profile UUID.
+  ctx.textAlign = 'right'
+  ctx.fillStyle = '#6b6455'
+  ctx.font = '10px Arial, sans-serif'
+  ctx.fillText(`Islam Seeko Id : ${d.islamSeekoId}`, W - 52, 60)
 
   const center = W / 2
   ctx.textAlign = 'center'

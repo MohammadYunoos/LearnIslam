@@ -1,5 +1,5 @@
 // src/lib/prayerTimes.ts
-// Prayer + Sunnah timings per the Hanafi / Deobandi convention:
+// Prayer + Sunnah timings per the app's configured convention:
 //   method = University of Islamic Sciences, Karachi (Fajr 18°, Isha 18°)
 //   Asr    = Hanafi (shadow length = 2× object + noon shadow)
 // Uses the `adhan` library for the astronomical calculation.

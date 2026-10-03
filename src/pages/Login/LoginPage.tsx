@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { signInWithGoogle, continueAsGuest, saveProfile } from '../../services/authService'
+import { redeemInviteCode } from '../../services/supabaseService'
 import { useAppStore } from '../../store/appStore'
 import { Logo } from '../../components/Logo'
 import { openExternal } from '../../lib/external'
@@ -33,6 +34,7 @@ export function LoginPage() {
   const [gender, setGender] = useState<'male' | 'female'>('male')
   const [madhab, setMadhab] = useState('hanafi')
   const [lang, setLang] = useState('en')
+  const [inviteCode, setInviteCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [msgIdx, setMsgIdx] = useState(0)
   const [error, setError] = useState('')
@@ -85,11 +87,27 @@ export function LoginPage() {
     try {
       if (isGoogle && user) {
         const u = await saveProfile(user.id, name || user.name, parseInt(age) || 20, gender, madhab, lang)
+        if (inviteCode.trim()) {
+          try {
+            await redeemInviteCode(inviteCode.trim())
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Invite code redemption failed')
+            return
+          }
+        }
         setUser(u)
         setNeedsProfile(false)
         navigate('/home', { replace: true })
       } else {
         const u = await continueAsGuest(name, parseInt(age) || 20, gender, madhab, lang)
+        if (inviteCode.trim()) {
+          try {
+            await redeemInviteCode(inviteCode.trim())
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Invite code redemption failed')
+            return
+          }
+        }
         setUser(u)
         setStep('done')
         setTimeout(() => navigate('/home'), 1000)
@@ -231,11 +249,28 @@ export function LoginPage() {
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-4"
+              className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3"
             >
               <option value="en">English</option>
               <option value="ur-roman">Roman Urdu (English letters)</option>
             </select>
+
+            {isGoogle && (
+              <>
+                <label className="block text-xs font-semibold text-teal-700 mb-1 uppercase tracking-wide">
+                  Invite Code (optional)
+                </label>
+                <input
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABC12345"
+                  className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-cream text-ink focus:outline-none focus:border-teal-700 mb-3 font-mono"
+                />
+                <p className="text-[11px] text-ink-muted mb-4 leading-relaxed">
+                  Enter a friend's invite code to count toward their Maqtab unlock progress.
+                </p>
+              </>
+            )}
 
             {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
             <button

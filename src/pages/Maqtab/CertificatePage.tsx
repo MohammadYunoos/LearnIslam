@@ -28,6 +28,8 @@ export function CertificatePage() {
   const [ready, setReady] = useState(false)
   const [checking, setChecking] = useState(true)
   const [drawn, setDrawn] = useState(false)
+  const [certificateData, setCertificateData] = useState<CertData | null>(null)
+  const fanfarePlayedRef = useRef(false)
 
   const tCongrats = useTr('Mubarak ho! 🎉')
   const tBody = useTr(`You have successfully completed the ${level} section and earned your certificate.`)
@@ -53,6 +55,7 @@ export function CertificatePage() {
         // Prefer the stored pass snapshot (name/date) if present.
         let data: CertData = {
           name: user?.name ?? 'Student',
+          islamSeekoId: user?.id ?? '',
           percent: bestPercent,
           date: new Date().toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' }),
           level,
@@ -63,6 +66,7 @@ export function CertificatePage() {
             const s = JSON.parse(raw)
             data = {
               name: s.name || data.name,
+              islamSeekoId: user?.id ?? data.islamSeekoId,
               percent: s.percent ?? bestPercent,
               date: new Date(s.date || Date.now()).toLocaleDateString([], {
                 day: '2-digit',
@@ -75,16 +79,9 @@ export function CertificatePage() {
         } catch {
           /* use server-derived data */
         }
+        setCertificateData(data)
         setReady(true)
         setChecking(false)
-        // Draw after the canvas mounts.
-        requestAnimationFrame(() => {
-          if (canvasRef.current) {
-            drawCertificate(canvasRef.current, data)
-            setDrawn(true)
-          }
-        })
-        playFanfare()
       })
       .catch(() => {
         if (alive) {
@@ -97,10 +94,21 @@ export function CertificatePage() {
     }
   }, [user, level])
 
+  // Draw only after the ready state has mounted the canvas in the DOM.
+  useEffect(() => {
+    if (!ready || !certificateData || !canvasRef.current) return
+    drawCertificate(canvasRef.current, certificateData)
+    setDrawn(true)
+    if (!fanfarePlayedRef.current) {
+      fanfarePlayedRef.current = true
+      playFanfare()
+    }
+  }, [ready, certificateData])
+
   const shareText = `Alhamdulillah! I completed the ${level} section on Islam Seeko and earned my certificate. Learn with me — download the app: ${APP_LINK}`
 
   return (
-    <div className="bg-cream min-h-screen pb-24">
+    <div className="maqtab-page min-h-screen pb-24">
       <PageHeader title="Certificate" subtitle={`${level} completed`} backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">
@@ -126,9 +134,11 @@ export function CertificatePage() {
             </div>
 
             <div className="bg-white border border-border rounded-2xl p-3 shadow-md overflow-hidden">
-              {drawn ? (
-                <canvas ref={canvasRef} className="w-full h-auto rounded-lg" />
-              ) : (
+              <canvas
+                ref={canvasRef}
+                className={`w-full h-auto rounded-lg ${drawn ? 'block' : 'hidden'}`}
+              />
+              {!drawn && (
                 <div className="w-full aspect-video bg-sand animate-pulse rounded-lg" />
               )}
             </div>

@@ -55,6 +55,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Push notifications (FCM), required at runtime on Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Qibla + prayer times: device location -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

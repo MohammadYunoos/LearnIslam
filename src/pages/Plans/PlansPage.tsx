@@ -14,7 +14,7 @@ const PLANS = [
     name: 'Premium',
     price: 'Coming soon',
     highlight: true,
-    features: ['All Maqtab lessons', 'Full Hifz library', 'Unlimited Masail questions', 'Direct Ulema messaging'],
+    features: ['All Maqtab lessons', 'Full Hifz library', 'Unlimited Masail questions', 'Priority learning support'],
   },
 ]
 

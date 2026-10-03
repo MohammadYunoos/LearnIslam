@@ -15,6 +15,7 @@ import {
 import { getSurahTranslation, getSurahTransliteration } from '../../services/quranText'
 import { useAppStore } from '../../store/appStore'
 import { useTr, useTrList } from '../../i18n/useTr'
+import { logAnalyticsEvent } from '../../lib/analytics'
 
 type Mode = 'single' | 'all'
 
@@ -99,7 +100,7 @@ export function HifzSurahPage() {
 
   if (!surah) {
     return (
-      <div className="bg-cream min-h-screen">
+      <div className="reader-page min-h-screen">
         <PageHeader title="Surah" backTo="/hifz" />
         <p className="text-sm text-ink-muted text-center py-10">Surah not found.</p>
       </div>
@@ -162,6 +163,7 @@ export function HifzSurahPage() {
     if (!slug) return
     setStatus(slug, 'Completed')
     setStatusState('Completed')
+    void logAnalyticsEvent('hifz_surah_completed', { surah_slug: slug })
   }
 
   const memoCount = memorised.length
@@ -169,12 +171,12 @@ export function HifzSurahPage() {
   const isSalah = surah.group === 'salah' // no audio — hide all play controls
 
   return (
-    <div className="bg-cream min-h-screen pb-40">
+    <div className="reader-page min-h-screen pb-40">
       <PageHeader title={surah.name} subtitle={`${surah.arabicName} · ${tMeaning}`} backTo="/hifz" />
 
       <div className="px-4 pt-4">
         {/* Progress */}
-        <div className="bg-white border border-border rounded-2xl p-4 mb-3">
+        <div className="reader-surface rounded-lg p-4 mb-3">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-semibold text-teal-900">{L[0]}</p>
             <p className="text-xs font-bold text-gold-dark">
@@ -202,8 +204,8 @@ export function HifzSurahPage() {
             return (
               <div
                 key={i}
-                className={`bg-white border rounded-2xl p-4 ${
-                  isActive ? 'border-teal-700 ring-1 ring-teal-500/30' : 'border-border'
+                className={`reader-surface rounded-lg p-4 ${
+                  isActive ? 'border-teal-700 ring-1 ring-teal-500/30' : ''
                 }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -237,7 +239,7 @@ export function HifzSurahPage() {
                   className={`w-full text-xs font-bold rounded-xl py-2 border ${
                     done
                       ? 'bg-teal-900 text-white border-teal-900'
-                      : 'bg-cream text-ink-muted border-border'
+                      : 'bg-white/70 text-ink-muted border-gold/30'
                   }`}
                 >
                   {done ? `✓ ${L[0]}` : L[3]}
@@ -258,7 +260,7 @@ export function HifzSurahPage() {
 
       {/* Playback bar — hidden for salah recitations (no audio) */}
       {!isSalah && (
-        <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 flex items-center gap-2">
+        <div className="reader-toolbar fixed bottom-bar left-0 right-0 max-w-lg mx-auto border-t p-3 flex items-center gap-2">
           <button
             onClick={() => (isPlaying ? stop() : playIndex(0, 'all'))}
             className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm"

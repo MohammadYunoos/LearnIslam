@@ -40,6 +40,31 @@ export async function completeLesson(userId: string, lessonId: string, score: nu
   await api.post('/maqtab/complete', { userId, lessonId, score })
 }
 
+export interface MaqtabLessonFeedback {
+  likeCount: number
+  liked: boolean
+  rating: number | null
+  averageRating: number | null
+  ratingCount: number
+}
+
+export async function getMaqtabLessonFeedback(lessonId: string) {
+  return api.get<MaqtabLessonFeedback>(`/maqtab/lesson/${encodeURIComponent(lessonId)}/feedback`)
+}
+
+export async function toggleMaqtabLessonLike(lessonId: string) {
+  return api.post<{ likeCount: number; liked: boolean }>(
+    `/maqtab/lesson/${encodeURIComponent(lessonId)}/like`
+  )
+}
+
+export async function rateMaqtabLesson(lessonId: string, rating: number) {
+  return api.post<{ rating: number; averageRating: number | null; ratingCount: number }>(
+    `/maqtab/lesson/${encodeURIComponent(lessonId)}/rating`,
+    { rating }
+  )
+}
+
 // ── BEGINNER EXAM ───────────────────────────────────────
 
 export interface ExamQuestion {
@@ -56,6 +81,15 @@ export interface ExamAttempt {
   passed: boolean
   elapsed_seconds: number | null
   created_at: string
+}
+export interface ExamLeaderboardEntry {
+  rank: number
+  userId: string
+  name: string
+  age: number | null
+  attempts: number
+  percent: number
+  achievedAt: string
 }
 
 export async function getExamQuestions(level = 'Beginner', lang = 'english') {
@@ -83,6 +117,12 @@ export async function getExamAttempts(level = 'Beginner') {
   return api.get<ExamAttempt[]>(`/exam/attempts?level=${encodeURIComponent(level)}`)
 }
 
+export async function getExamLeaderboard(level = 'Beginner') {
+  return api.get<ExamLeaderboardEntry[]>(
+    `/exam/leaderboard?level=${encodeURIComponent(level)}`
+  )
+}
+
 export async function getKnowledgeCheck(level = 'Beginner', count = 5, lang = 'english') {
   return api.get<
     { id: string; question: string; options: string[]; correct_idx: number; explanation?: string }[]
@@ -93,6 +133,26 @@ export async function getKnowledgeCheck(level = 'Beginner', count = 5, lang = 'e
 
 export async function getAppVersion() {
   return api.get<any>('/app/version')
+}
+
+export async function getDonationConfig() {
+  return api.get<{ buymeacoffee_link: string; upi_vpa: string }>('/donation/config')
+}
+
+export async function logDonationTransaction(payload: {
+  amount: number
+  currency: string
+  method: 'bmac' | 'upi'
+  status: 'initiated' | 'success' | 'failed'
+  error_message?: string
+}) {
+  return api.post('/donation/log', payload)
+}
+
+export async function getDonationTransactions(userId: string) {
+  return api.get<Array<{ id: string; created_at: string; status: string }>>(
+    `/donation/transactions?userId=${encodeURIComponent(userId)}`
+  )
 }
 
 export async function sendFeedback(payload: {
@@ -147,6 +207,16 @@ export async function updateHifzStatus(
   await api.post('/hifz/status', { userId, surahId, status })
 }
 
+// ── PUSH (FCM) ──────────────────────────────────────────
+
+export async function registerDeviceToken(fcmToken: string, platform = 'android') {
+  await api.post('/push/register', { fcmToken, platform })
+}
+
+export async function unregisterDeviceToken(fcmToken: string) {
+  await api.post('/push/unregister', { fcmToken })
+}
+
 // ── WAJIFA ──────────────────────────────────────────────
 
 export async function getWajifaCategories() {
@@ -179,6 +249,26 @@ export async function getAnalyzerSummary(userId: string) {
 export async function askMasail(question: string, madhab: string): Promise<string> {
   const res = await api.post<{ answer: string }>('/masail', { question, madhab })
   return res?.answer ?? 'Unable to answer right now. Please consult your local Alim.'
+}
+
+// ── INVITES ─────────────────────────────────────────────
+
+export async function getInviteStatus() {
+  return api.get<{ ok: boolean; code: string; redeemedCount: number; maqtabUnlocked: boolean; error?: string }>('/invite/status')
+}
+
+export async function redeemInviteCode(code: string) {
+  return api.post<{ ok: boolean; error?: string; redeemedCount?: number; inviterUnlocked?: boolean }>('/invite/redeem', { code })
+}
+
+// Backward-compatible aliases for older call sites.
+
+export async function generateUserCoupon() {
+  return getInviteStatus()
+}
+
+export async function redeemCoupon(code: string) {
+  return redeemInviteCode(code)
 }
 
 // ── HELPERS ─────────────────────────────────────────────

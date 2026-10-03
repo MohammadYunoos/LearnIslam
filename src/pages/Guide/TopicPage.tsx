@@ -25,12 +25,11 @@ export function TopicPage() {
   const trItems = useTrList(itemTexts)
   const trMap = new Map(itemTexts.map((t, i) => [t, trItems[i]]))
   const tPlay = useTr('Play step-by-step')
-  const tAsk = useTr('Ask Ulema')
   const tComing = useTr('Content coming soon, In sha Allah.')
 
   if (!topic) {
     return (
-      <div className="bg-cream min-h-screen pb-20">
+      <div className="reader-page min-h-screen pb-20">
         <PageHeader title="Not found" backTo="/guide" />
         <p className="text-sm text-ink-muted text-center py-10">Topic not found.</p>
         <BottomNav />
@@ -39,7 +38,7 @@ export function TopicPage() {
   }
 
   return (
-    <div className="bg-cream min-h-screen pb-44">
+    <div className="reader-page min-h-screen pb-44">
       <PageHeader title={topic.title} subtitle={topic.arabic} backTo="/guide" />
 
       <div className="px-4 pt-4">
@@ -49,7 +48,7 @@ export function TopicPage() {
           {sections.map((section, si) => {
             const isOpen = open === section.key
             return (
-              <div key={section.key} className="bg-white border border-border rounded-2xl overflow-hidden">
+              <div key={section.key} className="reader-surface rounded-lg">
                 <button
                   onClick={() => setOpen(isOpen ? null : section.key)}
                   className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -60,13 +59,13 @@ export function TopicPage() {
                   </span>
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-3">
+                  <div className="px-4 pb-3 border-t border-gold/20">
                     {section.items.length === 0 ? (
                       <p className="text-xs text-ink-muted italic">{tComing}</p>
                     ) : (
-                      <ol className="space-y-2.5">
+                      <ol className="reader-divider">
                         {section.items.map((item, i) => (
-                          <li key={i} className="flex gap-2.5">
+                          <li key={i} className="py-4 flex gap-3">
                             <span className="text-xs font-bold text-gold-dark mt-0.5">{i + 1}.</span>
                             <div className="flex-1">
                               <p className="text-sm text-ink leading-relaxed">
@@ -92,7 +91,7 @@ export function TopicPage() {
       </div>
 
       {/* Always-visible action bar (no scrolling needed) */}
-      <div className="fixed bottom-bar left-0 right-0 max-w-lg mx-auto bg-cream border-t border-border p-3 space-y-2">
+      <div className="reader-toolbar fixed bottom-bar left-0 right-0 max-w-lg mx-auto border-t p-3 space-y-2">
         {topic.hasSteps && topic.steps && topic.steps.length > 0 && (
           <button
             onClick={() => navigate(`/guide/${topic.slug}/steps`)}
@@ -101,12 +100,6 @@ export function TopicPage() {
             ▶ {tPlay}
           </button>
         )}
-        <button
-          onClick={() => navigate('/masail')}
-          className="w-full flex items-center justify-center gap-1.5 bg-teal-900 text-white text-sm font-bold rounded-xl py-2.5"
-        >
-          🕌 {tAsk}
-        </button>
       </div>
 
       <BottomNav />

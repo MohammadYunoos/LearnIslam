@@ -41,7 +41,7 @@ export function TasbihPage() {
 
   if (!zikr) {
     return (
-      <div className="bg-cream min-h-screen">
+      <div className="reader-page min-h-screen">
         <PageHeader title="Zikr" backTo="/wajifa" />
         <p className="text-sm text-ink-muted text-center py-10">Zikr not found.</p>
         <BottomNav />
@@ -71,12 +71,12 @@ export function TasbihPage() {
   const circ = 2 * Math.PI * 52
 
   return (
-    <div className="bg-cream min-h-screen pb-20">
+    <div className="reader-page min-h-screen pb-20">
       <PageHeader title={zikr.title} subtitle="Tap the circle to count" backTo="/wajifa" />
 
       <div className="px-4 pt-4">
         {/* Zikr text */}
-        <div className="bg-white border border-border rounded-2xl p-4 mb-4 text-center">
+        <div className="reader-surface rounded-lg p-5 mb-4 text-center">
           <p className="font-arabic text-2xl text-teal-900 leading-loose mb-2">{zikr.arabic}</p>
           <p className="text-sm italic text-gold-dark mb-1">{zikr.translit}</p>
           <p className="text-sm text-ink">{tMeaning}</p>

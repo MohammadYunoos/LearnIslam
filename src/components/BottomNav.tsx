@@ -6,8 +6,8 @@ const NAV_ITEMS = [
   { label: 'Home', icon: '🏠', path: '/home' },
   { label: 'Maqtab', icon: '📖', path: '/maqtab' },
   { label: 'Hifz', icon: '⭐', path: '/hifz' },
-  { label: 'Ulema', icon: '🕌', path: '/ulema' },
-  { label: 'Messages', icon: '💬', path: '/messages' },
+  { label: 'Donate', icon: '💗', path: '/donate' },
+  { label: 'Invite', icon: '🎁', path: '/invite' },
   { label: 'Muhasaba', icon: '📊', path: '/analyzer' },
 ]
 
@@ -15,7 +15,6 @@ export function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
   const labels = useTrList(NAV_ITEMS.map((i) => i.label))
-
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border flex z-40 max-w-lg mx-auto safe-bottom">
       {NAV_ITEMS.map((item, idx) => {
