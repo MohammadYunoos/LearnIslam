@@ -89,7 +89,7 @@ export function DonationsPage() {
           const savedPath = await Filesystem.writeFile({
             path: fileName,
             data: base64,
-            directory: Directory.Pictures,
+            directory: Directory.Cache,
             recursive: true,
           })
 
