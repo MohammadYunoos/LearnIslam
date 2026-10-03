@@ -113,6 +113,7 @@ export function MaqtabPage() {
   const tKnowledge = useTr('Knowledge Check')
   const tKnowledgeSub = useTr('Quick 5-question check — see where you stand')
   const tAbout = useTr('About')
+  const tAboutSub = useTr('Read the introduction (PDF)')
   const tExam = useTr('Take Exam')
   const tExamReady = useTr('You finished this level — take the exam for your certificate!')
   const tExamLocked = useTr('Finish all lessons to unlock the exam')
@@ -253,9 +254,10 @@ export function MaqtabPage() {
               <div className="mb-5">
                 <button
                   onClick={() => openPdf(getPdfPath(lvl.level), `${lvl.level.toLowerCase()}.pdf`)}
-                  className="maqtab-about w-full p-3 text-left text-sm font-semibold active:scale-[0.98] transition-transform"
+                  className="maqtab-about w-full p-3 text-left active:scale-[0.98] transition-transform"
                 >
-                  📖 {tAbout} {lvl.level}
+                  <p className="text-sm font-semibold text-teal-900">📖 {tAbout} {lvl.level}</p>
+                  <p className="text-xs text-teal-900/80 mt-0.5">{tAboutSub}</p>
                 </button>
               </div>
 

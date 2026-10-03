@@ -92,6 +92,8 @@ export const UI_I18N: Tr[] = [
   { en: 'Repeat', ur: 'دہرائیں', roman: 'dohrayein' },
 
   // ── Maqtab / Lesson / Quiz chrome ─────────────────────
+  { en: 'About', ur: 'تعارف', roman: 'taaruaf' },
+  { en: 'Read the introduction', ur: 'تعارف پڑھیں', roman: 'taaraf padhein' },
   { en: 'Overall progress', ur: 'مجموعی پیش رفت', roman: 'majmoi peshraft' },
   { en: 'Chapter', ur: 'باب', roman: 'baab' },
   { en: 'min', ur: 'منٹ', roman: 'minute' },
