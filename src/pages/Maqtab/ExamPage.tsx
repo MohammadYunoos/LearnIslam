@@ -110,6 +110,12 @@ export function ExamPage() {
           `exam_pass_${level.toLowerCase()}`,
           JSON.stringify({ name: user?.name ?? 'Student', percent: res.percent, date: new Date().toISOString() })
         )
+        // Show donation notification after exam pass
+        setTimeout(() => {
+          const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()
+          setDonationNotificationType('post-exam')
+          setShowDonationNotification(true)
+        }, 1500)
       }
       setPhase('result')
       // refresh history

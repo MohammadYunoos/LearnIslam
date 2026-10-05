@@ -17,8 +17,8 @@ interface AppStore {
 
   showDonationNotification: boolean
   setShowDonationNotification: (v: boolean) => void
-  donationNotificationType: 'reminder' | 'post-lesson' | 'session'
-  setDonationNotificationType: (t: 'reminder' | 'post-lesson' | 'session') => void
+  donationNotificationType: 'reminder' | 'post-lesson' | 'post-exam' | 'session'
+  setDonationNotificationType: (t: 'reminder' | 'post-lesson' | 'post-exam' | 'session') => void
 
   showMaqtabNotification: boolean
   setShowMaqtabNotification: (v: boolean) => void

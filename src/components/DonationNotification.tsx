@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/appStore'
 import { useTrList } from '../i18n/useTr'
 
-type NotificationType = 'reminder' | 'post-lesson' | 'session'
+type NotificationType = 'reminder' | 'post-lesson' | 'post-exam' | 'session'
 
 interface DonationNotificationProps {
   isOpen: boolean
@@ -63,12 +63,14 @@ export function DonationNotification({ isOpen, type, onClose }: DonationNotifica
   const titles: Record<NotificationType, string> = {
     session: L[0],
     'post-lesson': L[5],
+    'post-exam': L[5],
     reminder: L[0],
   }
 
   const messages: Record<NotificationType, string> = {
     session: L[1],
     'post-lesson': L[6],
+    'post-exam': L[7],
     reminder: L[8],
   }
 

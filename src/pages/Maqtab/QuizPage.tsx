@@ -206,11 +206,9 @@ export function QuizPage() {
         await completeLesson(user.id, lessonId, percent)
         setSaving(false)
         void logAnalyticsEvent('lesson_completed', { lesson_id: lessonId, percent })
-        // Show donation notification after lesson completion
+        // Show review page after lesson completion
         setTimeout(() => {
-          const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()
-          setDonationNotificationType('post-lesson')
-          setShowDonationNotification(true)
+          navigate(`/maqtab/${lessonId}/review`)
         }, 2000)
       }
     }

@@ -20,6 +20,7 @@ import { TaleemPage } from './pages/Taleem/TaleemPage'
 import { MaqtabPage } from './pages/Maqtab/MaqtabPage'
 import { LessonPage } from './pages/Maqtab/LessonPage'
 import { QuizPage } from './pages/Maqtab/QuizPage'
+import { ReviewPage } from './pages/Maqtab/ReviewPage'
 import { KnowledgeCheckPage } from './pages/Maqtab/KnowledgeCheckPage'
 import { ExamPage } from './pages/Maqtab/ExamPage'
 import { CertificatePage } from './pages/Maqtab/CertificatePage'
@@ -340,6 +341,10 @@ export default function App() {
         <Route
           path="/maqtab/:lessonId/quiz"
           element={<PrivateRoute element={<QuizPage />} />}
+        />
+        <Route
+          path="/maqtab/:lessonId/review"
+          element={<PrivateRoute element={<ReviewPage />} />}
         />
         <Route path="/hifz" element={<PrivateRoute element={<HifzPage />} />} />
         <Route path="/hifz/:slug" element={<PrivateRoute element={<HifzSurahPage />} />} />
