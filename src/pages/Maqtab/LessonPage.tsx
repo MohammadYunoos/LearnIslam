@@ -69,6 +69,7 @@ export function LessonPage() {
   const user = useAppStore((s) => s.user)
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [bookmark, setBookmark] = useState<number | null>(null)
   const [fontScale, setFontScale] = useState(1)
@@ -103,13 +104,20 @@ export function LessonPage() {
   useEffect(() => {
     if (!lessonId) return
     setLoading(true)
+    setLoadError(null)
     restoredRef.current = null
     restoringRef.current = true
     pageExitingRef.current = false
-    getLessonContent(lessonId).then((data) => {
-      setLesson(data as Lesson)
-      setLoading(false)
-    })
+    getLessonContent(lessonId)
+      .then((data) => {
+        setLesson(data as Lesson)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Failed to load lesson:', err)
+        setLoadError(err?.message || 'Failed to load lesson content')
+        setLoading(false)
+      })
   }, [lessonId])
 
   useEffect(() => {
@@ -125,7 +133,7 @@ export function LessonPage() {
       .catch(() => {
         // Feedback is supplementary; a lesson still works when it is unavailable.
       })
-  }, [lessonId])
+  }, [lessonId, user?.id])
 
   const rawBody = (lesson?.content_md ?? lesson?.content ?? '').replace(/\r\n/g, '\n')
   const formattedBody = useMemo(() => formatEmbeddedTakeaways(rawBody), [rawBody])
@@ -382,7 +390,20 @@ export function LessonPage() {
       <div className="px-4 pt-4">
         {loading && <p className="text-ink-muted text-sm text-center py-8">{L[8]}</p>}
 
-        {!loading && lesson && (
+        {loadError && (
+          <div className="bg-red-50 border border-red-300 rounded-lg p-4 text-center">
+            <p className="text-sm font-semibold text-red-700 mb-2">Error loading lesson</p>
+            <p className="text-xs text-red-600 mb-3">{loadError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !loadError && lesson && (
           <>
             <div ref={cardRef} className="maqtab-reader-surface fs-card relative px-5 py-6">
               <button onClick={toggleFullscreen} className="absolute top-3 right-3 z-10 bg-teal-900 text-white rounded-full w-10 h-10 flex items-center justify-center text-base shadow-lg" aria-label="Toggle fullscreen" title="Toggle fullscreen">

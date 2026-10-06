@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { qiblaBearing } from '../../lib/prayerTimes'
 import { getSavedCoords, saveCoords, requestGpsCoords, type Coords } from '../../lib/location'
+import { Capacitor } from '@capacitor/core'
 
 export function QiblaPage() {
   const [coords, setCoords] = useState<Coords | null>(getSavedCoords())
@@ -44,6 +45,12 @@ export function QiblaPage() {
         setManual(false)
       })
       .catch((e) => setErr(e?.message || 'Could not get location'))
+  }
+
+  const openLocationSettings = () => {
+    if (Capacitor.isNativePlatform()) {
+      setErr('Please enable location permission in your device settings (Settings > Apps > Islam Seeko > Permissions > Location)')
+    }
   }
 
   const saveManual = () => {
@@ -105,41 +112,55 @@ export function QiblaPage() {
   const aligned =
     bearing != null && heading != null && Math.min(arrowDeg, 360 - arrowDeg) < 6
 
+  const locErrorMsg = err
+    ? Capacitor.isNativePlatform()
+      ? 'Enable in Settings or enter coordinates:'
+      : 'Check browser permissions or enter coordinates:'
+    : 'Enable device location or enter coordinates:'
+
   return (
     <div className="bg-cream min-h-screen pb-20 page-fade">
-      <PageHeader title="Find Qibla" subtitle="Direction of the Ka‘bah" backTo="/home" />
+      <PageHeader title="Find Qibla" subtitle="Direction of the Ka'bah" backTo="/home" />
 
       <div className="px-4 pt-4">
         {!coords && !manual && (
-          <p className="text-sm text-ink-muted text-center py-10">Getting your location…</p>
+          <p className="text-sm text-ink-muted text-center py-10">Getting your location...</p>
         )}
 
         {manual && (
           <div className="glossy-gold rounded-2xl p-4 mb-4 space-y-3">
-            <p className="text-sm text-ink">Location unavailable. Enter coordinates or retry GPS.</p>
-            <div className="flex gap-2">
+            <p className="text-sm text-ink font-semibold">Location needed</p>
+            <p className="text-xs text-ink-muted">{locErrorMsg}</p>
+
+            <div className="space-y-2">
               <input
                 value={latIn}
                 onChange={(e) => setLatIn(e.target.value)}
                 inputMode="decimal"
-                placeholder="Latitude"
-                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-white text-ink"
+                placeholder="Latitude (-90 to 90)"
+                className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-white text-ink"
               />
               <input
                 value={lngIn}
                 onChange={(e) => setLngIn(e.target.value)}
                 inputMode="decimal"
-                placeholder="Longitude"
-                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm bg-white text-ink"
+                placeholder="Longitude (-180 to 180)"
+                className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-white text-ink"
               />
             </div>
+
             <div className="flex gap-2">
               <button onClick={saveManual} className="flex-1 bg-teal-900 text-white font-bold rounded-xl py-2.5 text-sm">
-                Use these
+                Use
               </button>
               <button onClick={useGps} className="flex-1 bg-white border border-teal-700 text-teal-900 font-bold rounded-xl py-2.5 text-sm">
-                Retry GPS
+                Try GPS
               </button>
+              {Capacitor.isNativePlatform() && (
+                <button onClick={openLocationSettings} className="flex-1 bg-sand border border-gold text-teal-900 font-bold rounded-xl py-2.5 text-sm">
+                  Settings
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -168,14 +189,14 @@ export function QiblaPage() {
                 <span className="absolute left-1 text-xs text-ink-muted">W</span>
                 <span className="absolute right-1 text-xs text-ink-muted">E</span>
               </div>
-              {/* Qibla arrow — points from centre to the Ka‘bah */}
+              {/* Qibla arrow — points from centre to the Ka'bah */}
               <div
                 className="absolute inset-0 flex items-start justify-center transition-transform duration-300 ease-out"
                 style={{ transform: `rotate(${arrowDeg}deg)` }}
               >
                 <div className="flex flex-col items-center pt-3">
-                  <div className={`text-2xl leading-none ${aligned ? 'text-green-600' : 'text-gold-dark'}`}>▲</div>
-                  {/* counter-rotate wrapper keeps the Ka‘bah upright; inner div floats */}
+                  <div className={`text-2xl leading-none ${aligned ? 'text-green-600' : 'text-gold-dark'}`}>^</div>
+                  {/* counter-rotate wrapper keeps the Ka'bah upright; inner div floats */}
                   <div style={{ transform: `rotate(${-arrowDeg}deg)` }}>
                     <div className={`text-5xl qibla-float ${aligned ? 'qibla-glow' : ''}`}>🕋</div>
                   </div>
@@ -185,21 +206,34 @@ export function QiblaPage() {
 
             <p className="text-lg font-bold text-teal-900">{Math.round(bearing)}° from North</p>
             {heading != null ? (
-              <p className={`text-sm mt-1 ${aligned ? 'text-green-600 font-bold' : 'text-ink-muted'}`}>
-                {aligned ? 'Facing the Qibla ✓' : 'Turn until the Ka‘bah points up'}
-              </p>
+              <>
+                {aligned ? (
+                  <p className="text-sm mt-3 text-green-600 font-bold">Facing the Qibla OK</p>
+                ) : (
+                  <p className="text-sm mt-3 text-ink-muted">Rotate device until arrow points up</p>
+                )}
+                {!aligned && (
+                  <div className="mt-4 flex justify-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-teal-500/10">
+                      <div className="text-lg font-bold text-teal-600 animate-spin" style={{ animationDuration: '2s' }}>
+                        *
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <button
                 onClick={enableCompass}
                 className="mt-3 bg-teal-900 text-white font-bold rounded-xl px-5 py-2.5 text-sm"
                 disabled={compassOn}
               >
-                {compassOn ? 'Waiting for compass…' : 'Enable live compass'}
+                {compassOn ? 'Waiting for compass...' : 'Enable live compass'}
               </button>
             )}
 
             <p className="text-[11px] text-ink-muted mt-4">
-              {coords.manual ? 'Manual location' : 'GPS location'} · {coords.lat.toFixed(3)},{' '}
+              {coords.manual ? 'Manual location' : 'GPS location'} - {coords.lat.toFixed(3)}, {' '}
               {coords.lng.toFixed(3)}
             </p>
             <button onClick={() => setManual(true)} className="text-[11px] text-gold-dark underline mt-1">

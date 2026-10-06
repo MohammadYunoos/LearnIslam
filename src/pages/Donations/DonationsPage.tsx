@@ -1,15 +1,12 @@
 // src/pages/Donations/DonationsPage.tsx
 // Donations page: voluntary support via UPI (QR or manual) or Buy Me a Coffee.
 import { useEffect, useState } from 'react'
-import { Filesystem, Directory } from '@capacitor/filesystem'
-import { Share } from '@capacitor/share'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
 import { useTr } from '../../i18n/useTr'
 import { openExternal } from '../../lib/external'
 import { getDonationConfig } from '../../services/supabaseService'
 import { logAnalyticsEvent } from '../../lib/analytics'
-import { Capacitor } from '@capacitor/core'
 
 interface DonationConfig {
   buymeacoffee_link: string
@@ -72,46 +69,6 @@ export function DonationsPage() {
     }
   }
 
-  const handleDownloadQR = async () => {
-    try {
-      void logAnalyticsEvent('donation_qr_downloaded', {})
-      const isNative = Capacitor.isNativePlatform()
-
-      if (isNative) {
-        const response = await fetch(QR_IMAGE)
-        const blob = await response.blob()
-        const reader = new FileReader()
-
-        reader.onload = async () => {
-          const base64 = (reader.result as string).split(',')[1]
-
-          const fileName = 'Islam-Seeko-UPI-QR.jpg'
-          const savedPath = await Filesystem.writeFile({
-            path: fileName,
-            data: base64,
-            directory: Directory.Cache,
-            recursive: true,
-          })
-
-          await Share.share({
-            title: 'Islam Seeko UPI QR Code',
-            text: 'Save this QR code to pay via UPI',
-            url: savedPath.uri,
-            dialogTitle: 'Save QR Code',
-          })
-        }
-
-        reader.readAsDataURL(blob)
-      } else {
-        const link = document.createElement('a')
-        link.href = QR_IMAGE
-        link.download = 'Islam-Seeko-UPI-QR.jpg'
-        link.click()
-      }
-    } catch (error) {
-      console.error('Download failed:', error)
-    }
-  }
 
   return (
     <div className="bg-cream min-h-screen pb-24 page-fade">
@@ -163,12 +120,6 @@ export function DonationsPage() {
                 alt="UPI QR code"
                 className="w-96 h-96 object-contain rounded-lg border border-border"
               />
-              <button
-                onClick={handleDownloadQR}
-                className="text-xs font-bold text-teal-900 border border-teal-900/30 rounded-md px-4 py-2 bg-sand hover:bg-sand/80 active:bg-sand/60"
-              >
-                Download QR
-              </button>
             </div>
 
             <div className="flex border-t border-border">
@@ -228,9 +179,9 @@ export function DonationsPage() {
                   <p className="text-xs font-bold text-teal-900 mb-3">How to pay</p>
                   <ol className="list-decimal list-inside space-y-1.5">
                     <li className="text-[11px] text-ink-muted leading-relaxed">Install a UPI app (Google Pay, PhonePe, Paytm, BHIM) from the Play Store if you don't have one.</li>
-                    <li className="text-[11px] text-ink-muted leading-relaxed">Open the app and look for Upload QR, Scan QR, or Paste QR option.</li>
-                    <li className="text-[11px] text-ink-muted leading-relaxed">Long-press or tap the Download QR button above to save the QR code image.</li>
-                    <li className="text-[11px] text-ink-muted leading-relaxed">In your UPI app, select the QR code image from your gallery to upload it. UPI ID will auto-fill.</li>
+                    <li className="text-[11px] text-ink-muted leading-relaxed">Take a screenshot of the QR code above.</li>
+                    <li className="text-[11px] text-ink-muted leading-relaxed">Open your UPI app and look for Upload QR, Scan QR, or Paste QR option.</li>
+                    <li className="text-[11px] text-ink-muted leading-relaxed">Select the QR code image from your gallery to upload it. UPI ID will auto-fill.</li>
                     <li className="text-[11px] text-ink-muted leading-relaxed">Enter the amount you want to send.</li>
                     <li className="text-[11px] text-ink-muted leading-relaxed">Confirm with your UPI PIN.</li>
                   </ol>

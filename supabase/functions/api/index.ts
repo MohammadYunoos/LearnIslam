@@ -34,19 +34,10 @@
   }
 
   async function canAccessMaqtabLevel(userId: string | null, level: string): Promise<boolean> {
-    if (!level || level === 'Beginner') return true
-    if (level !== 'Intermediate' && level !== 'Advanced') return false
-    if (!userId) return false
-    const { data } = await supabase
-      .from('profiles')
-      .select('maqtab_unlocked, maqtab_intermediate_unlocked, maqtab_advanced_unlocked')
-      .eq('id', userId)
-      .single()
-    if (!data) return false
-    if (data.maqtab_unlocked) return true
-    if (level === 'Intermediate') return !!data.maqtab_intermediate_unlocked
-    if (level === 'Advanced') return !!data.maqtab_advanced_unlocked
-    return false
+    if (!level || level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
+      return !!userId // All authenticated users can access any level
+    }
+    return false // Unknown level
   }
 
   async function sha256(text: string): Promise<string> {

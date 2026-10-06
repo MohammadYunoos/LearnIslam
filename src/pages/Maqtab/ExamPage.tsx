@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { BottomNav } from '../../components/BottomNav'
+import { AppRatingPrompt, shouldShowRatingPrompt } from '../../components/AppRatingPrompt'
 import { useAppStore } from '../../store/appStore'
 import {
   getExamQuestions,
@@ -46,6 +47,7 @@ export function ExamPage() {
   const [submitting, setSubmitting] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState<{ score: number; total: number; percent: number; passed: boolean } | null>(null)
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -110,6 +112,17 @@ export function ExamPage() {
           `exam_pass_${level.toLowerCase()}`,
           JSON.stringify({ name: user?.name ?? 'Student', percent: res.percent, date: new Date().toISOString() })
         )
+        // Show rating prompt if eligible
+        if (shouldShowRatingPrompt()) {
+          setShowRatingPrompt(true)
+        } else {
+          // Show donation notification after exam pass
+          setTimeout(() => {
+            const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()
+            setDonationNotificationType('post-exam')
+            setShowDonationNotification(true)
+          }, 1500)
+        }
       }
       setPhase('result')
       // refresh history
@@ -122,8 +135,19 @@ export function ExamPage() {
   const total = questions.length
   const answeredAll = total > 0 && Object.keys(answers).length >= total
 
+  const handleRatingClose = () => {
+    setShowRatingPrompt(false)
+    // Show donation notification after rating prompt closes
+    setTimeout(() => {
+      const { setShowDonationNotification, setDonationNotificationType } = useAppStore.getState()
+      setDonationNotificationType('post-exam')
+      setShowDonationNotification(true)
+    }, 500)
+  }
+
   return (
     <div className="maqtab-page maqtab-assessment-page min-h-screen pb-28">
+      <AppRatingPrompt isOpen={showRatingPrompt} onClose={handleRatingClose} />
       <PageHeader title={`${level} Exam`} subtitle="Maqtab · certificate exam" backTo="/maqtab" />
 
       <div className="px-4 pt-4 space-y-4">
