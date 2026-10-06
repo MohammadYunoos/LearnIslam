@@ -206,9 +206,9 @@ export function QuizPage() {
         await completeLesson(user.id, lessonId, percent)
         setSaving(false)
         void logAnalyticsEvent('lesson_completed', { lesson_id: lessonId, percent })
-        // Show review page after lesson completion
+        // Show app rating page after lesson completion
         setTimeout(() => {
-          navigate(`/maqtab/${lessonId}/review`)
+          navigate(`/maqtab/${lessonId}/rate-app`)
         }, 2000)
       }
     }
@@ -349,7 +349,7 @@ export function QuizPage() {
               ✓ {L[3]}
             </span>
             <button
-              onClick={() => navigate('/maqtab')}
+              onClick={() => navigate(`/maqtab/${lessonId}/rate-app`)}
               className="w-full bg-gold text-teal-900 font-bold rounded-xl py-2.5 text-sm mt-2"
             >
               {L[11]}
